@@ -25,6 +25,7 @@ struct TrophiesView: View {
     private var detail: some View {
         switch store.page {
         case .profile: ProfilePage(store: store)
+        case .stats: StatsPage(store: store)
         case .closest: GameGridPage(store: store, title: S.closestToFinish, empty: S.closestToFinish, games: store.closestGames)
         case .recent: RecentPage(store: store)
         case .platinums: GameGridPage(store: store, title: S.platinumCabinet, empty: S.noPlatinums, games: store.platinumGames)
@@ -51,6 +52,7 @@ private struct Sidebar: View {
         })) {
             Section(S.overview) {
                 Label(S.profile, systemImage: "person.crop.circle").tag(TrophyStore.Page.profile)
+                Label(S.statistics, systemImage: "chart.bar.xaxis").tag(TrophyStore.Page.stats)
                 Label(S.closestToFinish, systemImage: "flag.checkered").tag(TrophyStore.Page.closest)
                 Label(S.recentTrophies, systemImage: "clock").tag(TrophyStore.Page.recent)
                 Label(S.platinumCabinet, systemImage: "trophy.fill").tag(TrophyStore.Page.platinums)
@@ -138,6 +140,7 @@ private struct ProfilePage: View {
                     }
                 }
 
+                Fold(S.summary, key: "summary") {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
                     StatTile(title: S.totalTrophies,
                              value: "\(store.profile?.earnedTrophies.total ?? store.games.map(\.earnedTrophies.total).reduce(0, +))",
@@ -147,10 +150,13 @@ private struct ProfilePage: View {
                     StatTile(title: S.averageCompletion, value: S.percent(store.averageCompletion), symbol: "chart.pie")
                     StatTile(title: S.gamesPlayed, value: "\(store.games.count)", symbol: "gamecontroller")
                 }
+                }
+
+                Fold(S.showcase, key: "showcase") { ShowcaseBlock(store: store) }
 
                 if !store.closestGames.isEmpty {
+                    Fold(S.closestToFinish, key: "profileClosest") {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(S.closestToFinish).font(.headline)
                         ForEach(store.closestGames.prefix(5)) { game in
                             Button {
                                 Task { await store.open(.game(game.id)) }
@@ -159,6 +165,7 @@ private struct ProfilePage: View {
                             }
                             .buttonStyle(.plain)
                         }
+                    }
                     }
                 }
                 if let problem = store.problem {
@@ -453,6 +460,7 @@ private struct TrophyRow: View {
     let revealed: Bool
     let onReveal: () -> Void
     private let targets = TrophyTargets.shared
+    private let showcase = TrophyShowcase.shared
     @State private var note = ""
 
     private var concealed: Bool { trophy.hidden && !trophy.earned && !revealed }
@@ -502,7 +510,16 @@ private struct TrophyRow: View {
                 }
             }
             Spacer()
-            if !trophy.earned {
+            if trophy.earned {
+                let shown = showcase.contains(trophy, in: game)
+                Button {
+                    showcase.toggle(trophy, in: game)
+                } label: {
+                    Image(systemName: shown ? "star.fill" : "star").foregroundStyle(shown ? .yellow : .secondary)
+                }
+                .buttonStyle(.borderless)
+                .help(shown ? S.removeFromShowcase : S.addToShowcase)
+            } else {
                 VStack(spacing: 8) {
                     Button {
                         targets.toggle(trophy, in: game)
@@ -575,12 +592,18 @@ private struct SignInView: View {
             Text(S.connectIntro)
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 8) {
-                step(1, S.connectStep1)
+                HStack {
+                    step(1, S.connectStep1)
+                    Button(S.signInSony) { NSWorkspace.shared.open(PSNClient.signInURL) }
+                }
                 HStack {
                     step(2, S.connectStep2)
                     Button(S.openPage) { NSWorkspace.shared.open(PSNClient.sessionTokenURL) }
                 }
                 step(3, S.connectStep3)
+                Text(S.invalidLoginHint)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             HStack {
                 SecureField(S.tokenPlaceholder, text: $token)

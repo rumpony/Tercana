@@ -130,7 +130,9 @@ enum S {
     // MARK: Trophies
     static var connectPSN: String { pick("PSN hesabını bağla", "Connect your PSN account", "PSN-Konto verbinden", "Conecta tu cuenta de PSN", "Connectez votre compte PSN") }
     static var connectIntro: String { pick("Kupalarını görmek için PlayStation hesabının oturum anahtarı gerekiyor. Anahtar sadece bu Mac'in anahtar zincirinde saklanır; SubLens yalnızca okuma yapar.", "To show your trophies, SubLens needs your PlayStation session token. It stays in this Mac's keychain and is only used to read data.", "Für deine Trophäen braucht SubLens dein PlayStation-Sitzungstoken. Es bleibt im Schlüsselbund dieses Macs und wird nur zum Lesen verwendet.", "Para mostrar tus trofeos, SubLens necesita el token de sesión de PlayStation. Se guarda en el llavero de este Mac y solo se usa para leer datos.", "Pour afficher vos trophées, SubLens a besoin de votre jeton de session PlayStation. Il reste dans le trousseau de ce Mac et sert uniquement à lire des données.") }
-    static var connectStep1: String { pick("Tarayıcıda playstation.com'a giriş yap.", "Sign in at playstation.com in your browser.", "Melde dich im Browser bei playstation.com an.", "Inicia sesión en playstation.com en tu navegador.", "Connectez-vous sur playstation.com dans votre navigateur.") }
+    static var connectStep1: String { pick("Tarayıcında Sony hesabına giriş yap.", "Sign in to your Sony account in your browser.", "Melde dich im Browser bei deinem Sony-Konto an.", "Inicia sesión en tu cuenta de Sony en el navegador.", "Connectez-vous à votre compte Sony dans le navigateur.") }
+    static var signInSony: String { pick("Sony'ye giriş yap", "Sign in to Sony", "Bei Sony anmelden", "Iniciar sesión en Sony", "Se connecter à Sony") }
+    static var invalidLoginHint: String { pick("Sayfa \"Invalid login\" gösteriyorsa aynı tarayıcıda önce \"Sony'ye giriş yap\" ile giriş yapıp sayfayı yenile.", "If the page says \"Invalid login\", sign in with \"Sign in to Sony\" in the same browser, then reload it.", "Zeigt die Seite „Invalid login“, melde dich im selben Browser über „Bei Sony anmelden“ an und lade sie neu.", "Si la página dice «Invalid login», inicia sesión con «Iniciar sesión en Sony» en el mismo navegador y recárgala.", "Si la page indique « Invalid login », connectez-vous via « Se connecter à Sony » dans le même navigateur, puis rechargez-la.") }
     static var connectStep2: String { pick("Bu sayfayı aç ve \"npsso\" değerini kopyala:", "Open this page and copy the \"npsso\" value:", "Öffne diese Seite und kopiere den „npsso“-Wert:", "Abre esta página y copia el valor «npsso»:", "Ouvrez cette page et copiez la valeur « npsso » :") }
     static var connectStep3: String { pick("Değeri aşağıya yapıştır.", "Paste it below.", "Füge ihn unten ein.", "Pégalo abajo.", "Collez-la ci-dessous.") }
     static var openPage: String { pick("Sayfayı aç", "Open Page", "Seite öffnen", "Abrir página", "Ouvrir la page") }
@@ -207,6 +209,39 @@ enum S {
     static var noPlatinums: String { pick("Henüz platin yok", "No platinums yet", "Noch keine Platin-Trophäe", "Aún no hay platinos", "Pas encore de platine") }
     static var noRecent: String { pick("Son kupa bulunamadı", "No recent trophies", "Keine neuen Trophäen", "No hay trofeos recientes", "Aucun trophée récent") }
     static var openGame: String { pick("Oyunu aç", "Open game", "Spiel öffnen", "Abrir juego", "Ouvrir le jeu") }
+
+    // MARK: Statistics
+    static var statistics: String { pick("İstatistikler", "Statistics", "Statistiken", "Estadísticas", "Statistiques") }
+    static var summary: String { pick("Özet", "Summary", "Zusammenfassung", "Resumen", "Résumé") }
+    static var showcase: String { pick("Vitrinim", "My showcase", "Meine Vitrine", "Mi vitrina", "Ma vitrine") }
+    static var showcaseEmpty: String { pick("Kazandığın bir kupanın yanındaki yıldıza basarak buraya ekle.", "Star an earned trophy to show it here.", "Markiere eine erhaltene Trophäe mit dem Stern, um sie hier zu zeigen.", "Marca con la estrella un trofeo conseguido para mostrarlo aquí.", "Ajoutez l'étoile à un trophée obtenu pour l'afficher ici.") }
+    static var addToShowcase: String { pick("Vitrine ekle", "Add to showcase", "Zur Vitrine hinzufügen", "Añadir a la vitrina", "Ajouter à la vitrine") }
+    static var removeFromShowcase: String { pick("Vitrinden çıkar", "Remove from showcase", "Aus der Vitrine entfernen", "Quitar de la vitrina", "Retirer de la vitrine") }
+    static var statsNeedSync: String { pick("Önce tam senkron gerekiyor", "A full sync is needed first", "Zuerst ist eine vollständige Synchronisierung nötig", "Primero hace falta una sincronización completa", "Une synchronisation complète est d'abord nécessaire") }
+    static var statsNeedSyncHint: String { pick("İstatistikler bütün oyunlarındaki kupa tarihlerinden hesaplanır.", "Statistics are calculated from trophy dates across all your games.", "Statistiken werden aus den Trophäendaten aller Spiele berechnet.", "Las estadísticas se calculan con las fechas de trofeos de todos tus juegos.", "Les statistiques sont calculées à partir des dates de trophées de tous vos jeux.") }
+    static var fullSyncTitle: String { pick("Tam senkron", "Full sync", "Vollständige Synchronisierung", "Sincronización completa", "Synchronisation complète") }
+    static func fullSyncExplain(_ games: Int) -> String { pick("\(games) oyunun kupaları tek tek indirilir (yaklaşık \(max(1, games * 2 / 60)) dk). Sonraki senkronlar sadece değişen oyunları günceller.", "Downloads trophies for \(games) games one by one (about \(max(1, games * 2 / 60)) min). Later syncs only update games that changed.", "Lädt die Trophäen von \(games) Spielen nacheinander (etwa \(max(1, games * 2 / 60)) Min.). Spätere Synchronisierungen aktualisieren nur geänderte Spiele.", "Descarga los trofeos de \(games) juegos uno a uno (unos \(max(1, games * 2 / 60)) min). Después solo se actualizan los juegos con cambios.", "Télécharge les trophées de \(games) jeux un par un (environ \(max(1, games * 2 / 60)) min). Ensuite, seuls les jeux modifiés sont mis à jour.") }
+    static var syncExplain: String { pick("Yeni kupa kazandığın oyunlar pencere her açıldığında güncellenir.", "Games with new trophies update each time this window opens.", "Spiele mit neuen Trophäen werden bei jedem Öffnen aktualisiert.", "Los juegos con trofeos nuevos se actualizan al abrir esta ventana.", "Les jeux avec de nouveaux trophées sont mis à jour à chaque ouverture.") }
+    static func syncing(_ done: Int, _ total: Int) -> String { pick("Senkronlanıyor… \(done)/\(total)", "Syncing… \(done)/\(total)", "Synchronisiere… \(done)/\(total)", "Sincronizando… \(done)/\(total)", "Synchronisation… \(done)/\(total)") }
+    static func lastSynced(_ when: String) -> String { pick("Son senkron: \(when)", "Last synced: \(when)", "Zuletzt synchronisiert: \(when)", "Última sincronización: \(when)", "Dernière synchro : \(when)") }
+    static var startFullSync: String { pick("Tam senkronu başlat", "Start Full Sync", "Synchronisierung starten", "Iniciar sincronización", "Lancer la synchro") }
+    static var syncNow: String { pick("Şimdi senkronla", "Sync Now", "Jetzt synchronisieren", "Sincronizar ahora", "Synchroniser") }
+    static var stop: String { pick("Durdur", "Stop", "Stoppen", "Detener", "Arrêter") }
+    static var streaks: String { pick("Seriler", "Streaks", "Serien", "Rachas", "Séries") }
+    static var longestStreak: String { pick("En uzun seri", "Longest streak", "Längste Serie", "Racha más larga", "Plus longue série") }
+    static var currentStreak: String { pick("Şu anki seri", "Current streak", "Aktuelle Serie", "Racha actual", "Série actuelle") }
+    static var busiestDay: String { pick("En verimli gün", "Busiest day", "Bester Tag", "Día más productivo", "Meilleure journée") }
+    static var milestones: String { pick("Kilometre taşları", "Milestones", "Meilensteine", "Hitos", "Jalons") }
+    static var milestoneFirstTrophy: String { pick("İlk kupan", "First trophy", "Erste Trophäe", "Primer trofeo", "Premier trophée") }
+    static func milestoneTrophyNumber(_ n: Int) -> String { pick("\(n). kupa", "Trophy #\(n)", "Trophäe Nr. \(n)", "Trofeo n.º \(n)", "Trophée n° \(n)") }
+    static func milestonePlatinumNumber(_ n: Int) -> String { pick("\(n). platin", "Platinum #\(n)", "Platin Nr. \(n)", "Platino n.º \(n)", "Platine n° \(n)") }
+    static var rarestTrophies: String { pick("En nadir kupaların", "Your rarest trophies", "Deine seltensten Trophäen", "Tus trofeos más raros", "Vos trophées les plus rares") }
+    static var fastestPlatinums: String { pick("En hızlı platinler", "Fastest platinums", "Schnellste Platin-Trophäen", "Platinos más rápidos", "Platines les plus rapides") }
+    static var lastTwelveMonths: String { pick("Son 12 ay", "Last 12 months", "Letzte 12 Monate", "Últimos 12 meses", "12 derniers mois") }
+    static var byYear: String { pick("Yıllara göre", "By year", "Nach Jahr", "Por año", "Par année") }
+    static var byWeekday: String { pick("Haftanın günlerine göre", "By day of the week", "Nach Wochentag", "Por día de la semana", "Par jour de la semaine") }
+    static var byHour: String { pick("Günün saatlerine göre", "By hour of day", "Nach Tageszeit", "Por hora del día", "Par heure de la journée") }
+    static var breakdown: String { pick("Tür ve nadirlik dağılımı", "Grade and rarity breakdown", "Verteilung nach Typ und Seltenheit", "Reparto por tipo y rareza", "Répartition par type et rareté") }
 
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct TrophyCounts: Decodable, Hashable {
+struct TrophyCounts: Codable, Hashable {
     var bronze = 0
     var silver = 0
     var gold = 0
@@ -10,7 +10,7 @@ struct TrophyCounts: Decodable, Hashable {
 }
 
 /// A game in the player's trophy list.
-struct TrophyGame: Decodable, Identifiable, Hashable {
+struct TrophyGame: Codable, Identifiable, Hashable {
     let npServiceName: String
     let npCommunicationId: String
     let trophyTitleName: String
@@ -29,7 +29,7 @@ struct TrophyGame: Decodable, Identifiable, Hashable {
     var platinumEarned: Bool { earnedTrophies.platinum > 0 }
 }
 
-enum TrophyGrade: String, Decodable {
+enum TrophyGrade: String, Codable, CaseIterable {
     case bronze, silver, gold, platinum
 
     var label: String {
@@ -43,7 +43,7 @@ enum TrophyGrade: String, Decodable {
 }
 
 /// PSN's own rarity buckets (the `trophyRare` field).
-enum TrophyRarity: Int, CaseIterable, Identifiable, Comparable {
+enum TrophyRarity: Int, Codable, CaseIterable, Identifiable, Comparable {
     case ultraRare = 0, veryRare, rare, common
 
     var id: Int { rawValue }
@@ -71,7 +71,7 @@ struct TrophyProfile: Decodable {
 }
 
 /// Trophy definition merged with the player's progress on it.
-struct Trophy: Identifiable, Hashable {
+struct Trophy: Codable, Identifiable, Hashable {
     let id: Int
     let name: String
     let detail: String

@@ -33,6 +33,8 @@ actor PSNClient {
     private static let scope = "psn:mobile.v2.core psn:clientapp"
     /// Where the user fetches their NPSSO after logging in on playstation.com.
     static let sessionTokenURL = URL(string: "https://ca.account.sony.com/api/v1/ssocookie")!
+    /// Signing in here (not just on playstation.com) is what puts the session cookie on Sony's account domain.
+    static let signInURL = URL(string: "https://my.account.sony.com/")!
 
     private var accessToken: String?
     private var accessExpiry = Date.distantPast

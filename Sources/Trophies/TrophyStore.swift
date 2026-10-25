@@ -9,7 +9,7 @@ final class TrophyStore {
     static let shared = TrophyStore()
 
     enum Page: Hashable {
-        case profile, closest, recent, platinums, targets
+        case profile, stats, closest, recent, platinums, targets
         case game(String)
     }
 
@@ -123,6 +123,8 @@ final class TrophyStore {
             self.profile = try? await profile
             self.nowPlaying = try? await PSNClient.shared.currentGameName()
         }
+        // After the first full sync, keep the library current in the background.
+        if TrophyLibrary.shared.hasData { TrophyLibrary.shared.sync(with: games) }
         if let playing = matchingGame(nowPlaying), page == .profile {
             await open(.game(playing.id))
         } else {
@@ -154,6 +156,7 @@ final class TrophyStore {
         trophies = []
         recent = []
         nowPlaying = nil
+        TrophyLibrary.shared.reset()
         page = .profile
     }
 
