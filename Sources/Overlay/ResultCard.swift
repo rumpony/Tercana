@@ -44,7 +44,7 @@ final class ResultCard {
     }
 }
 
-private struct ResultView: View {
+struct ResultView: View {
     let original: String
     let translation: String?
     let error: String?

@@ -87,6 +87,12 @@ final class TrophyLibrary {
         }
     }
 
+    /// Local preview renderer only; never saved.
+    func usePreviewData(_ entries: [Entry]) {
+        snapshot = Snapshot(entries: Dictionary(uniqueKeysWithValues: entries.map { ($0.game.id, $0) }),
+                            syncedAt: Date())
+    }
+
     func remember(games: [TrophyGame], profile: TrophyProfile?) {
         snapshot.games = games
         if let profile { snapshot.profile = profile }

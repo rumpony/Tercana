@@ -52,7 +52,7 @@ final class SubtitlePanel {
     }
 }
 
-private struct SubtitleView: View {
+struct SubtitleView: View {
     let text: String
     let dimmed: Bool
     let fontSize: Double

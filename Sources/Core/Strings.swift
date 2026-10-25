@@ -204,7 +204,16 @@ enum S {
     static var noTargetsHint: String { pick("Bir kupanın yanındaki raptiyeye basarak hedeflerine ekle, istersen not yaz.", "Pin a trophy to add it here, and jot down a note if you like.", "Hefte eine Trophäe an, um sie hier zu sammeln – gern mit Notiz.", "Fija un trofeo para añadirlo aquí y, si quieres, escribe una nota.", "Épinglez un trophée pour l'ajouter ici, avec une note si vous voulez.") }
     static var firstTrophy: String { pick("İlk kupa", "First trophy", "Erste Trophäe", "Primer trofeo", "Premier trophée") }
     static var latestTrophy: String { pick("Son kupa", "Latest trophy", "Letzte Trophäe", "Último trofeo", "Dernier trophée") }
-    static func spanDays(_ days: Int) -> String { pick("\(days) gün", "\(days) days", "\(days) Tage", "\(days) días", "\(days) jours") }
+    static func spanDays(_ days: Int) -> String {
+        days == 1
+            ? pick("1 gün", "1 day", "1 Tag", "1 día", "1 jour")
+            : pick("\(days) gün", "\(days) days", "\(days) Tage", "\(days) días", "\(days) jours")
+    }
+    static func trophyCount(_ n: Int) -> String {
+        n == 1
+            ? pick("1 kupa", "1 trophy", "1 Trophäe", "1 trofeo", "1 trophée")
+            : pick("\(n) kupa", "\(n) trophies", "\(n) Trophäen", "\(n) trofeos", "\(n) trophées")
+    }
     static var rarestEarned: String { pick("En nadir kupan", "Your rarest", "Deine seltenste", "Tu más raro", "Votre plus rare") }
     static var noPlatinums: String { pick("Henüz platin yok", "No platinums yet", "Noch keine Platin-Trophäe", "Aún no hay platinos", "Pas encore de platine") }
     static var noRecent: String { pick("Son kupa bulunamadı", "No recent trophies", "Keine neuen Trophäen", "No hay trofeos recientes", "Aucun trophée récent") }

@@ -124,7 +124,23 @@ final class TrophyStore {
         profile = TrophyLibrary.shared.snapshot.profile
     }
 
+    /// Set by the local preview renderer: pages show the injected data and nothing hits the network.
+    @ObservationIgnored private(set) var isPreview = false
+    @ObservationIgnored private var previewTrophies: [Trophy] = []
+
+    func usePreviewData(profile: TrophyProfile?, games: [TrophyGame], trophies: [Trophy],
+                        recent: [Earned], nowPlaying: String?) {
+        isPreview = true
+        signedIn = true
+        self.profile = profile
+        self.games = games
+        previewTrophies = trophies
+        self.recent = recent
+        self.nowPlaying = nowPlaying
+    }
+
     func load() async {
+        guard !isPreview else { return }
         signedIn = PSNClient.hasStoredLogin
         guard signedIn else { return }
         await run {
@@ -151,6 +167,10 @@ final class TrophyStore {
 
     func open(_ page: Page) async {
         self.page = page
+        if isPreview {
+            if case .game = page { trophies = previewTrophies }
+            return
+        }
         switch page {
         case .game: await loadTrophies()
         case .recent: await loadRecent()

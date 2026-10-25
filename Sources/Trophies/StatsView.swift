@@ -112,7 +112,7 @@ private struct StreakBlock: View {
             figure(S.longestStreak, S.spanDays(streaks.longest))
             figure(S.currentStreak, S.spanDays(streaks.current))
             if let busiest = stats.busiestDay {
-                figure(S.busiestDay, "\(busiest.date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(S.locale))) · \(busiest.count)")
+                figure(S.busiestDay, "\(busiest.date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(S.locale))) · \(S.trophyCount(busiest.count))")
             }
             figure(S.totalTrophies, "\(stats.earned.count)")
         }

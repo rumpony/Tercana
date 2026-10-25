@@ -579,6 +579,8 @@ private struct TrophyRow: View {
                         .help(S.howToGet)
                     }
                 }
+                // Same width on every row so the pins line up, with or without the help menu.
+                .frame(width: 44, alignment: .top)
             }
         }
         .padding(.vertical, 4)
