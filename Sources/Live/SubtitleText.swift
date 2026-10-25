@@ -16,11 +16,15 @@ enum SubtitleText {
         "CONTINUE", "PAUSE", "HOLD", "PRESS", "TO", "OK",
     ]
 
+    /// Real subtitle lines come back near 1.0; texture on busy backgrounds read as
+    /// "x,:4¥ T." or "Kil" sits at 0.3–0.5 (measured on recorded game frames).
+    static let minimumConfidence: Float = 0.6
+
     static func clean(_ lines: [TextReader.Line]) -> Result {
         var kept: [TextReader.Line] = []
         var dropped: [String] = []
         for line in lines {
-            if isNoise(line.text) {
+            if line.confidence < minimumConfidence || isNoise(line.text) {
                 dropped.append(line.text)
             } else {
                 kept.append(line)

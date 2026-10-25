@@ -64,6 +64,9 @@ final class Preferences {
             Keys.batteryAlerts: true,
             Keys.subtitleFontSize: 20.0,
             Keys.subtitleBackground: 0.55,
+            // The fast recognizer garbles low-contrast game subtitles; accurate reads them cleanly
+            // in roughly 100–300 ms, well within the live loop's budget.
+            Keys.accurateRecognition: true,
         ])
         subtitleBackground = defaults.double(forKey: Keys.subtitleBackground)
         accurateRecognition = defaults.bool(forKey: Keys.accurateRecognition)
