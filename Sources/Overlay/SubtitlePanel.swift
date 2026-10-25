@@ -6,6 +6,8 @@ import SwiftUI
 final class SubtitlePanel {
     private let panel = FloatingPanel(clickThrough: true)
 
+    var windowNumber: Int { panel.windowNumber }
+
     /// `textRect` is where the original text was found; covering mode sizes the box to it rather
     /// than blacking out the whole region.
     func update(_ state: LiveTranslator.State, region: CGRect, textRect: CGRect?) {

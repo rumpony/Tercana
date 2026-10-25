@@ -169,6 +169,8 @@ final class AppController {
         present(id: "settings", title: { S.settingsTitle }, size: CGSize(width: 520, height: 620)) { SettingsView() }
     }
 
+    func window(id: String) -> NSWindow? { windows[id]?.window }
+
     private func present<V: View>(id: String, title: @escaping () -> String, size: CGSize,
                                   content: @escaping () -> V) {
         if let window = windows[id]?.window {

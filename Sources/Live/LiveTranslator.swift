@@ -46,6 +46,9 @@ final class LiveTranslator {
         isRunning = true
         state = .waiting
         recorder.beginSession()
+        // The first request after a while loads the translation model; do it before subtitles arrive.
+        let (source, target) = (prefs.sourceLanguage, prefs.targetLanguage)
+        Task { _ = try? await Translator.shared.translate("Hello.", from: source, to: target) }
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self, self.isRunning else { return }
@@ -127,7 +130,9 @@ final class LiveTranslator {
             let target = self.prefs.targetLanguage
             let started = ContinuousClock.now
             do {
-                let translated = try await Translator.shared.translate(line, from: source, to: target)
+                let parts = SubtitleText.splitSpeaker(line)
+                let body = try await Translator.shared.translate(parts.line, from: source, to: target)
+                let translated = parts.speaker.map { "\($0): \(body)" } ?? body
                 SubtitleLog.shared.add(original: line, translation: translated)
                 if self.recorder.isOn {
                     self.recorder.log(DebugRecorder.Record(

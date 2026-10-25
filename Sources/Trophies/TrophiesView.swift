@@ -7,11 +7,14 @@ struct TrophiesView: View {
     var body: some View {
         Group {
             if store.signedIn {
-                NavigationSplitView {
+                // A plain two-column layout: NavigationSplitView inside a hand-made NSWindow has no
+                // toolbar to host its search field, which pushed the sidebar content around.
+                HStack(spacing: 0) {
                     Sidebar(store: store)
-                        .navigationSplitViewColumnWidth(min: 260, ideal: 300)
-                } detail: {
+                        .frame(width: 290)
+                    Divider()
                     detail
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
             } else {
                 SignInView(store: store)
@@ -47,6 +50,39 @@ private struct Sidebar: View {
     private let targets = TrophyTargets.shared
 
     var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                    TextField(S.searchGames, text: $store.searchText)
+                        .textFieldStyle(.plain)
+                    if !store.searchText.isEmpty {
+                        Button {
+                            store.searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7))
+                Button {
+                    Task { await store.load() }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .help(S.refresh)
+                .disabled(store.loading)
+            }
+            .padding(10)
+            list
+        }
+    }
+
+    private var list: some View {
         List(selection: Binding(get: { store.page }, set: { page in
             if let page { Task { await store.open(page) } }
         })) {
@@ -76,17 +112,7 @@ private struct Sidebar: View {
                 }
             }
         }
-        .searchable(text: $store.searchText, placement: .sidebar, prompt: S.searchGames)
-        .toolbar {
-            ToolbarItem {
-                Button {
-                    Task { await store.load() }
-                } label: {
-                    Label(S.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(store.loading)
-            }
-        }
+        .listStyle(.sidebar)
     }
 }
 
@@ -419,23 +445,30 @@ private struct GameTrophies: View {
                 }
                 .font(.caption)
             }
+            // Two rows so nothing gets pushed out of narrow windows.
             HStack {
                 Picker("", selection: $store.filter) {
                     ForEach(TrophyStore.Filter.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
-                .fixedSize()
+                .labelsHidden()
+                .frame(maxWidth: 320)
+                Spacer(minLength: 12)
+                Toggle(S.translateDescriptions, isOn: $store.showTranslations)
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+            }
+            HStack(spacing: 12) {
                 Picker(S.order, selection: $store.order) {
                     ForEach(TrophyStore.Order.allCases) { Text($0.title).tag($0) }
                 }
-                .fixedSize()
-                Picker("", selection: $store.rarityFilter) {
+                .frame(maxWidth: 230)
+                Picker(S.rarity, selection: $store.rarityFilter) {
                     Text(S.anyRarity).tag(TrophyRarity?.none)
                     ForEach(TrophyRarity.allCases) { Text($0.label).tag(TrophyRarity?.some($0)) }
                 }
-                .fixedSize()
-                Spacer()
-                Toggle(S.translateDescriptions, isOn: $store.showTranslations)
+                .frame(maxWidth: 230)
+                Spacer(minLength: 0)
             }
         }
         .padding(14)

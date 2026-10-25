@@ -15,7 +15,12 @@ struct SubLensApp: App {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        MainActor.assumeIsolated { AppController.shared.launch() }
+        MainActor.assumeIsolated {
+            AppController.shared.launch()
+            if let folder = SnapshotRunner.requestedFolder {
+                Task { await SnapshotRunner.run(into: folder) }
+            }
+        }
     }
 }
 

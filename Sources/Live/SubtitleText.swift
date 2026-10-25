@@ -23,29 +23,64 @@ enum SubtitleText {
     static func clean(_ lines: [TextReader.Line]) -> Result {
         var kept: [TextReader.Line] = []
         var dropped: [String] = []
+        // Control hints come back in pieces ("PRESS" · "R3" · "to CROUCH"); everything on the
+        // same row as a hint word belongs to it.
+        let hintRows = lines.filter { isControlHint($0.text) }.map(\.box)
         for line in lines {
-            if line.confidence < minimumConfidence || isNoise(line.text) {
+            let onHintRow = hintRows.contains { Self.sameRow($0, line.box) }
+            if onHintRow || line.confidence < minimumConfidence || isNoise(line.text) {
                 dropped.append(line.text)
             } else {
                 kept.append(line)
             }
         }
         // Two-line subtitles read as one sentence.
-        let text = kept.map(\.text).joined(separator: " ")
+        let text = kept.map { stripDecoration($0.text) }.joined(separator: " ")
             .split(whereSeparator: \.isWhitespace)
             .joined(separator: " ")
         let box = kept.map(\.box).reduce(nil as CGRect?) { partial, next in partial?.union(next) ?? next }
         return Result(text: text, box: box, dropped: dropped)
     }
 
-    /// Stray characters and button prompts ("SKIP", "BACK TO MAIN MENU") that sit inside the region.
-    /// All-caps dialogue ("GET DOWN!") is kept: it has punctuation or words outside the prompt list.
+    /// Lines that aren't dialogue, all seen in recorded game frames:
+    /// - stray characters,
+    /// - button prompts, including ones cut off at the region edge ("SKIP", "RESUM"),
+    /// - control hints ("PRESS O to take COVER"),
+    /// - HUD readouts ("Swift 100%").
+    /// All-caps dialogue ("GET DOWN!") is kept: it has words outside the prompt list.
     private static func isNoise(_ line: String) -> Bool {
-        let letters = line.filter(\.isLetter)
+        let text = stripDecoration(line)
+        let letters = text.filter(\.isLetter)
         guard letters.count >= 2 else { return true }
+        let words = text.uppercased().split { !$0.isLetter }.map(String.init)
+        if isControlHint(text) { return true }
+        if text.contains("%"), words.count <= 3 { return true }
         guard !letters.contains(where: \.isLowercase) else { return false }
-        let words = line.uppercased().split { !$0.isLetter }.map(String.init)
-        return !words.isEmpty && words.allSatisfy(promptWords.contains)
+        return !words.isEmpty && words.allSatisfy { word in
+            word.count >= 2 && promptWords.contains { $0 == word || ($0.hasPrefix(word) && word.count >= 3) }
+        }
+    }
+
+    private static func isControlHint(_ line: String) -> Bool {
+        let first = stripDecoration(line).uppercased().split { !$0.isLetter }.first.map(String.init)
+        return first.map { ["PRESS", "HOLD", "TAP", "USE"].contains($0) } ?? false
+    }
+
+    /// Boxes whose vertical spans mostly overlap.
+    private static func sameRow(_ a: CGRect, _ b: CGRect) -> Bool {
+        let overlap = min(a.maxY, b.maxY) - max(a.minY, b.minY)
+        return overlap > 0.5 * min(a.height, b.height)
+    }
+
+    /// Bullet glyphs some games put before a speaker.
+    private static func stripDecoration(_ line: String) -> String {
+        line.trimmingCharacters(in: CharacterSet(charactersIn: "•·◦▪︎●-–— ").union(.whitespaces))
+    }
+
+    /// "MINE GUARD: Almost." → ("MINE GUARD", "Almost."). Names stay untranslated.
+    static func splitSpeaker(_ text: String) -> (speaker: String?, line: String) {
+        guard let match = text.firstMatch(of: #/^([A-Z][A-Z0-9'’ .-]{0,30}[A-Z]):\s*(.+)$/#) else { return (nil, text) }
+        return (String(match.1), String(match.2))
     }
 }
 
@@ -79,13 +114,14 @@ struct SubtitleStabilizer {
         return .show(candidate)
     }
 
-    /// Same text give or take ~8% of characters.
+    /// Same subtitle, allowing for recognition slips ("haven't eaten" / "haven treaten"):
+    /// up to ~20% of characters may differ.
     static func similar(_ a: String, _ b: String) -> Bool {
         if a == b { return true }
         if a.isEmpty || b.isEmpty { return false }
         let x = Array(a.lowercased()), y = Array(b.lowercased())
         let longest = max(x.count, y.count)
-        guard abs(x.count - y.count) <= max(2, longest / 12) else { return false }
+        guard abs(x.count - y.count) <= max(2, longest / 5) else { return false }
         var previous = Array(0...y.count)
         for i in 1...x.count {
             var row = [i] + Array(repeating: 0, count: y.count)
@@ -94,6 +130,6 @@ struct SubtitleStabilizer {
             }
             previous = row
         }
-        return Double(previous[y.count]) <= max(1, Double(longest) * 0.08)
+        return Double(previous[y.count]) <= max(1, Double(longest) * 0.2)
     }
 }

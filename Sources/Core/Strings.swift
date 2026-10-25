@@ -253,6 +253,8 @@ enum S {
     static var openDebugFolder: String { pick("Kayıt klasörünü aç", "Open Recordings Folder", "Aufzeichnungsordner öffnen", "Abrir carpeta de registros", "Ouvrir le dossier des enregistrements") }
     static var debugOn: String { pick("Hata ayıklama kaydı açık", "Debug recording on", "Debug-Aufzeichnung aktiv", "Registro de depuración activado", "Enregistrement de débogage actif") }
 
+    static var rarity: String { pick("Nadirlik", "Rarity", "Seltenheit", "Rareza", "Rareté") }
+
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
     static var psnBadToken: String { pick("Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al.", "The session token is invalid or expired. Get a new one.", "Das Sitzungstoken ist ungültig oder abgelaufen. Hol dir ein neues.", "El token de sesión no es válido o caducó. Consigue uno nuevo.", "Le jeton de session est invalide ou expiré. Récupérez-en un nouveau.") }
