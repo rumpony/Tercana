@@ -119,11 +119,17 @@ actor PSNClient {
                 trophy.earned = mine.earned ?? false
                 trophy.earnedDate = mine.earnedDateTime.flatMap(dateParser.date(from:))
                 trophy.earnedRate = mine.trophyEarnedRate.flatMap(Double.init)
+                trophy.rarity = mine.trophyRare.flatMap(TrophyRarity.init(rawValue:))
+                    ?? trophy.earnedRate.map(TrophyRarity.init(rate:))
                 trophy.progress = mine.progress
                 trophy.progressTarget = mine.trophyProgressTargetValue
             }
             return trophy
         }
+    }
+
+    func profile() async throws -> TrophyProfile {
+        try await get("/trophy/v1/users/me/trophySummary", query: [:], ttl: 300)
     }
 
     /// Name of the game the player is in right now, if PSN reports one.
@@ -150,7 +156,8 @@ actor PSNClient {
 
     private func get<T: Decodable>(_ path: String, query: [String: String], ttl: TimeInterval) async throws -> T {
         var components = URLComponents(string: Self.apiBase + path)!
-        components.queryItems = query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
+        components.queryItems = query.isEmpty ? nil
+            : query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         let url = components.url!
         // Sony returns trophy names and descriptions in the requested language when the game has them.
         let language = AppLanguage.current.resolved.rawValue

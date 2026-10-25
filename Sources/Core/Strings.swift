@@ -172,6 +172,42 @@ enum S {
     static var guidePSNProfiles: String { pick("PSNProfiles rehberleri", "PSNProfiles guides", "PSNProfiles-Guides", "Guías de PSNProfiles", "Guides PSNProfiles") }
     static var guideYouTube: String { pick("YouTube: platin yol haritası", "YouTube: platinum roadmap", "YouTube: Platin-Roadmap", "YouTube: guía del platino", "YouTube : feuille de route platine") }
 
+    // MARK: Trophy hub
+    static var overview: String { pick("Genel bakış", "Overview", "Übersicht", "Resumen", "Aperçu") }
+    static var profile: String { pick("Profil", "Profile", "Profil", "Perfil", "Profil") }
+    static var closestToFinish: String { pick("Bitmeye en yakın", "Closest to completion", "Kurz vor dem Abschluss", "Más cerca de completar", "Presque terminés") }
+    static var recentTrophies: String { pick("Son kupalar", "Recent trophies", "Neueste Trophäen", "Trofeos recientes", "Trophées récents") }
+    static var platinumCabinet: String { pick("Platin vitrini", "Platinum cabinet", "Platin-Vitrine", "Vitrina de platinos", "Vitrine des platines") }
+    static var myTargets: String { pick("Hedeflerim", "My targets", "Meine Ziele", "Mis objetivos", "Mes objectifs") }
+    static var library: String { pick("Oyunlar", "Games", "Spiele", "Juegos", "Jeux") }
+    static func trophyLevel(_ level: Int) -> String { pick("Kupa seviyesi \(level)", "Trophy level \(level)", "Trophäenstufe \(level)", "Nivel de trofeos \(level)", "Niveau de trophées \(level)") }
+    static func toNextLevel(_ fraction: Double) -> String {
+        let value = percent(fraction)
+        return pick("Sonraki seviyeye: \(value)", "To next level: \(value)", "Bis zur nächsten Stufe: \(value)", "Al siguiente nivel: \(value)", "Vers le niveau suivant : \(value)")
+    }
+    static var totalTrophies: String { pick("Toplam kupa", "Total trophies", "Trophäen gesamt", "Trofeos totales", "Trophées au total") }
+    static var platinums: String { pick("Platinler", "Platinums", "Platin-Trophäen", "Platinos", "Platines") }
+    static var completedGames: String { pick("%100 biten oyun", "100% games", "100-%-Spiele", "Juegos al 100 %", "Jeux à 100 %") }
+    static var averageCompletion: String { pick("Ortalama tamamlama", "Average completion", "Durchschnittlicher Abschluss", "Compleción media", "Complétion moyenne") }
+    static var gamesPlayed: String { pick("Oynanan oyun", "Games played", "Gespielte Spiele", "Juegos jugados", "Jeux joués") }
+    static var ultraRare: String { pick("Ultra nadir", "Ultra rare", "Ultra selten", "Ultra raro", "Ultra rare") }
+    static var veryRare: String { pick("Çok nadir", "Very rare", "Sehr selten", "Muy raro", "Très rare") }
+    static var rare: String { pick("Nadir", "Rare", "Selten", "Raro", "Rare") }
+    static var common: String { pick("Yaygın", "Common", "Häufig", "Común", "Courant") }
+    static var anyRarity: String { pick("Tüm nadirlikler", "Any rarity", "Jede Seltenheit", "Cualquier rareza", "Toute rareté") }
+    static var pinTarget: String { pick("Hedeflerime ekle", "Add to my targets", "Zu meinen Zielen", "Añadir a mis objetivos", "Ajouter à mes objectifs") }
+    static var unpinTarget: String { pick("Hedeflerimden çıkar", "Remove from my targets", "Aus meinen Zielen entfernen", "Quitar de mis objetivos", "Retirer de mes objectifs") }
+    static var notePlaceholder: String { pick("Not ekle (ör. 3. bölümde kaçırılabilir)", "Add a note (e.g. missable in chapter 3)", "Notiz (z. B. in Kapitel 3 verpassbar)", "Añade una nota (p. ej. perdible en el cap. 3)", "Ajouter une note (ex. manquable au chap. 3)") }
+    static var noTargets: String { pick("Henüz hedef yok", "No targets yet", "Noch keine Ziele", "Aún no hay objetivos", "Pas encore d'objectifs") }
+    static var noTargetsHint: String { pick("Bir kupanın yanındaki raptiyeye basarak hedeflerine ekle, istersen not yaz.", "Pin a trophy to add it here, and jot down a note if you like.", "Hefte eine Trophäe an, um sie hier zu sammeln – gern mit Notiz.", "Fija un trofeo para añadirlo aquí y, si quieres, escribe una nota.", "Épinglez un trophée pour l'ajouter ici, avec une note si vous voulez.") }
+    static var firstTrophy: String { pick("İlk kupa", "First trophy", "Erste Trophäe", "Primer trofeo", "Premier trophée") }
+    static var latestTrophy: String { pick("Son kupa", "Latest trophy", "Letzte Trophäe", "Último trofeo", "Dernier trophée") }
+    static func spanDays(_ days: Int) -> String { pick("\(days) gün", "\(days) days", "\(days) Tage", "\(days) días", "\(days) jours") }
+    static var rarestEarned: String { pick("En nadir kupan", "Your rarest", "Deine seltenste", "Tu más raro", "Votre plus rare") }
+    static var noPlatinums: String { pick("Henüz platin yok", "No platinums yet", "Noch keine Platin-Trophäe", "Aún no hay platinos", "Pas encore de platine") }
+    static var noRecent: String { pick("Son kupa bulunamadı", "No recent trophies", "Keine neuen Trophäen", "No hay trofeos recientes", "Aucun trophée récent") }
+    static var openGame: String { pick("Oyunu aç", "Open game", "Spiel öffnen", "Abrir juego", "Ouvrir le jeu") }
+
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
     static var psnBadToken: String { pick("Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al.", "The session token is invalid or expired. Get a new one.", "Das Sitzungstoken ist ungültig oder abgelaufen. Hol dir ein neues.", "El token de sesión no es válido o caducó. Consigue uno nuevo.", "Le jeton de session est invalide ou expiré. Récupérez-en un nouveau.") }

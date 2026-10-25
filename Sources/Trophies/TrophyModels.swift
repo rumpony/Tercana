@@ -42,6 +42,34 @@ enum TrophyGrade: String, Decodable {
     }
 }
 
+/// PSN's own rarity buckets (the `trophyRare` field).
+enum TrophyRarity: Int, CaseIterable, Identifiable, Comparable {
+    case ultraRare = 0, veryRare, rare, common
+
+    var id: Int { rawValue }
+
+    static func < (lhs: TrophyRarity, rhs: TrophyRarity) -> Bool { lhs.rawValue < rhs.rawValue }
+
+    /// Fallback when only the percentage is known; same thresholds PSN uses.
+    init(rate: Double) {
+        switch rate {
+        case ..<5: self = .ultraRare
+        case ..<15: self = .veryRare
+        case ..<50: self = .rare
+        default: self = .common
+        }
+    }
+}
+
+struct TrophyProfile: Decodable {
+    let trophyLevel: String
+    let progress: Int
+    let tier: Int
+    let earnedTrophies: TrophyCounts
+
+    var level: Int { Int(trophyLevel) ?? 0 }
+}
+
 /// Trophy definition merged with the player's progress on it.
 struct Trophy: Identifiable, Hashable {
     let id: Int
@@ -55,6 +83,7 @@ struct Trophy: Identifiable, Hashable {
     var earnedDate: Date?
     /// Share of players who have it, e.g. 12.4 for 12.4%.
     var earnedRate: Double?
+    var rarity: TrophyRarity?
     var progress: String?
     var progressTarget: String?
 }
@@ -86,6 +115,7 @@ struct TrophyProgressPayload: Decodable {
         let earned: Bool?
         let earnedDateTime: String?
         let trophyEarnedRate: String?
+        let trophyRare: Int?
         let progress: String?
         let trophyProgressTargetValue: String?
     }
