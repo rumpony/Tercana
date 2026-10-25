@@ -18,9 +18,9 @@ enum SnapshotRunner {
         let app = AppController.shared
 
         app.showSettings()
-        await capture("settings", into: folder)
+        await capture("settings", into: folder, window: "settings")
         app.showSubtitleLog()
-        await capture("subtitle-log", into: folder)
+        await capture("subtitle-log", into: folder, window: "log")
 
         app.showTrophies()
         await pause(8)
@@ -31,16 +31,16 @@ enum SnapshotRunner {
         ]
         for (name, page) in pages {
             await store.open(page)
-            await capture("trophies-\(name)", into: folder, wait: page == .recent ? 10 : 2)
+            await capture("trophies-\(name)", into: folder, wait: page == .recent ? 10 : 2, window: "trophies")
         }
         if let game = store.closestGames.first ?? store.games.first {
             await store.open(.game(game.id))
-            await capture("trophies-game", into: folder, wait: 4)
+            await capture("trophies-game", into: folder, wait: 4, window: "trophies")
         }
         // The smallest size the window allows, to catch anything that overflows.
         if let window = app.window(id: "trophies") {
             window.setContentSize(window.contentMinSize.width > 0 ? window.contentMinSize : CGSize(width: 900, height: 600))
-            await capture("trophies-game-narrow", into: folder)
+            await capture("trophies-game-narrow", into: folder, window: "trophies")
         }
 
         let panel = SubtitlePanel()
@@ -58,12 +58,13 @@ enum SnapshotRunner {
     }
 
     /// Captures the frontmost SubLens window (or a given one) as it appears on screen.
-    private static func capture(_ name: String, into folder: URL, wait: Double = 2, windowNumber: Int? = nil) async {
+    private static func capture(_ name: String, into folder: URL, wait: Double = 2, window id: String? = nil,
+                                windowNumber: Int? = nil) async {
         await pause(wait)
-        let front = NSApp.orderedWindows.first(where: { $0.isVisible && $0.title != "" })
         // Key windows draw their real control colors; inactive ones grey everything out.
-        if windowNumber == nil { NSApp.activate(); front?.makeKeyAndOrderFront(nil); await pause(0.4) }
-        let number = windowNumber ?? front?.windowNumber
+        let target = id.flatMap { AppController.shared.window(id: $0) }
+        if let target { NSApp.activate(); target.makeKeyAndOrderFront(nil); await pause(0.4) }
+        let number = windowNumber ?? target?.windowNumber
         guard let number,
               let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true),
               let window = content.windows.first(where: { $0.windowID == CGWindowID(number) }) else { return }
