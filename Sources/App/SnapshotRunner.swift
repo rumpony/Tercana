@@ -25,6 +25,8 @@ enum SnapshotRunner {
         app.showTrophies()
         await pause(8)
         let store = TrophyStore.shared
+        let notes = "profileError: \(store.profileError ?? "none")\nproblem: \(store.problem ?? "none")\ngames: \(store.games.count)\n"
+        try? notes.write(to: folder.appendingPathComponent("notes.txt"), atomically: true, encoding: .utf8)
         let pages: [(String, TrophyStore.Page)] = [
             ("profile", .profile), ("stats", .stats), ("closest", .closest),
             ("recent", .recent), ("platinums", .platinums), ("targets", .targets),

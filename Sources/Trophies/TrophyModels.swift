@@ -62,12 +62,33 @@ enum TrophyRarity: Int, Codable, CaseIterable, Identifiable, Comparable {
 }
 
 struct TrophyProfile: Codable {
-    let trophyLevel: String
+    let level: Int
     let progress: Int
     let tier: Int
     let earnedTrophies: TrophyCounts
 
-    var level: Int { Int(trophyLevel) ?? 0 }
+    private enum CodingKeys: String, CodingKey { case trophyLevel, progress, tier, earnedTrophies }
+
+    /// Sony has sent the level both as a string and as a number; accept either.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if let text = try? c.decode(String.self, forKey: .trophyLevel) {
+            level = Int(text) ?? 0
+        } else {
+            level = (try? c.decode(Int.self, forKey: .trophyLevel)) ?? 0
+        }
+        progress = (try? c.decode(Int.self, forKey: .progress)) ?? 0
+        tier = (try? c.decode(Int.self, forKey: .tier)) ?? 1
+        earnedTrophies = try c.decode(TrophyCounts.self, forKey: .earnedTrophies)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(String(level), forKey: .trophyLevel)
+        try c.encode(progress, forKey: .progress)
+        try c.encode(tier, forKey: .tier)
+        try c.encode(earnedTrophies, forKey: .earnedTrophies)
+    }
 }
 
 /// Trophy definition merged with the player's progress on it.

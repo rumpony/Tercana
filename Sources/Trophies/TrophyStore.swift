@@ -53,6 +53,8 @@ final class TrophyStore {
     private(set) var nowPlaying: String?
     private(set) var loading = false
     private(set) var problem: String?
+    /// Why the profile summary failed to load, if it did; kept for diagnostics.
+    private(set) var profileError: String?
     var page: Page = .profile
     var filter: Filter = .missing
     var order: Order = .easiest
@@ -127,7 +129,12 @@ final class TrophyStore {
         guard signedIn else { return }
         await run {
             self.games = try await PSNClient.shared.games()
-            self.profile = (try? await PSNClient.shared.profile()) ?? self.profile
+            do {
+                self.profile = try await PSNClient.shared.profile()
+                self.profileError = nil
+            } catch {
+                self.profileError = String(describing: error)
+            }
             TrophyLibrary.shared.remember(games: self.games, profile: self.profile)
             self.nowPlaying = try? await PSNClient.shared.currentGameName()
         }

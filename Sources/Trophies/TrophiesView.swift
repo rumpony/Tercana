@@ -14,7 +14,7 @@ struct TrophiesView: View {
                         .frame(width: 290)
                     Divider()
                     detail
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             } else {
                 SignInView(store: store)
