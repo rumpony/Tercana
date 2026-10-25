@@ -16,6 +16,9 @@ final class TrophyLibrary {
     struct Snapshot: Codable {
         var entries: [String: Entry] = [:]
         var syncedAt: Date?
+        /// Last known game list and profile, shown immediately while fresh data loads.
+        var games: [TrophyGame]?
+        var profile: TrophyProfile?
     }
 
     static let shared = TrophyLibrary()
@@ -82,6 +85,12 @@ final class TrophyLibrary {
             save()
             syncing = false
         }
+    }
+
+    func remember(games: [TrophyGame], profile: TrophyProfile?) {
+        snapshot.games = games
+        if let profile { snapshot.profile = profile }
+        save()
     }
 
     func cancelSync() {

@@ -60,7 +60,10 @@ enum SnapshotRunner {
     /// Captures the frontmost SubLens window (or a given one) as it appears on screen.
     private static func capture(_ name: String, into folder: URL, wait: Double = 2, windowNumber: Int? = nil) async {
         await pause(wait)
-        let number = windowNumber ?? NSApp.orderedWindows.first(where: { $0.isVisible && $0.title != "" })?.windowNumber
+        let front = NSApp.orderedWindows.first(where: { $0.isVisible && $0.title != "" })
+        // Key windows draw their real control colors; inactive ones grey everything out.
+        if windowNumber == nil { NSApp.activate(); front?.makeKeyAndOrderFront(nil); await pause(0.4) }
+        let number = windowNumber ?? front?.windowNumber
         guard let number,
               let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true),
               let window = content.windows.first(where: { $0.windowID == CGWindowID(number) }) else { return }

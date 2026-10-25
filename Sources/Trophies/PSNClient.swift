@@ -49,7 +49,10 @@ actor PSNClient {
         session = URLSession(configuration: config, delegate: NoRedirects(), delegateQueue: nil)
     }
 
-    var isSignedIn: Bool { SecureStore.string(for: Keys.refreshToken) != nil }
+    var isSignedIn: Bool { Self.hasStoredLogin }
+
+    /// Readable without hopping onto the actor, so the window can pick its first screen instantly.
+    nonisolated static var hasStoredLogin: Bool { SecureStore.string(for: Keys.refreshToken) != nil }
 
     // MARK: Sign-in
 

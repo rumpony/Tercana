@@ -68,14 +68,17 @@ private struct Sidebar: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
                 .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7))
-                Button {
-                    Task { await store.load() }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
+                if store.loading {
+                    ProgressView().controlSize(.small).frame(width: 16)
+                } else {
+                    Button {
+                        Task { await store.load() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(S.refresh)
                 }
-                .buttonStyle(.borderless)
-                .help(S.refresh)
-                .disabled(store.loading)
             }
             .padding(10)
             list
@@ -264,7 +267,9 @@ private struct GameGridPage: View {
                             } label: {
                                 VStack(spacing: 6) {
                                     RemoteIcon(url: game.iconURL, size: 120)
+                                    // Fixed two-line height keeps every cell's bar on the same line.
                                     Text(game.name).font(.callout).lineLimit(2).multilineTextAlignment(.center)
+                                        .frame(height: 38, alignment: .top)
                                     ProgressView(value: Double(game.progress), total: 100)
                                         .tint(game.progress == 100 ? .yellow : .accentColor)
                                     Text(S.percent(Double(game.progress) / 100)).font(.caption).foregroundStyle(.secondary)

@@ -61,7 +61,7 @@ enum TrophyRarity: Int, Codable, CaseIterable, Identifiable, Comparable {
     }
 }
 
-struct TrophyProfile: Decodable {
+struct TrophyProfile: Codable {
     let trophyLevel: String
     let progress: Int
     let tier: Int

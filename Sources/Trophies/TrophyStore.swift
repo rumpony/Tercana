@@ -44,7 +44,7 @@ final class TrophyStore {
         var id: String { TrophyTargets.key(game.id, trophy.id) }
     }
 
-    private(set) var signedIn = false
+    private(set) var signedIn = PSNClient.hasStoredLogin
     private(set) var profile: TrophyProfile?
     private(set) var games: [TrophyGame] = []
     private(set) var trophies: [Trophy] = []
@@ -114,18 +114,28 @@ final class TrophyStore {
 
     // MARK: Loading
 
+    @ObservationIgnored private var jumpedToNowPlaying = false
+
+    private init() {
+        // Show the last known list right away; the network refresh follows.
+        games = TrophyLibrary.shared.snapshot.games ?? []
+        profile = TrophyLibrary.shared.snapshot.profile
+    }
+
     func load() async {
-        signedIn = await PSNClient.shared.isSignedIn
+        signedIn = PSNClient.hasStoredLogin
         guard signedIn else { return }
         await run {
-            async let profile = PSNClient.shared.profile()
             self.games = try await PSNClient.shared.games()
-            self.profile = try? await profile
+            self.profile = (try? await PSNClient.shared.profile()) ?? self.profile
+            TrophyLibrary.shared.remember(games: self.games, profile: self.profile)
             self.nowPlaying = try? await PSNClient.shared.currentGameName()
         }
         // After the first full sync, keep the library current in the background.
         if TrophyLibrary.shared.hasData { TrophyLibrary.shared.sync(with: games) }
-        if let playing = matchingGame(nowPlaying), page == .profile {
+        // Jump to the game being played the first time the window opens, not on every refresh.
+        if !jumpedToNowPlaying, let playing = matchingGame(nowPlaying), page == .profile {
+            jumpedToNowPlaying = true
             await open(.game(playing.id))
         } else {
             await open(page)
