@@ -243,6 +243,16 @@ enum S {
     static var byHour: String { pick("Günün saatlerine göre", "By hour of day", "Nach Tageszeit", "Por hora del día", "Par heure de la journée") }
     static var breakdown: String { pick("Tür ve nadirlik dağılımı", "Grade and rarity breakdown", "Verteilung nach Typ und Seltenheit", "Reparto por tipo y rareza", "Répartition par type et rareté") }
 
+    // MARK: Recognition & debug
+    static var backgroundOpacity: String { pick("Arka plan koyuluğu", "Background opacity", "Hintergrunddeckkraft", "Opacidad del fondo", "Opacité du fond") }
+    static var recognition: String { pick("Yazı tanıma", "Text recognition", "Texterkennung", "Reconocimiento de texto", "Reconnaissance du texte") }
+    static var accurateRecognition: String { pick("Canlı çeviride hassas tanıma kullan", "Use accurate recognition in live mode", "Genaue Erkennung im Live-Modus", "Reconocimiento preciso en vivo", "Reconnaissance précise en direct") }
+    static var accurateRecognitionHint: String { pick("Stilize oyun yazılarını daha iyi okur ama biraz daha yavaştır ve işlemciyi daha çok kullanır.", "Reads stylized game fonts better, but is a bit slower and uses more CPU.", "Erkennt stilisierte Spielschriften besser, ist aber etwas langsamer und braucht mehr CPU.", "Lee mejor las fuentes estilizadas, pero es algo más lento y usa más CPU.", "Lit mieux les polices stylisées, mais est un peu plus lente et sollicite davantage le processeur.") }
+    static var debugRecording: String { pick("Hata ayıklama kaydı", "Debug recording", "Debug-Aufzeichnung", "Registro de depuración", "Enregistrement de débogage") }
+    static var debugRecordingHint: String { pick("Canlı çeviri sırasında değişen her kareyi ve okunan yazıları kaydeder. Tanımayı iyileştirmek için kullanılır; disk alanı kaplar.", "Saves every changed frame and what was read during live translation, to tune recognition. Uses disk space.", "Speichert bei der Live-Übersetzung jedes geänderte Bild und den erkannten Text, um die Erkennung zu verbessern. Belegt Speicherplatz.", "Guarda cada fotograma cambiado y el texto leído durante la traducción en vivo para ajustar el reconocimiento. Ocupa espacio.", "Enregistre chaque image modifiée et le texte lu pendant la traduction en direct pour affiner la reconnaissance. Occupe de l'espace disque.") }
+    static var openDebugFolder: String { pick("Kayıt klasörünü aç", "Open Recordings Folder", "Aufzeichnungsordner öffnen", "Abrir carpeta de registros", "Ouvrir le dossier des enregistrements") }
+    static var debugOn: String { pick("Hata ayıklama kaydı açık", "Debug recording on", "Debug-Aufzeichnung aktiv", "Registro de depuración activado", "Enregistrement de débogage actif") }
+
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
     static var psnBadToken: String { pick("Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al.", "The session token is invalid or expired. Get a new one.", "Das Sitzungstoken ist ungültig oder abgelaufen. Hol dir ein neues.", "El token de sesión no es válido o caducó. Consigue uno nuevo.", "Le jeton de session est invalide ou expiré. Récupérez-en un nouveau.") }

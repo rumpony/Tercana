@@ -29,6 +29,18 @@ final class Preferences {
     var batteryAlerts: Bool {
         didSet { defaults.set(batteryAlerts, forKey: Keys.batteryAlerts) }
     }
+    /// Opacity of the box behind the translated subtitle.
+    var subtitleBackground: Double {
+        didSet { defaults.set(subtitleBackground, forKey: Keys.subtitleBackground) }
+    }
+    /// Use the slower, more thorough recognizer in live mode too.
+    var accurateRecognition: Bool {
+        didSet { defaults.set(accurateRecognition, forKey: Keys.accurateRecognition) }
+    }
+    /// Save frames and recognition results for tuning.
+    var debugRecording: Bool {
+        didSet { defaults.set(debugRecording, forKey: Keys.debugRecording) }
+    }
     var subtitleFontSize: Double {
         didSet { defaults.set(subtitleFontSize, forKey: Keys.subtitleFontSize) }
     }
@@ -51,7 +63,11 @@ final class Preferences {
             Keys.followRemotePlay: true,
             Keys.batteryAlerts: true,
             Keys.subtitleFontSize: 20.0,
+            Keys.subtitleBackground: 0.55,
         ])
+        subtitleBackground = defaults.double(forKey: Keys.subtitleBackground)
+        accurateRecognition = defaults.bool(forKey: Keys.accurateRecognition)
+        debugRecording = defaults.bool(forKey: Keys.debugRecording)
         appLanguage = AppLanguage.current
         sourceLanguage = defaults.string(forKey: Keys.sourceLanguage) ?? "en"
         targetLanguage = defaults.string(forKey: Keys.targetLanguage) ?? "tr"
@@ -70,6 +86,9 @@ final class Preferences {
         static let batteryAlerts = "batteryAlerts"
         static let subtitleFontSize = "subtitleFontSize"
         static let liveRegion = "liveRegion"
+        static let subtitleBackground = "subtitleBackground"
+        static let accurateRecognition = "accurateRecognition"
+        static let debugRecording = "debugRecording"
     }
 }
 

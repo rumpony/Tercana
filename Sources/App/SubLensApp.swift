@@ -39,6 +39,9 @@ private struct MenuContent: View {
             .keyboardShortcut("k", modifiers: [.control, .option])
         Divider()
         Text("🎮 " + (controller.summary ?? S.noController))
+        if prefs.debugRecording {
+            Button("🔴 " + S.debugOn + " · " + S.openDebugFolder) { DebugRecorder.shared.openFolder() }
+        }
         Divider()
         Button(S.settings) { app.showSettings() }
             .keyboardShortcut(",")

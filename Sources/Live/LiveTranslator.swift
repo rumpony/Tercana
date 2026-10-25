@@ -21,12 +21,16 @@ final class LiveTranslator {
         didSet { if state != oldValue { onStateChange?(state) } }
     }
     private(set) var isRunning = false
+    /// Where the subtitle text sits on screen (global coordinates), so the translation can cover
+    /// just the text instead of the whole region.
+    private(set) var textRect: CGRect?
 
     var region: CGRect
     private let prefs = Preferences.shared
+    private let recorder = DebugRecorder.shared
     private var loop: Task<Void, Never>?
     private var lastSignature: FrameSignature?
-    private var lastReading = ""
+    private var lastReading = SubtitleText.Result(text: "", box: nil, dropped: [])
     private var stabilizer = SubtitleStabilizer()
     private var pending: String?
     /// The subtitle currently on the game screen; a late translation for an older line is dropped.
@@ -41,6 +45,7 @@ final class LiveTranslator {
         guard !isRunning else { return }
         isRunning = true
         state = .waiting
+        recorder.beginSession()
         loop = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self, self.isRunning else { return }
@@ -70,23 +75,32 @@ final class LiveTranslator {
         }
         guard isRunning else { return }
 
-        let reading: String
+        var record: DebugRecorder.Record?
+        let reading: SubtitleText.Result
         let signature = FrameSignature(image)
         if let signature, let lastSignature, signature.matches(lastSignature) {
             reading = lastReading
         } else {
             let language = prefs.sourceLanguage
-            let quality: TextReader.Quality = TextReader.supportsFastMode(language) ? .fast : .accurate
-            guard let text = try? await TextReader.read(image, language: language, quality: quality) else { return }
-            reading = SubtitleText.clean(text)
+            let quality: TextReader.Quality = TextReader.supportsFastMode(language) && !prefs.accurateRecognition
+                ? .fast : .accurate
+            let started = ContinuousClock.now
+            guard let lines = try? await TextReader.lines(in: image, language: language, quality: quality) else { return }
+            let ocrTime = started.duration(to: .now)
+            reading = SubtitleText.clean(lines)
             lastSignature = signature
             lastReading = reading
+            if recorder.isOn {
+                record = await debugRecord(image: image, lines: lines, quality: quality, took: ocrTime, reading: reading)
+            }
         }
         guard isRunning else { return }
 
-        switch stabilizer.feed(reading) {
+        let change = stabilizer.feed(reading.text)
+        switch change {
         case .show(let line):
             onScreen = line
+            textRect = reading.box.map(globalRect)
             pending = line
             translateNext()
         case .clear:
@@ -95,6 +109,11 @@ final class LiveTranslator {
             state = .waiting
         case nil:
             break
+        }
+        if let record {
+            var final = record
+            final.decision = Self.describe(change)
+            recorder.log(final)
         }
     }
 
@@ -106,9 +125,17 @@ final class LiveTranslator {
             guard let self else { return }
             let source = self.prefs.sourceLanguage
             let target = self.prefs.targetLanguage
+            let started = ContinuousClock.now
             do {
                 let translated = try await Translator.shared.translate(line, from: source, to: target)
                 SubtitleLog.shared.add(original: line, translation: translated)
+                if self.recorder.isOn {
+                    self.recorder.log(DebugRecorder.Record(
+                        time: Date(), frame: nil, regionSize: self.region.size, quality: .fast, ocrMilliseconds: 0,
+                        lines: [], accurateLines: nil, accurateMilliseconds: nil, cleaned: line, dropped: [],
+                        decision: "translated", translation: translated,
+                        translationMilliseconds: Self.milliseconds(started.duration(to: .now))))
+                }
                 if self.isRunning, line == self.onScreen {
                     self.state = .subtitle(translated)
                 }
@@ -118,5 +145,39 @@ final class LiveTranslator {
             self.translating = false
             self.translateNext()
         }
+    }
+
+    /// Normalized image box (origin bottom-left) → global screen rectangle.
+    private func globalRect(_ box: CGRect) -> CGRect {
+        CGRect(x: region.minX + box.minX * region.width, y: region.minY + box.minY * region.height,
+               width: box.width * region.width, height: box.height * region.height)
+    }
+
+    private func debugRecord(image: CGImage, lines: [TextReader.Line], quality: TextReader.Quality,
+                             took: Duration, reading: SubtitleText.Result) async -> DebugRecorder.Record {
+        let frame = recorder.saveFrame(image)
+        var accurate: [TextReader.Line]?
+        var accurateTime: Duration?
+        if quality == .fast {
+            let started = ContinuousClock.now
+            accurate = try? await TextReader.lines(in: image, language: prefs.sourceLanguage, quality: .accurate)
+            accurateTime = started.duration(to: .now)
+        }
+        return DebugRecorder.Record(time: Date(), frame: frame, regionSize: region.size, quality: quality,
+                                    ocrMilliseconds: Self.milliseconds(took), lines: lines,
+                                    accurateLines: accurate, accurateMilliseconds: accurateTime.map(Self.milliseconds),
+                                    cleaned: reading.text, dropped: reading.dropped, decision: "")
+    }
+
+    private static func describe(_ change: SubtitleStabilizer.Change?) -> String {
+        switch change {
+        case .show: return "show"
+        case .clear: return "clear"
+        case nil: return "hold"
+        }
+    }
+
+    private static func milliseconds(_ duration: Duration) -> Int {
+        Int(duration.components.seconds * 1000 + duration.components.attoseconds / 1_000_000_000_000_000)
     }
 }

@@ -1,12 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// Shows the live translation, either covering the original subtitle or just below it.
+/// Shows the live translation, either over the original subtitle text or just below the region.
 @MainActor
 final class SubtitlePanel {
     private let panel = FloatingPanel(clickThrough: true)
 
-    func update(_ state: LiveTranslator.State, region: CGRect) {
+    /// `textRect` is where the original text was found; covering mode sizes the box to it rather
+    /// than blacking out the whole region.
+    func update(_ state: LiveTranslator.State, region: CGRect, textRect: CGRect?) {
         let prefs = Preferences.shared
         let text: String
         let dimmed: Bool
@@ -15,13 +17,9 @@ final class SubtitlePanel {
             panel.fade(visible: false)
             return
         case .waiting:
-            // Covering mode would hide the game's own text with an empty box; stay out of the way.
-            if prefs.coverOriginal {
-                panel.fade(visible: false)
-                return
-            }
-            text = S.waitingForSubtitle
-            dimmed = true
+            // An empty box would only hide the game; stay out of the way.
+            panel.fade(visible: false)
+            return
         case .subtitle(let line):
             text = line
             dimmed = false
@@ -30,15 +28,16 @@ final class SubtitlePanel {
             dimmed = true
         }
 
-        let width = max(region.width, 280)
-        let view = SubtitleView(text: text, dimmed: dimmed, fontSize: prefs.subtitleFontSize,
-                                width: width, minHeight: prefs.coverOriginal ? region.height : 0,
-                                opaque: prefs.coverOriginal)
+        let cover = prefs.coverOriginal && !dimmed
+        let target = cover ? (textRect ?? region).insetBy(dx: -14, dy: -6) : region
+        let width = min(max(target.width, 280), max(region.width, 280))
+        let view = SubtitleView(text: text, dimmed: dimmed, fontSize: prefs.subtitleFontSize, width: width,
+                                minHeight: cover ? target.height : 0, background: prefs.subtitleBackground)
         panel.host(view)
         let size = panel.contentView?.fittingSize ?? CGSize(width: width, height: 40)
         let origin: CGPoint
-        if prefs.coverOriginal {
-            origin = CGPoint(x: region.midX - size.width / 2, y: region.midY - size.height / 2)
+        if cover {
+            origin = CGPoint(x: target.midX - size.width / 2, y: target.midY - size.height / 2)
         } else {
             origin = CGPoint(x: region.midX - size.width / 2, y: region.minY - 6 - size.height)
         }
@@ -57,19 +56,22 @@ private struct SubtitleView: View {
     let fontSize: Double
     let width: CGFloat
     let minHeight: CGFloat
-    let opaque: Bool
+    let background: Double
 
     var body: some View {
         Text(text)
-            .font(.system(size: dimmed ? 13 : fontSize, weight: .medium))
-            .foregroundStyle(dimmed ? .white.opacity(0.7) : .white)
+            .font(.system(size: dimmed ? 13 : fontSize, weight: .semibold))
+            .foregroundStyle(dimmed ? .white.opacity(0.75) : .white)
+            // A tight dark outline keeps the text readable over the game when the box is see-through.
+            .shadow(color: .black.opacity(0.9), radius: 1, x: 0, y: 0)
+            .shadow(color: .black.opacity(0.7), radius: 3, x: 0, y: 1)
             .multilineTextAlignment(.center)
             .lineLimit(4)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
             .frame(width: width)
             .frame(minHeight: minHeight)
-            .background(Color.black.opacity(opaque ? 0.94 : 0.72), in: RoundedRectangle(cornerRadius: 8))
+            .background(Color.black.opacity(background), in: RoundedRectangle(cornerRadius: 8))
     }
 }

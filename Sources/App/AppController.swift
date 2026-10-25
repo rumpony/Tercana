@@ -93,7 +93,7 @@ final class AppController {
 
         live.onStateChange = { [weak live, weak subtitle] state in
             guard let live else { return }
-            subtitle?.update(state, region: live.region)
+            subtitle?.update(state, region: live.region, textRect: live.textRect)
         }
         live.onStop = { [weak self] reason in
             self?.endLive()

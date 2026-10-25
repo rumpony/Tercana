@@ -52,6 +52,11 @@ struct SettingsView: View {
             Section(S.liveTranslation) {
                 Toggle(S.coverOriginal, isOn: $prefs.coverOriginal)
                 HStack {
+                    Text(S.backgroundOpacity)
+                    Slider(value: $prefs.subtitleBackground, in: 0...1, step: 0.05)
+                    Text(S.percent(prefs.subtitleBackground)).monospacedDigit().frame(width: 44)
+                }
+                HStack {
                     Text(S.textSize)
                     Slider(value: $prefs.subtitleFontSize, in: 14...36, step: 1)
                     Text(verbatim: "\(Int(prefs.subtitleFontSize))").monospacedDigit().frame(width: 28)
@@ -59,6 +64,14 @@ struct SettingsView: View {
                 Toggle(S.followRemotePlay, isOn: $prefs.followRemotePlay)
                 Text(S.followRemotePlayHint)
                     .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Section(S.recognition) {
+                Toggle(S.accurateRecognition, isOn: $prefs.accurateRecognition)
+                Text(S.accurateRecognitionHint).font(.caption).foregroundStyle(.secondary)
+                Toggle(S.debugRecording, isOn: $prefs.debugRecording)
+                Text(S.debugRecordingHint).font(.caption).foregroundStyle(.secondary)
+                Button(S.openDebugFolder) { DebugRecorder.shared.openFolder() }
             }
 
             Section(S.controller) {
