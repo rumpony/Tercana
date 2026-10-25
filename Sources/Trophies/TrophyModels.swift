@@ -34,10 +34,10 @@ enum TrophyGrade: String, Decodable {
 
     var label: String {
         switch self {
-        case .bronze: return "Bronz"
-        case .silver: return "Gümüş"
-        case .gold: return "Altın"
-        case .platinum: return "Platin"
+        case .bronze: return S.bronze
+        case .silver: return S.silver
+        case .gold: return S.gold
+        case .platinum: return S.platinum
         }
     }
 }

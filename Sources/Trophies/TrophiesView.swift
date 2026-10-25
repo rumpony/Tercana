@@ -14,7 +14,7 @@ struct TrophiesView: View {
                     if let game = store.selectedGame {
                         GameTrophies(store: store, game: game)
                     } else {
-                        ContentUnavailableView("Bir oyun seç", systemImage: "trophy")
+                        ContentUnavailableView(S.pickAGame, systemImage: "trophy")
                     }
                 }
             } else {
@@ -34,22 +34,22 @@ private struct SignInView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label("PSN hesabını bağla", systemImage: "trophy.fill")
+            Label(S.connectPSN, systemImage: "trophy.fill")
                 .font(.title2.bold())
-            Text("Kupalarını görmek için PlayStation hesabının oturum anahtarı gerekiyor. Anahtar sadece bu Mac'in anahtar zincirinde saklanır; SubLens yalnızca okuma yapar.")
+            Text(S.connectIntro)
                 .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 8) {
-                step(1, "Tarayıcıda playstation.com'a giriş yap.")
+                step(1, S.connectStep1)
                 HStack {
-                    step(2, "Bu sayfayı aç ve \"npsso\" değerini kopyala:")
-                    Button("Sayfayı aç") { NSWorkspace.shared.open(PSNClient.sessionTokenURL) }
+                    step(2, S.connectStep2)
+                    Button(S.openPage) { NSWorkspace.shared.open(PSNClient.sessionTokenURL) }
                 }
-                step(3, "Değeri aşağıya yapıştır.")
+                step(3, S.connectStep3)
             }
             HStack {
-                SecureField("npsso (64 karakter)", text: $token)
+                SecureField(S.tokenPlaceholder, text: $token)
                     .textFieldStyle(.roundedBorder)
-                Button("Bağlan") {
+                Button(S.connect) {
                     let value = extract(token)
                     Task { await store.signIn(sessionToken: value) }
                 }
@@ -60,7 +60,7 @@ private struct SignInView: View {
             if let problem = store.problem {
                 Text(problem).foregroundStyle(.red)
             }
-            Text("Not: Bu bağlantı Sony'nin resmi olmayan, mobil uygulamanın kullandığı arayüzünü kullanır. SubLens istekleri seyrek tutar.")
+            Text(S.unofficialNote)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -93,7 +93,7 @@ private struct GameList: View {
         List(selection: Binding(get: { store.selectedGameID },
                                 set: { id in Task { await store.select(id) } })) {
             if let playing = store.nowPlaying {
-                Section("Şu an oynuyorsun") {
+                Section(S.nowPlaying) {
                     Button {
                         Task { await store.showNowPlaying() }
                     } label: {
@@ -102,19 +102,19 @@ private struct GameList: View {
                     .buttonStyle(.plain)
                 }
             }
-            Section("Oyunlar (\(store.games.count))") {
+            Section(S.gamesCount(store.games.count)) {
                 ForEach(store.visibleGames) { game in
                     GameRow(game: game).tag(game.id)
                 }
             }
         }
-        .searchable(text: $store.searchText, placement: .sidebar, prompt: "Oyun ara")
+        .searchable(text: $store.searchText, placement: .sidebar, prompt: S.searchGames)
         .toolbar {
             ToolbarItem {
                 Button {
                     Task { await store.load() }
                 } label: {
-                    Label("Yenile", systemImage: "arrow.clockwise")
+                    Label(S.refresh, systemImage: "arrow.clockwise")
                 }
                 .disabled(store.loading)
             }
@@ -139,8 +139,8 @@ private struct GameRow: View {
                 ProgressView(value: Double(game.progress), total: 100)
                     .tint(game.progress == 100 ? .yellow : .accentColor)
                 HStack(spacing: 6) {
-                    Text(verbatim: "%\(game.progress)")
-                    if game.platinumEarned { Text("Platin ✓").foregroundStyle(.yellow) }
+                    Text(S.percent(Double(game.progress) / 100))
+                    if game.platinumEarned { Text(S.platinumEarned).foregroundStyle(.yellow) }
                     Text(game.platform).foregroundStyle(.tertiary)
                 }
                 .font(.caption)
@@ -190,22 +190,22 @@ private struct GameTrophies: View {
                         Button(link.title) { NSWorkspace.shared.open(link.url) }
                     }
                 } label: {
-                    Label("Rehberler", systemImage: "book")
+                    Label(S.guides, systemImage: "book")
                 }
                 .fixedSize()
             }
             HStack {
                 Picker("", selection: $store.filter) {
-                    ForEach(TrophyStore.Filter.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(TrophyStore.Filter.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .fixedSize()
-                Picker("Sıra", selection: $store.order) {
-                    ForEach(TrophyStore.Order.allCases) { Text($0.rawValue).tag($0) }
+                Picker(S.order, selection: $store.order) {
+                    ForEach(TrophyStore.Order.allCases) { Text($0.title).tag($0) }
                 }
                 .fixedSize()
                 Spacer()
-                Toggle("Açıklamaları çevir", isOn: $store.showTranslations)
+                Toggle(S.translateDescriptions, isOn: $store.showTranslations)
             }
         }
         .padding(14)
@@ -254,13 +254,13 @@ private struct TrophyRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Image(systemName: "trophy.fill").foregroundStyle(trophy.grade.color).font(.caption)
-                    Text(concealed ? "Gizli kupa" : trophy.name).font(.headline)
+                    Text(concealed ? S.hiddenTrophy : trophy.name).font(.headline)
                     if trophy.earned {
                         Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
                     }
                 }
                 if concealed {
-                    Button("Spoiler'ı göster", action: onReveal)
+                    Button(S.revealSpoiler, action: onReveal)
                         .buttonStyle(.link)
                         .font(.callout)
                 } else {
@@ -271,14 +271,14 @@ private struct TrophyRow: View {
                 }
                 HStack(spacing: 10) {
                     if let rate = trophy.earnedRate {
-                        Text(verbatim: "Oyuncuların %" + String(format: "%.1f", rate) + "'i aldı")
+                        Text(S.earnedBy(rate))
                             .foregroundStyle(rate < 5 ? .orange : .secondary)
                     }
                     if let progress = trophy.progress, let target = trophy.progressTarget, !trophy.earned {
-                        Text("İlerleme \(progress)/\(target)")
+                        Text(S.progress(progress, target))
                     }
                     if let date = trophy.earnedDate {
-                        Text(date.formatted(date: .abbreviated, time: .omitted))
+                        Text(date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(S.locale)))
                     }
                 }
                 .font(.caption)
@@ -287,14 +287,14 @@ private struct TrophyRow: View {
             Spacer()
             if !trophy.earned && !concealed {
                 Menu {
-                    Button("YouTube'da ara") { NSWorkspace.shared.open(GuideLinks.forTrophy(trophy.name, game: game)) }
-                    Button("Web'de rehber ara") { NSWorkspace.shared.open(GuideLinks.webSearch(trophy.name, game: game)) }
+                    Button(S.searchYouTube) { NSWorkspace.shared.open(GuideLinks.forTrophy(trophy.name, game: game)) }
+                    Button(S.searchWebGuide) { NSWorkspace.shared.open(GuideLinks.webSearch(trophy.name, game: game)) }
                 } label: {
                     Image(systemName: "questionmark.circle")
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
-                .help("Bu kupa nasıl alınır?")
+                .help(S.howToGet)
             }
         }
         .padding(.vertical, 4)

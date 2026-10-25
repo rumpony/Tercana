@@ -16,6 +16,10 @@ targets:
     sources:
       - Sources
       - Resources/Assets.xcassets
+      - path: Resources
+        includes:
+          - "*.lproj/**"
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rumpony.SubLens

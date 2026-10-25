@@ -9,6 +9,9 @@ final class Preferences {
 
     private let defaults = UserDefaults.standard
 
+    var appLanguage: AppLanguage {
+        didSet { defaults.set(appLanguage.rawValue, forKey: AppLanguage.defaultsKey) }
+    }
     var sourceLanguage: String {
         didSet { defaults.set(sourceLanguage, forKey: Keys.sourceLanguage) }
     }
@@ -49,6 +52,7 @@ final class Preferences {
             Keys.batteryAlerts: true,
             Keys.subtitleFontSize: 20.0,
         ])
+        appLanguage = AppLanguage.current
         sourceLanguage = defaults.string(forKey: Keys.sourceLanguage) ?? "en"
         targetLanguage = defaults.string(forKey: Keys.targetLanguage) ?? "tr"
         coverOriginal = defaults.bool(forKey: Keys.coverOriginal)
@@ -71,13 +75,6 @@ final class Preferences {
 
 /// Languages offered in settings. Recognition quality is best for Latin scripts.
 enum Language {
-    static let sources: [(code: String, name: String)] = [
-        ("en", "İngilizce"), ("ja", "Japonca"), ("fr", "Fransızca"), ("de", "Almanca"),
-        ("es", "İspanyolca"), ("it", "İtalyanca"), ("pt", "Portekizce"), ("ru", "Rusça"),
-        ("ko", "Korece"), ("zh-Hans", "Çince (Basit)"),
-    ]
-    static let targets: [(code: String, name: String)] = [
-        ("tr", "Türkçe"), ("en", "İngilizce"), ("de", "Almanca"), ("fr", "Fransızca"),
-        ("es", "İspanyolca"),
-    ]
+    static let sources = ["en", "ja", "fr", "de", "es", "it", "pt", "ru", "ko", "zh-Hans"]
+    static let targets = ["tr", "en", "de", "fr", "es", "it", "pt", "ru", "ja"]
 }

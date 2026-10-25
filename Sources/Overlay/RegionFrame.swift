@@ -121,7 +121,7 @@ private final class DragView: NSView {
         super.init(frame: .zero)
         if kind == .move {
             let close = NSButton(image: NSImage(systemSymbolName: "xmark.circle.fill",
-                                                accessibilityDescription: "Kapat") ?? NSImage(),
+                                                accessibilityDescription: S.close) ?? NSImage(),
                                  target: self, action: #selector(closeTapped))
             close.isBordered = false
             close.contentTintColor = .white
@@ -157,7 +157,7 @@ private final class DragView: NSView {
         NSColor.systemTeal.setFill()
         if kind == .move {
             NSBezierPath(ovalIn: CGRect(x: 10, y: 10, width: 7, height: 7)).fill()
-            ("SubLens · sürükle" as NSString).draw(at: CGPoint(x: 24, y: 6), withAttributes: [
+            (S.dragHandle as NSString).draw(at: CGPoint(x: 24, y: 6), withAttributes: [
                 .font: NSFont.systemFont(ofSize: 11, weight: .semibold),
                 .foregroundColor: NSColor.white,
             ])

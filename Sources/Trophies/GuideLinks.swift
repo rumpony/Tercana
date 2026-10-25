@@ -11,10 +11,10 @@ enum GuideLinks {
     static func forGame(_ name: String) -> [Link] {
         let plain = cleanName(name)
         return [
-            link("powerpyx", "PowerPyx rehberi", "https://www.powerpyx.com/?s=\(encode(plain + " trophy guide"))"),
-            link("psnprofiles", "PSNProfiles rehberleri", "https://psnprofiles.com/search/guides?q=\(encode(plain))"),
+            link("powerpyx", S.guidePowerPyx, "https://www.powerpyx.com/?s=\(encode(plain + " trophy guide"))"),
+            link("psnprofiles", S.guidePSNProfiles, "https://psnprofiles.com/search/guides?q=\(encode(plain))"),
             link("playstationtrophies", "PlaystationTrophies", "https://www.playstationtrophies.org/search/?q=\(encode(plain))"),
-            link("youtube", "YouTube: platin yol haritası",
+            link("youtube", S.guideYouTube,
                  "https://www.youtube.com/results?search_query=\(encode(plain + " platinum trophy guide"))"),
         ]
     }

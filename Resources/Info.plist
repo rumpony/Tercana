@@ -23,6 +23,16 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>SubLens ekrandaki altyazıları okuyup çevirmek için seçtiğin alanı görüntüler.</string>
+    <string>SubLens looks at the screen area you choose to read and translate its subtitles.</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>tr</string>
+        <string>de</string>
+        <string>es</string>
+        <string>fr</string>
+    </array>
 </dict>
 </plist>

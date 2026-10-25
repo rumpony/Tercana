@@ -61,7 +61,7 @@ private struct ResultView: View {
                 }
                 .frame(maxHeight: 280)
             } else {
-                Text(error ?? "Çevrilecek yazı bulunamadı.")
+                Text(error ?? S.noTextFound)
                     .foregroundStyle(.secondary)
             }
             if !original.isEmpty {
@@ -78,12 +78,12 @@ private struct ResultView: View {
             HStack {
                 Spacer()
                 if let translation {
-                    Button("Kopyala") {
+                    Button(S.copy) {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(translation, forType: .string)
                     }
                 }
-                Button("Kapat", action: onClose)
+                Button(S.close, action: onClose)
                     .keyboardShortcut(.cancelAction)
             }
         }

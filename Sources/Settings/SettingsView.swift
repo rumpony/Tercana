@@ -11,75 +11,81 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Çeviri") {
-                Picker("Altyazı dili", selection: $prefs.sourceLanguage) {
-                    ForEach(Language.sources, id: \.code) { Text($0.name).tag($0.code) }
+            Section(S.general) {
+                Picker(S.appLanguage, selection: $prefs.appLanguage) {
+                    Text(AppLanguage.system.nativeName).tag(AppLanguage.system)
+                    Divider()
+                    ForEach(AppLanguage.allCases.filter { $0 != .system }) { language in
+                        Text(language.nativeName).tag(language)
+                    }
                 }
-                Picker("Çeviri dili", selection: $prefs.targetLanguage) {
-                    ForEach(Language.targets, id: \.code) { Text($0.name).tag($0.code) }
+                Toggle(S.launchAtLogin, isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, enabled in
+                        try? enabled ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
+                    }
+            }
+
+            Section(S.translation) {
+                Picker(S.subtitleLanguage, selection: $prefs.sourceLanguage) {
+                    ForEach(Language.sources, id: \.self) { Text(S.languageName($0)).tag($0) }
+                }
+                Picker(S.translateInto, selection: $prefs.targetLanguage) {
+                    ForEach(Language.targets, id: \.self) { Text(S.languageName($0)).tag($0) }
                 }
                 HStack {
-                    Text("Dil paketi")
+                    Text(S.languagePack)
                     Spacer()
                     switch packStatus {
-                    case .installed: Label("Hazır", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    case .installed: Label(S.ready, systemImage: "checkmark.circle.fill").foregroundStyle(.green)
                     case .supported:
-                        Button("Dil paketini indir") {
+                        Button(S.downloadPack) {
                             downloadConfig = TranslationSession.Configuration(
                                 source: Locale.Language(identifier: prefs.sourceLanguage),
                                 target: Locale.Language(identifier: prefs.targetLanguage))
                         }
-                    case .unsupported: Text("Bu dil çifti desteklenmiyor").foregroundStyle(.secondary)
+                    case .unsupported: Text(S.pairUnsupported).foregroundStyle(.secondary)
                     default: ProgressView().controlSize(.small)
                     }
                 }
             }
 
-            Section("Canlı çeviri") {
-                Toggle("Çeviriyi orijinal altyazının üstüne yaz", isOn: $prefs.coverOriginal)
+            Section(S.liveTranslation) {
+                Toggle(S.coverOriginal, isOn: $prefs.coverOriginal)
                 HStack {
-                    Text("Yazı boyutu")
+                    Text(S.textSize)
                     Slider(value: $prefs.subtitleFontSize, in: 14...36, step: 1)
-                    Text("\(Int(prefs.subtitleFontSize))").monospacedDigit().frame(width: 28)
+                    Text(verbatim: "\(Int(prefs.subtitleFontSize))").monospacedDigit().frame(width: 28)
                 }
-                Toggle("Remote Play açılınca otomatik başlat, kapanınca durdur", isOn: $prefs.followRemotePlay)
-                Text("Otomatik başlatma son seçtiğin altyazı alanını kullanır.")
+                Toggle(S.followRemotePlay, isOn: $prefs.followRemotePlay)
+                Text(S.followRemotePlayHint)
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Kumanda") {
-                Toggle("Pil azalınca uyar", isOn: $prefs.batteryAlerts)
+            Section(S.controller) {
+                Toggle(S.batteryAlerts, isOn: $prefs.batteryAlerts)
             }
 
-            Section("Kupalar") {
+            Section(S.trophies) {
                 if psnSignedIn {
-                    Button("PSN bağlantısını kaldır", role: .destructive) {
+                    Button(S.disconnectPSN, role: .destructive) {
                         Task {
                             await TrophyStore.shared.signOut()
                             psnSignedIn = false
                         }
                     }
                 } else {
-                    Text("PSN hesabını Kupalar penceresinden bağlayabilirsin.")
-                        .foregroundStyle(.secondary)
+                    Text(S.connectPSNHint).foregroundStyle(.secondary)
                 }
             }
 
-            Section("Kısayollar") {
+            Section(S.shortcuts) {
                 ForEach(HotKeys.Action.allCases, id: \.rawValue) { action in
                     LabeledContent(action.title, value: action.combo.label)
                 }
             }
-
-            Section {
-                Toggle("Mac açılınca başlat", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { _, enabled in
-                        try? enabled ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
-                    }
-            }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 480, minHeight: 520)
+        .frame(minWidth: 480, minHeight: 560)
         .task(id: "\(prefs.sourceLanguage)>\(prefs.targetLanguage)") {
             packStatus = nil
             packStatus = await Translator.status(from: prefs.sourceLanguage, to: prefs.targetLanguage)
@@ -96,10 +102,10 @@ struct SettingsView: View {
 extension HotKeys.Action {
     var title: String {
         switch self {
-        case .toggleLive: return "Canlı çeviri aç/kapat"
-        case .translateArea: return "Bir alanı çevir"
-        case .subtitleLog: return "Altyazı geçmişi"
-        case .trophies: return "Kupalar"
+        case .toggleLive: return S.toggleLive
+        case .translateArea: return S.translateArea.replacingOccurrences(of: "…", with: "")
+        case .subtitleLog: return S.subtitleLog
+        case .trophies: return S.trophies
         }
     }
 }

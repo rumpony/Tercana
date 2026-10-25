@@ -8,10 +8,10 @@ enum PSNError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .notSignedIn: return "PSN hesabı bağlı değil."
-        case .badSessionToken: return "Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al."
-        case .expiredLogin: return "PSN oturumu sona erdi. Kupalar penceresinden yeniden bağlan."
-        case .server(let code): return "PSN yanıt vermedi (hata \(code)). Biraz sonra tekrar dene."
+        case .notSignedIn: return S.psnNotSignedIn
+        case .badSessionToken: return S.psnBadToken
+        case .expiredLogin: return S.psnExpired
+        case .server(let code): return S.psnServer(code)
         }
     }
 }
@@ -110,7 +110,7 @@ actor PSNClient {
         let byID = Dictionary(progress.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { a, _ in a })
         let dateParser = ISO8601DateFormatter()
         return definitions.trophies.map { item in
-            var trophy = Trophy(id: item.trophyId, name: item.trophyName ?? "Gizli kupa",
+            var trophy = Trophy(id: item.trophyId, name: item.trophyName ?? S.hiddenTrophy,
                                 detail: item.trophyDetail ?? "", grade: item.trophyType,
                                 hidden: item.trophyHidden ?? false,
                                 iconURL: item.trophyIconUrl.flatMap(URL.init(string:)),
@@ -152,7 +152,10 @@ actor PSNClient {
         var components = URLComponents(string: Self.apiBase + path)!
         components.queryItems = query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         let url = components.url!
-        if let (stamp, data) = cache[url.absoluteString], Date().timeIntervalSince(stamp) < ttl {
+        // Sony returns trophy names and descriptions in the requested language when the game has them.
+        let language = AppLanguage.current.resolved.rawValue
+        let cacheKey = "\(language)|\(url.absoluteString)"
+        if let (stamp, data) = cache[cacheKey], Date().timeIntervalSince(stamp) < ttl {
             return try JSONDecoder().decode(T.self, from: data)
         }
 
@@ -163,6 +166,7 @@ actor PSNClient {
 
         var request = URLRequest(url: url)
         request.setValue("Bearer \(try await validAccessToken())", forHTTPHeaderField: "Authorization")
+        request.setValue(language, forHTTPHeaderField: "Accept-Language")
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 {
@@ -170,7 +174,7 @@ actor PSNClient {
             throw PSNError.expiredLogin
         }
         guard (200..<300).contains(status) else { throw PSNError.server(status) }
-        cache[url.absoluteString] = (Date(), data)
+        cache[cacheKey] = (Date(), data)
         return try JSONDecoder().decode(T.self, from: data)
     }
 

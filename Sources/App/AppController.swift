@@ -17,7 +17,7 @@ final class AppController {
     @ObservationIgnored private var live: LiveTranslator?
     @ObservationIgnored private var frame: RegionFrame?
     @ObservationIgnored private var subtitle: SubtitlePanel?
-    @ObservationIgnored private var windows: [String: NSWindow] = [:]
+    @ObservationIgnored private var windows: [String: (window: NSWindow, title: () -> String)] = [:]
     /// Auto-start happens once per Remote Play launch, so stopping by hand sticks.
     @ObservationIgnored private var autoStarted = false
 
@@ -42,6 +42,20 @@ final class AppController {
         ControllerWatch.shared.start()
 
         if !ScreenGrabber.hasPermission { ScreenGrabber.requestPermission() }
+        followLanguageChanges()
+    }
+
+    /// Window titles are plain AppKit strings; refresh them when the interface language changes.
+    private func followLanguageChanges() {
+        withObservationTracking {
+            _ = prefs.appLanguage
+        } onChange: {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                for entry in self.windows.values { entry.window.title = entry.title() }
+                self.followLanguageChanges()
+            }
+        }
     }
 
     // MARK: Live translation
@@ -54,14 +68,14 @@ final class AppController {
         if isLive { stopLive() }
         guard ScreenGrabber.hasPermission else {
             ScreenGrabber.requestPermission()
-            Toast.show("Önce ekran kaydı izni ver, sonra tekrar dene.", symbol: "lock.shield")
+            Toast.show(S.grantPermissionFirst, symbol: "lock.shield")
             return
         }
         if !reselect, let saved = prefs.liveRegion, NSScreen.screens.contains(where: { $0.frame.contains(saved) }) {
             beginLive(in: saved)
             return
         }
-        picker.pick(hint: "Altyazı alanını sürükleyerek seç  ·  Esc: vazgeç") { [weak self] rect in
+        picker.pick(hint: S.pickLiveArea) { [weak self] rect in
             guard let self, let rect else { return }
             self.prefs.liveRegion = rect
             self.beginLive(in: rect)
@@ -115,7 +129,7 @@ final class AppController {
             ScreenGrabber.requestPermission()
             return
         }
-        picker.pick(hint: "Çevrilecek alanı seç  ·  Esc: vazgeç") { [weak self] rect in
+        picker.pick(hint: S.pickTranslateArea) { [weak self] rect in
             guard let self, let rect else { return }
             Task { await self.translate(area: rect) }
         }
@@ -144,19 +158,20 @@ final class AppController {
     // MARK: Windows
 
     func showSubtitleLog() {
-        present(id: "log", title: "Altyazı Geçmişi", size: CGSize(width: 520, height: 600)) { SubtitleLogView() }
+        present(id: "log", title: { S.subtitleLog }, size: CGSize(width: 520, height: 600)) { SubtitleLogView() }
     }
 
     func showTrophies() {
-        present(id: "trophies", title: "Kupalar", size: CGSize(width: 980, height: 680)) { TrophiesView() }
+        present(id: "trophies", title: { S.trophies }, size: CGSize(width: 980, height: 680)) { TrophiesView() }
     }
 
     func showSettings() {
-        present(id: "settings", title: "SubLens Ayarları", size: CGSize(width: 520, height: 560)) { SettingsView() }
+        present(id: "settings", title: { S.settingsTitle }, size: CGSize(width: 520, height: 620)) { SettingsView() }
     }
 
-    private func present<V: View>(id: String, title: String, size: CGSize, content: () -> V) {
-        if let window = windows[id] {
+    private func present<V: View>(id: String, title: @escaping () -> String, size: CGSize,
+                                  content: @escaping () -> V) {
+        if let window = windows[id]?.window {
             NSApp.activate()
             window.makeKeyAndOrderFront(nil)
             return
@@ -164,12 +179,25 @@ final class AppController {
         let window = NSWindow(contentRect: CGRect(origin: .zero, size: size),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable],
                               backing: .buffered, defer: false)
-        window.title = title
+        window.title = title()
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: content())
+        window.contentView = NSHostingView(rootView: LocalizedRoot(content: content))
         window.center()
-        windows[id] = window
+        windows[id] = (window, title)
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
+    }
+}
+
+/// Rebuilds its content in the new language when the interface language changes,
+/// and hands SwiftUI the matching locale for dates and numbers.
+private struct LocalizedRoot<Content: View>: View {
+    let content: () -> Content
+    private let prefs = Preferences.shared
+
+    var body: some View {
+        content()
+            .id(prefs.appLanguage)
+            .environment(\.locale, prefs.appLanguage.locale)
     }
 }

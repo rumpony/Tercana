@@ -35,7 +35,7 @@ final class ControllerWatch {
     var summary: String? {
         guard let name else { return nil }
         guard let batteryLevel else { return name }
-        return "\(name) · %\(Int((batteryLevel * 100).rounded()))\(isCharging ? " ⚡︎" : "")"
+        return "\(name) · \(S.percent(Double(batteryLevel)))\(isCharging ? " ⚡︎" : "")"
     }
 
     private func refresh() {
@@ -44,7 +44,7 @@ final class ControllerWatch {
             batteryLevel = nil
             return
         }
-        name = controller.vendorName ?? "Kumanda"
+        name = controller.vendorName ?? S.controller
         if let battery = controller.battery, battery.batteryState != .unknown {
             batteryLevel = battery.batteryLevel
             isCharging = battery.batteryState == .charging || battery.batteryState == .full
@@ -63,7 +63,7 @@ final class ControllerWatch {
         for threshold: Float in [0.05, 0.15] where level <= threshold {
             if warnedAt == nil || warnedAt! > threshold {
                 warnedAt = threshold
-                Toast.show("Kumanda pili azaldı: %\(Int((level * 100).rounded()))",
+                Toast.show(S.batteryLow(level),
                            symbol: "battery.25percent", seconds: 6)
             }
             return

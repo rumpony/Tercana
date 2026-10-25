@@ -1,4 +1,5 @@
 import Foundation
+import NaturalLanguage
 import Observation
 
 /// State behind the trophies window.
@@ -8,17 +9,27 @@ final class TrophyStore {
     static let shared = TrophyStore()
 
     enum Filter: String, CaseIterable, Identifiable {
-        case missing = "Eksikler"
-        case all = "Tümü"
-        case earned = "Kazanılanlar"
+        case missing, all, earned
         var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .missing: return S.filterMissing
+            case .all: return S.filterAll
+            case .earned: return S.filterEarned
+            }
+        }
     }
 
     enum Order: String, CaseIterable, Identifiable {
-        case easiest = "En kolay önce"
-        case rarest = "En nadir önce"
-        case original = "Oyun sırası"
+        case easiest, rarest, original
         var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .easiest: return S.orderEasiest
+            case .rarest: return S.orderRarest
+            case .original: return S.orderGame
+            }
+        }
     }
 
     private(set) var signedIn = false
@@ -58,6 +69,7 @@ final class TrophyStore {
         }
     }
 
+    /// Trophy text follows the interface language; the window is rebuilt on a switch, which reloads it.
     func load() async {
         signedIn = await PSNClient.shared.isSignedIn
         guard signedIn else { return }
@@ -108,17 +120,25 @@ final class TrophyStore {
         if showTranslations { translateDetails() }
     }
 
+    /// Machine-translates only the descriptions Sony couldn't give us in the interface language.
     private func translateDetails() {
-        let prefs = Preferences.shared
+        let target = AppLanguage.current.resolved.rawValue
         let pending = trophies.filter { translatedDetails[$0.id] == nil && !$0.detail.isEmpty }
         Task {
             for trophy in pending {
-                // Trophy text is written in the account's PSN language; English is the common case.
-                if let text = try? await Translator.shared.translate(trophy.detail, from: "en", to: prefs.targetLanguage) {
+                guard let source = Self.language(of: trophy.detail), source != target else { continue }
+                if let text = try? await Translator.shared.translate(trophy.detail, from: source, to: target) {
                     translatedDetails[trophy.id] = text
                 }
             }
         }
+    }
+
+    private static func language(of text: String) -> String? {
+        let recognizer = NLLanguageRecognizer()
+        recognizer.processString(text)
+        guard let language = recognizer.dominantLanguage else { return nil }
+        return language == .simplifiedChinese ? "zh-Hans" : language.rawValue
     }
 
     private func matchingGame(_ name: String?) -> TrophyGame? {

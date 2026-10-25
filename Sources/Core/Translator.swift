@@ -7,10 +7,8 @@ enum TranslatorError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .languagePackMissing:
-            return "Dil paketi yüklü değil. Ayarlar → Çeviri → \"Dil paketini indir\"."
-        case .unsupportedPair:
-            return "Bu dil çifti Apple Çeviri tarafından desteklenmiyor."
+        case .languagePackMissing: return S.errorPackMissing
+        case .unsupportedPair: return S.errorUnsupportedPair
         }
     }
 }

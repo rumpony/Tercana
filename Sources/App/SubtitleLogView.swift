@@ -8,16 +8,16 @@ struct SubtitleLogView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Toggle("Orijinali de göster", isOn: $showOriginal)
+                Toggle(S.showOriginal, isOn: $showOriginal)
                 Spacer()
-                Button("Temizle") { log.clear() }
+                Button(S.clear) { log.clear() }
                     .disabled(log.entries.isEmpty)
             }
             .padding(12)
             Divider()
             if log.entries.isEmpty {
-                ContentUnavailableView("Henüz altyazı yok", systemImage: "captions.bubble",
-                                       description: Text("Canlı çeviri çalışırken çevrilen satırlar burada birikir."))
+                ContentUnavailableView(S.noSubtitlesYet, systemImage: "captions.bubble",
+                                       description: Text(S.noSubtitlesHint))
             } else {
                 List(log.entries) { entry in
                     VStack(alignment: .leading, spacing: 4) {
@@ -30,7 +30,7 @@ struct SubtitleLogView: View {
                                 .foregroundStyle(.secondary)
                                 .textSelection(.enabled)
                         }
-                        Text(entry.time.formatted(date: .omitted, time: .standard))
+                        Text(entry.time.formatted(Date.FormatStyle(date: .omitted, time: .standard).locale(S.locale)))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }

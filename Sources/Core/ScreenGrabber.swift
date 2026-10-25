@@ -7,8 +7,8 @@ enum ScreenGrabberError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noPermission: return "Ekran kaydı izni yok. Sistem Ayarları → Gizlilik ve Güvenlik → Ekran Kaydı'ndan SubLens'i aç."
-        case .displayNotFound: return "Seçilen alanın bulunduğu ekran bulunamadı."
+        case .noPermission: return S.errorNoPermission
+        case .displayNotFound: return S.errorNoDisplay
         }
     }
 }

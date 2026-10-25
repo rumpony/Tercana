@@ -22,24 +22,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 private struct MenuContent: View {
     private let app = AppController.shared
     private let controller = ControllerWatch.shared
+    private let prefs = Preferences.shared
 
     var body: some View {
-        Button(app.isLive ? "Canlı çeviriyi durdur" : "Canlı çeviriyi başlat") { app.toggleLive() }
+        // Reading the language here makes the menu rebuild when it changes.
+        let _ = prefs.appLanguage
+        Button(app.isLive ? S.stopLive : S.startLive) { app.toggleLive() }
             .keyboardShortcut("l", modifiers: [.control, .option])
-        Button("Canlı çeviri: yeni alan seç…") { app.startLive(reselect: true) }
-        Button("Bir alanı çevir…") { app.translateArea() }
+        Button(S.newLiveArea) { app.startLive(reselect: true) }
+        Button(S.translateArea) { app.translateArea() }
             .keyboardShortcut("t", modifiers: [.control, .option])
         Divider()
-        Button("Altyazı geçmişi") { app.showSubtitleLog() }
+        Button(S.subtitleLog) { app.showSubtitleLog() }
             .keyboardShortcut("h", modifiers: [.control, .option])
-        Button("Kupalar") { app.showTrophies() }
+        Button(S.trophies) { app.showTrophies() }
             .keyboardShortcut("k", modifiers: [.control, .option])
         Divider()
-        Text(controller.summary.map { "🎮 \($0)" } ?? "🎮 Kumanda bağlı değil")
+        Text("🎮 " + (controller.summary ?? S.noController))
         Divider()
-        Button("Ayarlar…") { app.showSettings() }
+        Button(S.settings) { app.showSettings() }
             .keyboardShortcut(",")
-        Button("Çık") { NSApp.terminate(nil) }
+        Button(S.quit) { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 }

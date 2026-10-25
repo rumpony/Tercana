@@ -20,7 +20,7 @@ final class SubtitlePanel {
                 panel.fade(visible: false)
                 return
             }
-            text = "Altyazı bekleniyor…"
+            text = S.waitingForSubtitle
             dimmed = true
         case .subtitle(let line):
             text = line
