@@ -12,9 +12,13 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
     private var webView: WKWebView?
     private var poll: Timer?
     private var onToken: ((String) -> Void)?
+    private var onCode: ((String) -> Void)?
 
-    func begin(onToken: @escaping (String) -> Void) {
+    /// Either callback may fire: the OAuth code (preferred) or a session token found in cookies.
+    func begin(onCode: @escaping (String) -> Void, onToken: @escaping (String) -> Void) {
+        self.onCode = onCode
         self.onToken = onToken
+        AppLog.write("psn-login: window opened")
         if let window { window.makeKeyAndOrderFront(nil); return }
 
         let config = WKWebViewConfiguration()
@@ -23,7 +27,8 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
         web.navigationDelegate = self
         // Sony's sign-in rejects unknown embedded browsers; present as Safari.
         web.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15"
-        web.load(URLRequest(url: PSNClient.signInURL))
+        // The OAuth page loads in a web view; my.account.sony.com does not ("Frame load interrupted").
+        web.load(URLRequest(url: PSNClient.authorizeURL))
 
         let header = NSHostingView(rootView: LoginHeader())
         let stack = NSStackView(views: [header, web])
@@ -53,7 +58,28 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        AppLog.write("psn-login: loaded \(webView.url?.host ?? "-")\(webView.url?.path ?? "")")
         checkCookie()
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        AppLog.write("psn-login: load failed \(error.localizedDescription)")
+    }
+
+    /// Sony finishes by redirecting to the mobile app's URL scheme with `?code=…`; catch it here.
+    func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
+                 decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
+        guard let url = action.request.url, url.scheme == PSNClient.redirectScheme else {
+            decisionHandler(.allow)
+            return
+        }
+        decisionHandler(.cancel)
+        let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "code" }?.value
+        AppLog.write("psn-login: redirect received, code \(code == nil ? "missing" : "present")")
+        if let code, let onCode {
+            close()
+            onCode(code)
+        }
     }
 
     /// Looks for the session token two ways: the `npsso` cookie itself, and — since Sony doesn't
@@ -86,8 +112,19 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
 
     private var asking = false
 
+    private func close() {
+        onToken = nil
+        onCode = nil
+        poll?.invalidate()
+        poll = nil
+        window?.close()
+        window = nil
+        webView = nil
+    }
+
     private func finish(_ token: String) {
         guard let onToken else { return }
+        AppLog.write("psn-login: session token found")
         self.onToken = nil
         poll?.invalidate()
         poll = nil

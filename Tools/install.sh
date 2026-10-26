@@ -8,4 +8,6 @@ xcodebuild build -project SubLens.xcodeproj -scheme SubLens -configuration Relea
 app=build/Build/Products/Release/SubLens.app
 codesign --force --deep --sign "${SUBLENS_SIGN_ID:-E7BC42E087BC4D18FED4FF8A263E9F627084F9E4}" --entitlements Resources/SubLens.entitlements "$app"
 pkill -x SubLens || true; sleep 1
-rm -rf /Applications/SubLens.app && ditto "$app" /Applications/SubLens.app && open -a /Applications/SubLens.app
+rm -rf /Applications/SubLens.app && ditto "$app" /Applications/SubLens.app
+sleep 1; open -a /Applications/SubLens.app; sleep 2
+pgrep -x SubLens >/dev/null && echo "SubLens running" || { echo "SubLens did not start"; exit 1; }

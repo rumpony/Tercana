@@ -648,9 +648,9 @@ struct SignInView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 420)
             Button {
-                PSNWebLogin.shared.begin { token in
-                    Task { await store.signIn(sessionToken: token) }
-                }
+                PSNWebLogin.shared.begin(
+                    onCode: { code in Task { await store.signIn(authorizationCode: code) } },
+                    onToken: { token in Task { await store.signIn(sessionToken: token) } })
             } label: {
                 Label(S.signInWithPlayStation, systemImage: "person.badge.key")
                     .frame(minWidth: 240)

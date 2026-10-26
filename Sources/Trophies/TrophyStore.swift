@@ -178,6 +178,14 @@ final class TrophyStore {
         }
     }
 
+    func signIn(authorizationCode code: String) async {
+        await run {
+            try await PSNClient.shared.signIn(authorizationCode: code)
+        }
+        AppLog.write("psn-login: token exchange \(problem == nil ? "ok" : "failed: \(problem!)")")
+        await load()
+    }
+
     func signIn(sessionToken: String) async {
         await run {
             try await PSNClient.shared.signIn(sessionToken: sessionToken)

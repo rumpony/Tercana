@@ -81,6 +81,30 @@ actor PSNClient {
         ])
     }
 
+    /// Sony's own sign-in page; after signing in it redirects to `redirectURI` with a one-time code.
+    static var authorizeURL: URL {
+        var components = URLComponents(string: "\(authBase)/authorize")!
+        components.queryItems = [
+            URLQueryItem(name: "access_type", value: "offline"),
+            URLQueryItem(name: "client_id", value: clientID),
+            URLQueryItem(name: "redirect_uri", value: redirectURI),
+            URLQueryItem(name: "response_type", value: "code"),
+            URLQueryItem(name: "scope", value: scope),
+        ]
+        return components.url!
+    }
+
+    static let redirectScheme = "com.scee.psxandroid.scecompcall"
+
+    func signIn(authorizationCode code: String) async throws {
+        try await requestTokens([
+            "code": code,
+            "redirect_uri": Self.redirectURI,
+            "grant_type": "authorization_code",
+            "token_format": "jwt",
+        ])
+    }
+
     func signOut() {
         SecureStore.set(nil, for: Keys.refreshToken)
         SecureStore.set(nil, for: Keys.accountID)
