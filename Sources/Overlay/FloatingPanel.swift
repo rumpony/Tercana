@@ -66,3 +66,85 @@ enum Toast {
         }
     }
 }
+
+/// A small banner that slides down from the top edge and offers a choice.
+/// It doesn't take focus from the game; it closes itself after a while.
+@MainActor
+enum Prompt {
+    typealias Action = (title: String, primary: Bool, run: () -> Void)
+
+    private static var panel: FloatingPanel?
+    private static var hideTask: Task<Void, Never>?
+
+    static func show(_ message: String, hint: String, actions: [Action], seconds: Double = 15) {
+        let panel = Self.panel ?? FloatingPanel(clickThrough: false)
+        Self.panel = panel
+        panel.host(PromptView(message: message, hint: hint, actions: actions) { dismiss() })
+        let size = panel.contentView?.fittingSize ?? CGSize(width: 480, height: 64)
+        let screen = NSScreen.underMouse ?? NSScreen.main!
+        let shown = CGRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height - 44,
+                           width: size.width, height: size.height)
+        panel.setFrame(shown.offsetBy(dx: 0, dy: 40), display: true)
+        panel.alphaValue = 0
+        panel.orderFrontRegardless()
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.28
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().setFrame(shown, display: true)
+            panel.animator().alphaValue = 1
+        }
+        hideTask?.cancel()
+        hideTask = Task {
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled else { return }
+            dismiss()
+        }
+    }
+
+    static func dismiss() {
+        hideTask?.cancel()
+        guard let panel, panel.isVisible else { return }
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.2
+            panel.animator().setFrame(panel.frame.offsetBy(dx: 0, dy: 30), display: true)
+            panel.animator().alphaValue = 0
+        }, completionHandler: {
+            MainActor.assumeIsolated { panel.orderOut(nil) }
+        })
+    }
+}
+
+struct PromptView: View {
+    let message: String
+    let hint: String
+    let actions: [Prompt.Action]
+    let onClose: () -> Void
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "captions.bubble.fill").font(.title2).foregroundStyle(.tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(message).font(.system(size: 14, weight: .semibold))
+                Text(hint).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            ForEach(Array(actions.enumerated()), id: \.offset) { _, action in
+                if action.primary {
+                    Button(action.title) { onClose(); action.run() }.buttonStyle(.borderedProminent)
+                } else {
+                    Button(action.title) { onClose(); action.run() }
+                }
+            }
+            Button { onClose() } label: { Image(systemName: "xmark").font(.caption.weight(.bold)) }
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(minWidth: 460)
+        .fixedSize()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.white.opacity(0.12)))
+        .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+    }
+}

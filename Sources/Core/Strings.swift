@@ -264,6 +264,16 @@ enum S {
 
     static var rarity: String { pick("Nadirlik", "Rarity", "Seltenheit", "Rareza", "Rareté") }
 
+    // MARK: Remote Play prompt
+    static var remotePlayPrompt: String { pick("Remote Play açıldı. Canlı çeviri başlasın mı?", "Remote Play is open. Start live translation?", "Remote Play ist offen. Live-Übersetzung starten?", "Remote Play está abierto. ¿Iniciar la traducción en vivo?", "Remote Play est ouvert. Lancer la traduction en direct ?") }
+    static var remotePlayPromptHint: String { pick("Kumandadayken: ⌃⌥L ile de başlatabilirsin", "Playing with a controller? ⌃⌥L starts it too", "Mit Controller? ⌃⌥L startet sie auch", "¿Con mando? ⌃⌥L también la inicia", "À la manette ? ⌃⌥L la lance aussi") }
+    static var start: String { pick("Başlat", "Start", "Starten", "Iniciar", "Lancer") }
+    static var chooseArea: String { pick("Yeni alan seç", "Choose Area", "Bereich wählen", "Elegir área", "Choisir la zone") }
+    static var whenRemotePlayOpens: String { pick("Remote Play açılınca", "When Remote Play opens", "Wenn Remote Play öffnet", "Al abrir Remote Play", "À l'ouverture de Remote Play") }
+    static var remotePlayAsk: String { pick("Sor", "Ask", "Fragen", "Preguntar", "Demander") }
+    static var remotePlayStart: String { pick("Otomatik başlat", "Start automatically", "Automatisch starten", "Iniciar automáticamente", "Lancer automatiquement") }
+    static var remotePlayNothing: String { pick("Hiçbir şey yapma", "Do nothing", "Nichts tun", "No hacer nada", "Ne rien faire") }
+
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
     static var psnBadToken: String { pick("Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al.", "The session token is invalid or expired. Get a new one.", "Das Sitzungstoken ist ungültig oder abgelaufen. Hol dir ein neues.", "El token de sesión no es válido o caducó. Consigue uno nuevo.", "Le jeton de session est invalide ou expiré. Récupérez-en un nouveau.") }

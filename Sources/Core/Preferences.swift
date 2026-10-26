@@ -26,6 +26,10 @@ final class Preferences {
     var followRemotePlay: Bool {
         didSet { defaults.set(followRemotePlay, forKey: Keys.followRemotePlay) }
     }
+    /// What happens when PS Remote Play opens.
+    var remotePlayAction: RemotePlayAction {
+        didSet { defaults.set(remotePlayAction.rawValue, forKey: Keys.remotePlayAction) }
+    }
     var batteryAlerts: Bool {
         didSet { defaults.set(batteryAlerts, forKey: Keys.batteryAlerts) }
     }
@@ -76,6 +80,7 @@ final class Preferences {
         targetLanguage = defaults.string(forKey: Keys.targetLanguage) ?? "tr"
         coverOriginal = defaults.bool(forKey: Keys.coverOriginal)
         followRemotePlay = defaults.bool(forKey: Keys.followRemotePlay)
+        remotePlayAction = RemotePlayAction(rawValue: defaults.string(forKey: Keys.remotePlayAction) ?? "") ?? .ask
         batteryAlerts = defaults.bool(forKey: Keys.batteryAlerts)
         subtitleFontSize = defaults.double(forKey: Keys.subtitleFontSize)
         liveRegion = defaults.string(forKey: Keys.liveRegion).map { NSRectFromString($0) }
@@ -86,6 +91,7 @@ final class Preferences {
         static let targetLanguage = "targetLanguage"
         static let coverOriginal = "coverOriginal"
         static let followRemotePlay = "followRemotePlay"
+        static let remotePlayAction = "remotePlayAction"
         static let batteryAlerts = "batteryAlerts"
         static let subtitleFontSize = "subtitleFontSize"
         static let liveRegion = "liveRegion"
@@ -93,6 +99,14 @@ final class Preferences {
         static let accurateRecognition = "accurateRecognition"
         static let debugRecording = "debugRecording"
     }
+}
+
+enum RemotePlayAction: String, CaseIterable, Identifiable {
+    /// Drop a small prompt from the top of the screen.
+    case ask
+    case start
+    case nothing
+    var id: String { rawValue }
 }
 
 /// Languages offered in settings. Recognition quality is best for Latin scripts.

@@ -135,6 +135,9 @@ func run() async {
         render("\(language)-subtitle", width: 900, height: 80,
                SubtitleView(text: "GAETANO: Bunu bana tekrar okur musun?", dimmed: false, fontSize: 22, width: 900,
                             minHeight: 0, background: 0.55).background(Color(red: 0.75, green: 0.68, blue: 0.5)))
+        render("\(language)-prompt", width: 760, height: 120,
+               PromptView(message: S.remotePlayPrompt, hint: S.remotePlayPromptHint,
+                          actions: [(S.start, true, {}), (S.chooseArea, false, {})], onClose: {}).padding(20))
         render("\(language)-result-card", width: 400, height: 260,
                ResultView(original: "Dear Enzo, I hope this message reaches you in good health.",
                           translation: "Sevgili Enzo, umarım bu mesaj sana sağlıkla ulaşır.", error: nil, onClose: {}))

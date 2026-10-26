@@ -61,7 +61,11 @@ struct SettingsView: View {
                     Slider(value: $prefs.subtitleFontSize, in: 14...36, step: 1)
                     Text(verbatim: "\(Int(prefs.subtitleFontSize))").monospacedDigit().frame(width: 28)
                 }
-                Toggle(S.followRemotePlay, isOn: $prefs.followRemotePlay)
+                Picker(S.whenRemotePlayOpens, selection: $prefs.remotePlayAction) {
+                    Text(S.remotePlayAsk).tag(RemotePlayAction.ask)
+                    Text(S.remotePlayStart).tag(RemotePlayAction.start)
+                    Text(S.remotePlayNothing).tag(RemotePlayAction.nothing)
+                }
                 Text(S.followRemotePlayHint)
                     .font(.caption).foregroundStyle(.secondary)
             }

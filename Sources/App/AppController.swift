@@ -28,15 +28,24 @@ final class AppController {
         HotKeys.shared.register(.trophies) { [weak self] in self?.showTrophies() }
 
         remotePlay.onActivate = { [weak self] in
-            guard let self, self.prefs.followRemotePlay, !self.autoStarted, !self.isLive,
-                  self.prefs.liveRegion != nil else { return }
+            // Once per Remote Play launch, so stopping or dismissing by hand sticks.
+            guard let self, !self.autoStarted, !self.isLive else { return }
             self.autoStarted = true
-            self.startLive(reselect: false)
+            switch self.prefs.remotePlayAction {
+            case .nothing: break
+            case .start: self.startLive(reselect: self.prefs.liveRegion == nil)
+            case .ask:
+                Prompt.show(S.remotePlayPrompt, hint: S.remotePlayPromptHint, actions: [
+                    (S.start, true, { [weak self] in self?.startLive(reselect: false) }),
+                    (S.chooseArea, false, { [weak self] in self?.startLive(reselect: true) }),
+                ])
+            }
         }
         remotePlay.onQuit = { [weak self] in
             guard let self else { return }
             self.autoStarted = false
-            if self.prefs.followRemotePlay { self.stopLive() }
+            Prompt.dismiss()
+            if self.prefs.remotePlayAction != .nothing { self.stopLive() }
         }
         remotePlay.start()
         ControllerWatch.shared.start()
@@ -61,6 +70,7 @@ final class AppController {
     // MARK: Live translation
 
     func toggleLive() {
+        Prompt.dismiss()
         isLive ? stopLive() : startLive(reselect: false)
     }
 

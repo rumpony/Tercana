@@ -60,8 +60,16 @@ struct SubtitleView: View {
     let minHeight: CGFloat
     let background: Double
 
+    /// "MEHMET: naber" → the name in the accent colour games use for speakers, the line in white.
+    private var styled: Text {
+        let parts = SubtitleText.splitSpeaker(text)
+        guard !dimmed, let speaker = parts.speaker else { return Text(text) }
+        let name = Text(speaker + ": ").foregroundColor(Color(red: 1.0, green: 0.82, blue: 0.3))
+        return Text("\(name)\(parts.line)")
+    }
+
     var body: some View {
-        Text(text)
+        styled
             .font(.system(size: dimmed ? 13 : fontSize, weight: .semibold))
             .foregroundStyle(dimmed ? .white.opacity(0.75) : .white)
             // A tight dark outline keeps the text readable over the game when the box is see-through.
