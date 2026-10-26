@@ -29,6 +29,12 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
         let stack = NSStackView(views: [header, web])
         stack.orientation = .vertical
         stack.spacing = 0
+        stack.alignment = .width
+        // A web view has no natural size; without these it collapses to nothing inside the stack.
+        web.translatesAutoresizingMaskIntoConstraints = false
+        web.setContentHuggingPriority(.defaultLow, for: .vertical)
+        web.heightAnchor.constraint(greaterThanOrEqualToConstant: 560).isActive = true
+        header.setContentHuggingPriority(.required, for: .vertical)
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 520, height: 720),
                               styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
         window.title = S.signInWithPlayStation
