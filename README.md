@@ -54,7 +54,7 @@ If you live on PSNProfiles and PowerPyx, SubLens brings that view to your Mac: r
 ## Privacy
 
 - Screen reading and translation run **on your Mac** with Apple frameworks. No subtitles, screenshots or analytics leave your computer.
-- Trophies are optional. Signing in happens on Sony's own page; SubLens stores only the resulting session token, in your Keychain, and only reads data.
+- Trophies are optional. Signing in happens on Sony's own page; SubLens stores only the resulting session token, in a file only your user account can read, and only reads data.
 
 ## How it works
 
