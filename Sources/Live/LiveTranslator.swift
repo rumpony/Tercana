@@ -46,6 +46,7 @@ final class LiveTranslator {
         isRunning = true
         state = .waiting
         recorder.beginSession()
+        ScreenGrabber.shared.reset()
         // The first request after a while loads the translation model; do it before subtitles arrive.
         let (source, target) = (prefs.sourceLanguage, prefs.targetLanguage)
         Task { _ = try? await Translator.shared.translate("Hello.", from: source, to: target) }
@@ -69,6 +70,9 @@ final class LiveTranslator {
     }
 
     private func tick() async {
+        // With Remote Play running, anything else in front (a browser guide, a chat) covers the
+        // region; recordings showed those being translated. Wait until the game is back.
+        if RemotePlayWatcher.isRunning, !RemotePlayWatcher.isFrontmost { return }
         let image: CGImage
         do {
             image = try await ScreenGrabber.shared.capture(region)
@@ -99,7 +103,11 @@ final class LiveTranslator {
         }
         guard isRunning else { return }
 
-        let change = stabilizer.feed(reading.text)
+        // Text already in the language we translate into (a Turkish guide, a PS notification) isn't a subtitle.
+        let target = prefs.targetLanguage
+        let readable = SubtitleText.likelyLanguage(of: reading.text, expected: prefs.sourceLanguage) == target
+            ? "" : reading.text
+        let change = stabilizer.feed(readable)
         switch change {
         case .show(let line):
             onScreen = line
@@ -131,7 +139,10 @@ final class LiveTranslator {
             let started = ContinuousClock.now
             do {
                 let parts = SubtitleText.splitSpeaker(line)
-                let body = try await Translator.shared.translate(parts.line, from: source, to: target)
+                // Games mix in other languages ("Ai posti! Pronti!"); translate those from what they are.
+                let from = SubtitleText.likelyLanguage(of: parts.line, expected: source) ?? source
+                let body = from == target ? parts.line
+                    : try await Translator.shared.translate(parts.line, from: from, to: target)
                 let translated = parts.speaker.map { "\($0): \(body)" } ?? body
                 SubtitleLog.shared.add(original: line, translation: translated)
                 if self.recorder.isOn {

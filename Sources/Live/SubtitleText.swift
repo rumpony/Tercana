@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import NaturalLanguage
 
 /// Turns raw recognized lines into the subtitle we actually want to translate.
 enum SubtitleText {
@@ -54,6 +55,8 @@ enum SubtitleText {
         guard letters.count >= 2 else { return true }
         let words = text.uppercased().split { !$0.isLetter }.map(String.init)
         if isControlHint(text) { return true }
+        // System notifications and HUD clocks ("12:25:19 PM").
+        if text.range(of: #"\b\d{1,2}:\d{2}(:\d{2})?\b"#, options: .regularExpression) != nil { return true }
         if text.contains("%"), words.count <= 3 { return true }
         guard !letters.contains(where: \.isLowercase) else { return false }
         return !words.isEmpty && words.allSatisfy { word in
@@ -75,6 +78,18 @@ enum SubtitleText {
     /// Bullet glyphs some games put before a speaker.
     private static func stripDecoration(_ line: String) -> String {
         line.trimmingCharacters(in: CharacterSet(charactersIn: "•·◦▪︎●-–— ").union(.whitespaces))
+    }
+
+    /// The language a line is clearly written in, when that differs from `expected`.
+    /// Short exclamations are left alone: the recognizer guesses wildly on two words.
+    static func likelyLanguage(of text: String, expected: String) -> String? {
+        guard text.split(separator: " ").count >= 3 else { return nil }
+        let recognizer = NLLanguageRecognizer()
+        recognizer.processString(text)
+        guard let (language, confidence) = recognizer.languageHypotheses(withMaximum: 1).first,
+              confidence >= 0.85 else { return nil }
+        let code = language == .simplifiedChinese ? "zh-Hans" : language.rawValue
+        return code == expected ? nil : code
     }
 
     /// "MINE GUARD: Almost." → ("MINE GUARD", "Almost."). Names stay untranslated.

@@ -27,6 +27,11 @@ final class ScreenGrabber {
         CGRequestScreenCaptureAccess()
     }
 
+    /// Forget cached filters, e.g. when a live session starts or displays change.
+    func reset() {
+        cachedFilters.removeAll()
+    }
+
     /// `rect` is in global AppKit coordinates (origin bottom-left of the main display).
     func capture(_ rect: CGRect) async throws -> CGImage {
         guard Self.hasPermission else { throw ScreenGrabberError.noPermission }
@@ -54,11 +59,15 @@ final class ScreenGrabber {
 
     private func filter(for displayID: CGDirectDisplayID) async throws -> SCContentFilter {
         if let cached = cachedFilters[displayID] { return cached }
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        // Ask for all windows, not just on-screen ones: with only on-screen windows SubLens is
+        // missing from the list whenever it has nothing showing yet, the exclusion silently
+        // becomes empty, and the translation overlay later gets read back as a subtitle.
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         guard let display = content.displays.first(where: { $0.displayID == displayID }) else {
             throw ScreenGrabberError.displayNotFound
         }
         let ownApps = content.applications.filter { $0.processID == ProcessInfo.processInfo.processIdentifier }
+        guard !ownApps.isEmpty else { throw ScreenGrabberError.displayNotFound }
         let filter = SCContentFilter(display: display, excludingApplications: ownApps, exceptingWindows: [])
         cachedFilters[displayID] = filter
         return filter

@@ -24,7 +24,8 @@ final class DebugRecorder {
     }
 
     static let shared = DebugRecorder()
-    private static let maxFrames = 3000
+    /// Half-resolution JPEGs are ~10× smaller than the PNGs were, so sessions can run for hours.
+    private static let maxFrames = 30000
 
     static var rootFolder: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -53,15 +54,23 @@ final class DebugRecorder {
     }
 
     /// Saves the frame as PNG and returns its file name.
+    /// Saves the frame in the background and returns its file name right away.
     func saveFrame(_ image: CGImage) -> String? {
         guard let folder, frameCount < Self.maxFrames else { return nil }
         frameCount += 1
-        let name = String(format: "%05d.png", frameCount)
+        let name = String(format: "%05d.jpg", frameCount)
         let url = folder.appendingPathComponent(name)
-        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)
-        else { return nil }
-        CGImageDestinationAddImage(destination, image, nil)
-        return CGImageDestinationFinalize(destination) ? name : nil
+        Task.detached(priority: .utility) {
+            guard let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.jpeg.identifier as CFString, 1, nil)
+            else { return }
+            let options: [CFString: Any] = [
+                kCGImageDestinationLossyCompressionQuality: 0.7,
+                kCGImageDestinationImageMaxPixelSize: max(image.width, image.height) / 2,
+            ]
+            CGImageDestinationAddImage(destination, image, options as CFDictionary)
+            CGImageDestinationFinalize(destination)
+        }
+        return name
     }
 
     func log(_ record: Record) {
