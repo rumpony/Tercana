@@ -56,13 +56,15 @@ struct SettingsView: View {
                 Toggle(S.coverOriginal, isOn: $prefs.coverOriginal)
                 HStack {
                     Text(S.backgroundOpacity)
-                    Slider(value: $prefs.subtitleBackground, in: 0...1, step: 0.05)
-                    Text(S.percent(prefs.subtitleBackground)).monospacedDigit().frame(width: 44)
+                    Spacer()
+                    Slider(value: $prefs.subtitleBackground, in: 0...1, step: 0.05).frame(width: 240)
+                    Text(S.percent(prefs.subtitleBackground)).monospacedDigit().frame(width: 44, alignment: .trailing)
                 }
                 HStack {
                     Text(S.textSize)
-                    Slider(value: $prefs.subtitleFontSize, in: 14...36, step: 1)
-                    Text(verbatim: "\(Int(prefs.subtitleFontSize))").monospacedDigit().frame(width: 28)
+                    Spacer()
+                    Slider(value: $prefs.subtitleFontSize, in: 14...36, step: 1).frame(width: 240)
+                    Text(verbatim: "\(Int(prefs.subtitleFontSize))").monospacedDigit().frame(width: 44, alignment: .trailing)
                 }
                 Picker(S.whenRemotePlayOpens, selection: $prefs.remotePlayAction) {
                     Text(S.remotePlayAsk).tag(RemotePlayAction.ask)

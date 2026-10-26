@@ -21,7 +21,7 @@ struct SubtitleLogView: View {
             } else {
                 List(log.entries) { entry in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(entry.translation)
+                        SpeakerLine(text: entry.translation)
                             .font(.system(size: 15))
                             .textSelection(.enabled)
                         if showOriginal {
@@ -39,5 +39,20 @@ struct SubtitleLogView: View {
             }
         }
         .frame(minWidth: 380, minHeight: 300)
+    }
+}
+
+/// "ENZO: …" with the name in the same colour the subtitle overlay uses.
+struct SpeakerLine: View {
+    let text: String
+
+    var body: some View {
+        let parts = SubtitleText.splitSpeaker(text)
+        if let speaker = parts.speaker {
+            let name = Text(speaker + ": ").foregroundColor(Color(red: 0.85, green: 0.62, blue: 0.0)).bold()
+            Text("\(name)\(parts.line)")
+        } else {
+            Text(text)
+        }
     }
 }

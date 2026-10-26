@@ -50,7 +50,7 @@ struct HomeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.18), value: router.tab)
         }
-        .frame(minWidth: 900, minHeight: 660)
+        .frame(minWidth: 1040, minHeight: 660)
     }
 }
 
@@ -85,13 +85,13 @@ private struct HomePage: View {
                     app.toggleLive()
                 } label: {
                     Label(app.isLive ? S.stopLive : S.startLive, systemImage: app.isLive ? "stop.fill" : "play.fill")
-                        .frame(minWidth: 200)
+                        .frame(width: 210)
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(app.isLive ? .red : .accentColor)
                 .controlSize(.large)
                 Button { app.translateArea() } label: {
-                    Label(S.translateArea, systemImage: "viewfinder").frame(minWidth: 160)
+                    Label(S.translateArea, systemImage: "viewfinder").frame(width: 210)
                 }
                 .controlSize(.large)
             }
@@ -112,6 +112,8 @@ private struct HomePage: View {
     private func chip(_ symbol: String, _ text: String) -> some View {
         Label(text, systemImage: symbol)
             .font(.callout)
+            .lineLimit(1)
+            .frame(width: 210)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(.quaternary.opacity(0.6), in: Capsule())

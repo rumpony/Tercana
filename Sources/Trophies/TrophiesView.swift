@@ -20,7 +20,7 @@ struct TrophiesView: View {
                 SignInView(store: store)
             }
         }
-        .frame(minWidth: 860, minHeight: 600)
+        .frame(minWidth: 1040, minHeight: 600)
         .task { await store.load() }
     }
 
@@ -176,21 +176,22 @@ private struct ProfilePage: View {
                         .frame(width: 92, height: 92)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(S.trophyLevel(profile.level)).font(.title2.bold())
-                            Text(S.toNextLevel(Double(profile.progress) / 100)).foregroundStyle(.secondary)
+                            Text(S.toNextLevel(Double(profile.progress) / 100) + "  ·  " + S.gamesPlayed + ": \(store.games.count)")
+                                .foregroundStyle(.secondary)
                             GradeCounts(counts: profile.earnedTrophies)
                         }
                     }
                 }
 
                 Fold(S.summary, key: "summary") {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
+                // Four equal tiles in one row; games played moves to the header line.
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
                     StatTile(title: S.totalTrophies,
                              value: "\(store.profile?.earnedTrophies.total ?? store.games.map(\.earnedTrophies.total).reduce(0, +))",
                              symbol: "trophy")
                     StatTile(title: S.platinums, value: "\(store.platinumGames.count)", symbol: "trophy.fill")
                     StatTile(title: S.completedGames, value: "\(store.completedCount)", symbol: "checkmark.seal")
                     StatTile(title: S.averageCompletion, value: S.percent(store.averageCompletion), symbol: "chart.pie")
-                    StatTile(title: S.gamesPlayed, value: "\(store.games.count)", symbol: "gamecontroller")
                 }
                 }
 
@@ -229,10 +230,11 @@ private struct StatTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label(title, systemImage: symbol).font(.callout).foregroundStyle(.secondary)
+                .lineLimit(1)
             Text(verbatim: value).font(.system(size: 26, weight: .semibold)).monospacedDigit()
         }
         .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
     }
 }
@@ -456,7 +458,7 @@ private struct GameTrophies: View {
                 HStack(spacing: 18) {
                     stat(S.firstTrophy, Self.day(stats.first))
                     stat(S.latestTrophy, Self.day(stats.last))
-                    stat("⏱", S.spanDays(max(1, Calendar.current.dateComponents([.day], from: stats.first, to: stats.last).day ?? 0)))
+                    stat(S.duration, S.spanDays(max(1, Calendar.current.dateComponents([.day], from: stats.first, to: stats.last).day ?? 0)))
                     if let rarest = stats.rarest {
                         stat(S.rarestEarned, rarest.name + (rarest.earnedRate.map { " · " + S.percent($0 / 100, digits: 1) } ?? ""))
                     }
@@ -477,15 +479,18 @@ private struct GameTrophies: View {
                     .controlSize(.small)
             }
             HStack(spacing: 12) {
+                // The options name themselves ("Easiest first", "Any rarity"), so no side labels.
                 Picker(S.order, selection: $store.order) {
                     ForEach(TrophyStore.Order.allCases) { Text($0.title).tag($0) }
                 }
-                .frame(maxWidth: 230)
+                .labelsHidden()
+                .fixedSize()
                 Picker(S.rarity, selection: $store.rarityFilter) {
                     Text(S.anyRarity).tag(TrophyRarity?.none)
                     ForEach(TrophyRarity.allCases) { Text($0.label).tag(TrophyRarity?.some($0)) }
                 }
-                .frame(maxWidth: 230)
+                .labelsHidden()
+                .fixedSize()
                 Spacer(minLength: 0)
             }
         }

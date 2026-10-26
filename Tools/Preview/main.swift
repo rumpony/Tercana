@@ -137,10 +137,10 @@ func run() async {
         for (name, page) in pages {
             await store.open(page)
             render("\(language)-trophies-\(name)", width: 1100, height: 720, TrophiesView())
-            render("\(language)-trophies-\(name)-min", width: 900, height: 620, TrophiesView())
+            render("\(language)-trophies-\(name)-min", width: 1040, height: 620, TrophiesView())
         }
         await store.open(.game("G1"))
-        render("\(language)-trophies-game-min", width: 900, height: 600, TrophiesView())
+        render("\(language)-trophies-game-min", width: 1040, height: 600, TrophiesView())
         render("\(language)-trophies-game-dark", width: 1100, height: 720, dark: true, TrophiesView())
         TrophyLibrary.shared.usePreviewData([])
         await store.open(.stats)
@@ -158,7 +158,7 @@ func run() async {
         for tab in HomeView.Tab.allCases {
             let router = HomeRouter()
             router.tab = tab
-            for (label, w, h) in [("min", 900.0, 660.0), ("default", 1040.0, 720.0)] {
+            for (label, w, h) in [("min", 1040.0, 660.0), ("default", 1040.0, 720.0)] {
                 render("\(language)-home-\(tab.rawValue)-\(label)", width: w, height: h, HomeView(router: router))
             }
         }

@@ -190,7 +190,7 @@ enum S {
     static var totalTrophies: String { pick("Toplam kupa", "Total trophies", "Trophäen gesamt", "Trofeos totales", "Trophées au total") }
     static var platinums: String { pick("Platinler", "Platinums", "Platin-Trophäen", "Platinos", "Platines") }
     static var completedGames: String { pick("%100 biten oyun", "100% games", "100-%-Spiele", "Juegos al 100 %", "Jeux à 100 %") }
-    static var averageCompletion: String { pick("Ortalama tamamlama", "Average completion", "Durchschnittlicher Abschluss", "Compleción media", "Complétion moyenne") }
+    static var averageCompletion: String { pick("Ort. tamamlama", "Average completion", "Durchschnittlicher Abschluss", "Compleción media", "Complétion moyenne") }
     static var gamesPlayed: String { pick("Oynanan oyun", "Games played", "Gespielte Spiele", "Juegos jugados", "Jeux joués") }
     static var ultraRare: String { pick("Ultra nadir", "Ultra rare", "Ultra selten", "Ultra raro", "Ultra rare") }
     static var veryRare: String { pick("Çok nadir", "Very rare", "Sehr selten", "Muy raro", "Très rare") }
@@ -292,6 +292,8 @@ enum S {
     static var pressShortcut: String { pick("Kısayola bas…", "Press keys…", "Tasten drücken…", "Pulsa las teclas…", "Appuyez sur les touches…") }
     static var restoreDefault: String { pick("Varsayılana dön", "Restore default", "Standard wiederherstellen", "Restaurar", "Rétablir") }
     static var shortcutHint: String { pick("Değiştirmek için kısayola tıkla ve yeni tuşlara bas (en az bir ⌃ ⌥ ⌘ tuşuyla). Esc: vazgeç.", "Click a shortcut and press the new keys (with at least one of ⌃ ⌥ ⌘). Esc cancels.", "Klicke auf ein Kürzel und drücke die neuen Tasten (mit ⌃ ⌥ oder ⌘). Esc bricht ab.", "Haz clic en un atajo y pulsa las nuevas teclas (con ⌃ ⌥ o ⌘). Esc cancela.", "Cliquez sur un raccourci et appuyez sur les nouvelles touches (avec ⌃ ⌥ ou ⌘). Échap annule.") }
+
+    static var duration: String { pick("Süre", "Duration", "Dauer", "Duración", "Durée") }
 
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
