@@ -29,4 +29,4 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" SubLens.zip --title "SubLens $GITHUB_REF_NAME" --generate-notes
+        run: gh release upload "$GITHUB_REF_NAME" SubLens.zip --clobber || gh release create "$GITHUB_REF_NAME" SubLens.zip --title "SubLens $GITHUB_REF_NAME" --generate-notes
