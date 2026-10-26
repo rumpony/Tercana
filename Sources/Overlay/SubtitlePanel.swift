@@ -60,7 +60,7 @@ struct SubtitleView: View {
     let minHeight: CGFloat
     let background: Double
 
-    /// "MEHMET: naber" → the name in the accent colour games use for speakers, the line in white.
+    /// "ENZO: Ciao." → the name in the accent colour games use for speakers, the line in white.
     private var styled: Text {
         let parts = SubtitleText.splitSpeaker(text)
         guard !dimmed, let speaker = parts.speaker else { return Text(text) }
