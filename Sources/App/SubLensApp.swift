@@ -27,6 +27,8 @@ private struct MenuContent: View {
     var body: some View {
         // Reading the language here makes the menu rebuild when it changes.
         let _ = prefs.appLanguage
+        Button(S.openSubLens) { app.showHome() }
+        Divider()
         Button(app.isLive ? S.stopLive : S.startLive) { app.toggleLive() }
             .keyboardShortcut("l", modifiers: [.control, .option])
         Button(S.newLiveArea) { app.startLive(reselect: true) }

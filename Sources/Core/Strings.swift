@@ -281,6 +281,13 @@ enum S {
     static var advancedManualToken: String { pick("Gelişmiş: anahtarı elle gir", "Advanced: enter the token by hand", "Erweitert: Token manuell eingeben", "Avanzado: introducir el token a mano", "Avancé : saisir le jeton manuellement") }
     static var manualStep: String { pick("playstation.com'a giriş yaptığın tarayıcıda bu sayfadaki \"npsso\" değerini kopyala:", "In a browser signed in to playstation.com, copy the \"npsso\" value from this page:", "Kopiere im bei playstation.com angemeldeten Browser den „npsso“-Wert von dieser Seite:", "En un navegador con sesión en playstation.com, copia el valor «npsso» de esta página:", "Dans un navigateur connecté à playstation.com, copiez la valeur « npsso » de cette page :") }
 
+    // MARK: Home
+    static var openSubLens: String { pick("SubLens'i aç", "Open SubLens", "SubLens öffnen", "Abrir SubLens", "Ouvrir SubLens") }
+    static var homeTab: String { pick("Ana sayfa", "Home", "Start", "Inicio", "Accueil") }
+    static var settingsTab: String { pick("Ayarlar", "Settings", "Einstellungen", "Ajustes", "Réglages") }
+    static var liveOn: String { pick("Canlı çeviri açık", "Live translation is on", "Live-Übersetzung läuft", "Traducción en vivo activada", "Traduction en direct activée") }
+    static var liveOff: String { pick("Canlı çeviri kapalı", "Live translation is off", "Live-Übersetzung aus", "Traducción en vivo desactivada", "Traduction en direct désactivée") }
+
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
     static var psnBadToken: String { pick("Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al.", "The session token is invalid or expired. Get a new one.", "Das Sitzungstoken ist ungültig oder abgelaufen. Hol dir ein neues.", "El token de sesión no es válido o caducó. Consigue uno nuevo.", "Le jeton de session est invalide ou expiré. Récupérez-en un nouveau.") }

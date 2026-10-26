@@ -167,17 +167,19 @@ final class AppController {
 
     // MARK: Windows
 
-    func showSubtitleLog() {
-        present(id: "log", title: { S.subtitleLog }, size: CGSize(width: 520, height: 600)) { SubtitleLogView() }
+    @ObservationIgnored let router = HomeRouter()
+
+    /// Everything lives in one window; the menu and shortcuts just pick the tab.
+    func showHome(_ tab: HomeView.Tab = .home) {
+        withAnimation(.easeInOut(duration: 0.18)) { router.tab = tab }
+        present(id: "home", title: { "SubLens" }, size: CGSize(width: 1040, height: 720)) { [router] in
+            HomeView(router: router)
+        }
     }
 
-    func showTrophies() {
-        present(id: "trophies", title: { S.trophies }, size: CGSize(width: 980, height: 680)) { TrophiesView() }
-    }
-
-    func showSettings() {
-        present(id: "settings", title: { S.settingsTitle }, size: CGSize(width: 520, height: 620)) { SettingsView() }
-    }
+    func showSubtitleLog() { showHome(.history) }
+    func showTrophies() { showHome(.trophies) }
+    func showSettings() { showHome(.settings) }
 
     func window(id: String) -> NSWindow? { windows[id]?.window }
 
