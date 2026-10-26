@@ -4,8 +4,11 @@ import Security
 /// Small wrapper around generic-password Keychain items for this app.
 enum SecureStore {
     private static let service = "com.rumpony.SubLens"
+    /// The local UI preview tool runs this code outside the app; it must never touch the real keychain.
+    private static let disabled = ProcessInfo.processInfo.environment["SUBLENS_PREVIEW"] != nil
 
     static func string(for key: String) -> String? {
+        guard !disabled else { return nil }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -20,6 +23,7 @@ enum SecureStore {
     }
 
     static func set(_ value: String?, for key: String) {
+        guard !disabled else { return }
         let match: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

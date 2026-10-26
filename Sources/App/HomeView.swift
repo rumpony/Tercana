@@ -50,7 +50,7 @@ struct HomeView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.18), value: router.tab)
         }
-        .frame(minWidth: 900, minHeight: 620)
+        .frame(minWidth: 900, minHeight: 660)
     }
 }
 

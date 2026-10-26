@@ -77,6 +77,8 @@ for (index, g) in games.prefix(6).enumerated() {
 
 // MARK: Rendering
 
+var failures: [String] = []
+
 @MainActor
 func render<V: View>(_ name: String, width: CGFloat, height: CGFloat, dark: Bool = false, _ view: V) {
     let window = NSWindow(contentRect: CGRect(x: -20000, y: -20000, width: width, height: height),
@@ -93,6 +95,15 @@ func render<V: View>(_ name: String, width: CGFloat, height: CGFloat, dark: Bool
         RunLoop.main.run(until: Date().addingTimeInterval(0.1))
         host.layoutSubtreeIfNeeded()
     }
+    // Layout check: content that needs more room than the window has gets clipped or pushed off-centre.
+    // Ask how wide the content ends up when offered exactly this width. Truncating text and
+    // wrapping grids fit; fixed rows that can't shrink report more than they were given.
+    let measurer = NSHostingController(rootView: view.environment(\.locale, S.locale))
+    let needed = measurer.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
+    // Width only: pages scroll vertically, but anything wider than the window is cut off.
+    if needed.width > width + 1 {
+        failures.append("\(name): needs \(Int(needed.width))×\(Int(needed.height)), window is \(Int(width))×\(Int(height))")
+    }
     guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
     host.cacheDisplay(in: host.bounds, to: rep)
     try? rep.representation(using: .png, properties: [:])?.write(to: output.appendingPathComponent("\(name).png"))
@@ -104,6 +115,10 @@ func render<V: View>(_ name: String, width: CGFloat, height: CGFloat, dark: Bool
 func run() async {
     _ = NSApplication.shared
     NSApp.setActivationPolicy(.prohibited)
+    // Canary: a row that can't shrink must be reported, or the layout check itself is broken.
+    render("canary", width: 400, height: 100, HStack { Text("fixed").frame(width: 600) })
+    guard failures.count == 1 else { print("LAYOUT CHECK BROKEN: canary not caught"); exit(2) }
+    failures.removeAll()
     let languages = CommandLine.arguments.count > 3 ? CommandLine.arguments[3].split(separator: ",").map(String.init) : ["tr"]
     for language in languages {
         UserDefaults.standard.set(language, forKey: AppLanguage.defaultsKey)
@@ -122,11 +137,12 @@ func run() async {
         for (name, page) in pages {
             await store.open(page)
             render("\(language)-trophies-\(name)", width: 1100, height: 720, TrophiesView())
+            render("\(language)-trophies-\(name)-min", width: 900, height: 620, TrophiesView())
         }
         await store.open(.game("G1"))
         render("\(language)-trophies-game-min", width: 900, height: 600, TrophiesView())
         render("\(language)-trophies-game-dark", width: 1100, height: 720, dark: true, TrophiesView())
-        render("\(language)-settings", width: 520, height: 900, SettingsView())
+        render("\(language)-settings", width: 900, height: 900, SettingsView())
 
         SubtitleLog.shared.clear()
         SubtitleLog.shared.add(original: "GAETANO: Read this again for me, will you?", translation: "GAETANO: Bunu bana tekrar okur musun?")
@@ -135,7 +151,13 @@ func run() async {
         render("\(language)-subtitle", width: 900, height: 80,
                SubtitleView(text: "GAETANO: Bunu bana tekrar okur musun?", dimmed: false, fontSize: 22, width: 900,
                             minHeight: 0, background: 0.55).background(Color(red: 0.75, green: 0.68, blue: 0.5)))
-        render("\(language)-home", width: 1040, height: 720, HomeView(router: HomeRouter()))
+        for tab in HomeView.Tab.allCases {
+            let router = HomeRouter()
+            router.tab = tab
+            for (label, w, h) in [("min", 900.0, 660.0), ("default", 1040.0, 720.0)] {
+                render("\(language)-home-\(tab.rawValue)-\(label)", width: w, height: h, HomeView(router: router))
+            }
+        }
         render("\(language)-psn-signin", width: 900, height: 600, SignInView(store: TrophyStore.shared))
         render("\(language)-prompt", width: 760, height: 120,
                PromptView(message: S.remotePlayPrompt, hint: S.remotePlayPromptHint,
@@ -145,7 +167,13 @@ func run() async {
                           translation: "Sevgili Enzo, umarım bu mesaj sana sağlıkla ulaşır.", error: nil, onClose: {}))
         TrophyTargets.shared.toggle(trophies[1], in: games[0])
     }
-    exit(0)
+    if failures.isEmpty {
+        print("LAYOUT OK")
+        exit(0)
+    }
+    print("LAYOUT FAILURES:")
+    failures.forEach { print("  ✗ \($0)") }
+    exit(1)
 }
 
 Task { await run() }

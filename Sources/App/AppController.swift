@@ -194,7 +194,10 @@ final class AppController {
                               backing: .buffered, defer: false)
         window.title = title()
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: LocalizedRoot(content: content))
+        let host = NSHostingView(rootView: LocalizedRoot(content: content))
+        // Let SwiftUI's minimum size bound the window, so it can't be shrunk until content spills out.
+        host.sizingOptions = [.minSize]
+        window.contentView = host
         window.center()
         windows[id] = (window, title)
         NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window,

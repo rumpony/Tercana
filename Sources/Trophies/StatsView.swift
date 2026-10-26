@@ -108,7 +108,8 @@ private struct StreakBlock: View {
 
     var body: some View {
         let streaks = stats.streaks()
-        HStack(spacing: 24) {
+        // A grid wraps on narrow windows instead of pushing the page wider than the window.
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), alignment: .leading)], alignment: .leading, spacing: 12) {
             figure(S.longestStreak, S.spanDays(streaks.longest))
             figure(S.currentStreak, S.spanDays(streaks.current))
             if let busiest = stats.busiestDay {
@@ -200,6 +201,8 @@ private struct BarBlock: View {
                 }
         }
         .chartXScale(domain: buckets.sorted { $0.order < $1.order }.map(\.label))
+        // Charts ask for room for every axis label; let them shrink to the page instead.
+        .frame(minWidth: 0, maxWidth: .infinity)
         .frame(height: 170)
     }
 }

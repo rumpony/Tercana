@@ -7,4 +7,4 @@ langs=${2:-tr}
 bin=$(mktemp -d)/preview
 swiftc -swift-version 5 -target arm64-apple-macos26.0 -sdk "$(xcrun --show-sdk-path)" -o "$bin" \
   $(find Sources -name '*.swift' ! -name 'SubLensApp.swift') Tools/Preview/main.swift
-"$bin" "$out" "$PWD/Tools/Preview/assets" "$langs"
+SUBLENS_PREVIEW=1 "$bin" "$out" "$PWD/Tools/Preview/assets" "$langs"

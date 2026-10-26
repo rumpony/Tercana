@@ -20,7 +20,7 @@ struct TrophiesView: View {
                 SignInView(store: store)
             }
         }
-        .frame(minWidth: 900, minHeight: 600)
+        .frame(minWidth: 860, minHeight: 600)
         .task { await store.load() }
     }
 
