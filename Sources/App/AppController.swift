@@ -184,8 +184,7 @@ final class AppController {
     private func present<V: View>(id: String, title: @escaping () -> String, size: CGSize,
                                   content: @escaping () -> V) {
         if let window = windows[id]?.window {
-            NSApp.activate()
-            window.makeKeyAndOrderFront(nil)
+            bringForward(window)
             return
         }
         let window = NSWindow(contentRect: CGRect(origin: .zero, size: size),
@@ -196,8 +195,27 @@ final class AppController {
         window.contentView = NSHostingView(rootView: LocalizedRoot(content: content))
         window.center()
         windows[id] = (window, title)
+        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window,
+                                               queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.windowClosed() }
+        }
+        bringForward(window)
+    }
+
+    /// A menu-bar-only app can't keep a window active: its switches and buttons draw grey and it
+    /// slips behind other apps. Act as a regular app while a window is open.
+    private func bringForward(_ window: NSWindow) {
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
+    }
+
+    private func windowClosed() {
+        // The closing window still counts as visible during this notification.
+        DispatchQueue.main.async {
+            let open = self.windows.values.filter { $0.window.isVisible }
+            if open.isEmpty { NSApp.setActivationPolicy(.accessory) }
+        }
     }
 }
 

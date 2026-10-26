@@ -621,57 +621,61 @@ private struct RemoteIcon: View {
 
 // MARK: - Sign in
 
-private struct SignInView: View {
+struct SignInView: View {
     let store: TrophyStore
     @State private var token = ""
+    @State private var manual = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Label(S.connectPSN, systemImage: "trophy.fill")
-                .font(.title2.bold())
-            Text(S.connectIntro)
+        VStack(spacing: 18) {
+            Image(systemName: "trophy.circle.fill").font(.system(size: 54)).foregroundStyle(.tint)
+            Text(S.connectPSN).font(.title2.bold())
+            Text(S.connectIntroShort)
+                .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    step(1, S.connectStep1)
-                    Button(S.signInSony) { NSWorkspace.shared.open(PSNClient.signInURL) }
+                .frame(maxWidth: 420)
+            Button {
+                PSNWebLogin.shared.begin { token in
+                    Task { await store.signIn(sessionToken: token) }
                 }
-                HStack {
-                    step(2, S.connectStep2)
-                    Button(S.openPage) { NSWorkspace.shared.open(PSNClient.sessionTokenURL) }
-                }
-                step(3, S.connectStep3)
-                Text(S.invalidLoginHint)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            } label: {
+                Label(S.signInWithPlayStation, systemImage: "person.badge.key")
+                    .frame(minWidth: 240)
             }
-            HStack {
-                SecureField(S.tokenPlaceholder, text: $token)
-                    .textFieldStyle(.roundedBorder)
-                Button(S.connect) {
-                    let value = extract(token)
-                    Task { await store.signIn(sessionToken: value) }
-                }
-                .disabled(token.isEmpty || store.loading)
-                .keyboardShortcut(.defaultAction)
-            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(store.loading)
             if store.loading { ProgressView().controlSize(.small) }
             if let problem = store.problem {
-                Text(problem).foregroundStyle(.red)
+                Text(problem).foregroundStyle(.red).multilineTextAlignment(.center).frame(maxWidth: 420)
             }
+            DisclosureGroup(S.advancedManualToken, isExpanded: $manual) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(S.manualStep)
+                        Button(S.openPage) { NSWorkspace.shared.open(PSNClient.sessionTokenURL) }
+                    }
+                    HStack {
+                        SecureField(S.tokenPlaceholder, text: $token).textFieldStyle(.roundedBorder)
+                        Button(S.connect) {
+                            let value = extract(token)
+                            Task { await store.signIn(sessionToken: value) }
+                        }
+                        .disabled(token.isEmpty || store.loading)
+                    }
+                }
+                .padding(.top, 6)
+            }
+            .frame(maxWidth: 460)
+            .font(.callout)
             Text(S.unofficialNote)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 440)
         }
         .padding(32)
-        .frame(maxWidth: 560)
-    }
-
-    private func step(_ number: Int, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(verbatim: "\(number)").font(.headline).foregroundStyle(.tint)
-            Text(text)
-        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// Accepts either the bare token or the whole JSON the page shows.
