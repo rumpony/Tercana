@@ -21,6 +21,8 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
         config.websiteDataStore = .nonPersistent()
         let web = WKWebView(frame: .zero, configuration: config)
         web.navigationDelegate = self
+        // Sony's sign-in rejects unknown embedded browsers; present as Safari.
+        web.customUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15"
         web.load(URLRequest(url: PSNClient.signInURL))
 
         let header = NSHostingView(rootView: LoginHeader())
@@ -48,12 +50,35 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
         checkCookie()
     }
 
+    /// Looks for the session token two ways: the `npsso` cookie itself, and — since Sony doesn't
+    /// always expose it to the web view — by asking the token endpoint with the window's cookies,
+    /// which is exactly what the manual method does in a browser. The visible page is left alone.
     private func checkCookie() {
+        guard !asking else { return }
         webView?.configuration.websiteDataStore.httpCookieStore.getAllCookies { [weak self] cookies in
-            guard let token = cookies.first(where: { $0.name == "npsso" && !$0.value.isEmpty })?.value else { return }
-            MainActor.assumeIsolated { self?.finish(token) }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let token = cookies.first(where: { $0.name == "npsso" && !$0.value.isEmpty })?.value {
+                    self.finish(token)
+                    return
+                }
+                let sony = cookies.filter { $0.domain.hasSuffix("sony.com") }
+                guard !sony.isEmpty else { return }
+                self.asking = true
+                var request = URLRequest(url: PSNClient.sessionTokenURL)
+                request.setValue(sony.map { "\($0.name)=\($0.value)" }.joined(separator: "; "), forHTTPHeaderField: "Cookie")
+                Task {
+                    defer { self.asking = false }
+                    guard let (data, _) = try? await URLSession.shared.data(for: request),
+                          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let token = json["npsso"] as? String, !token.isEmpty else { return }
+                    self.finish(token)
+                }
+            }
         }
     }
+
+    private var asking = false
 
     private func finish(_ token: String) {
         guard let onToken else { return }
