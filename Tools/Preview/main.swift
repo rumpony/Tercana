@@ -142,6 +142,10 @@ func run() async {
         await store.open(.game("G1"))
         render("\(language)-trophies-game-min", width: 900, height: 600, TrophiesView())
         render("\(language)-trophies-game-dark", width: 1100, height: 720, dark: true, TrophiesView())
+        TrophyLibrary.shared.usePreviewData([])
+        await store.open(.stats)
+        render("\(language)-trophies-stats-empty", width: 1100, height: 720, TrophiesView())
+        TrophyLibrary.shared.usePreviewData(entries)
         render("\(language)-settings", width: 900, height: 900, SettingsView())
 
         SubtitleLog.shared.clear()

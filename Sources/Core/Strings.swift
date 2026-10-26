@@ -288,6 +288,11 @@ enum S {
     static var liveOn: String { pick("Canlı çeviri açık", "Live translation is on", "Live-Übersetzung läuft", "Traducción en vivo activada", "Traduction en direct activée") }
     static var liveOff: String { pick("Canlı çeviri kapalı", "Live translation is off", "Live-Übersetzung aus", "Traducción en vivo desactivada", "Traduction en direct désactivée") }
 
+    static var signOutPSN: String { pick("PSN'den çıkış yap", "Sign out of PSN", "Von PSN abmelden", "Cerrar sesión en PSN", "Se déconnecter du PSN") }
+    static var pressShortcut: String { pick("Kısayola bas…", "Press keys…", "Tasten drücken…", "Pulsa las teclas…", "Appuyez sur les touches…") }
+    static var restoreDefault: String { pick("Varsayılana dön", "Restore default", "Standard wiederherstellen", "Restaurar", "Rétablir") }
+    static var shortcutHint: String { pick("Değiştirmek için kısayola tıkla ve yeni tuşlara bas (en az bir ⌃ ⌥ ⌘ tuşuyla). Esc: vazgeç.", "Click a shortcut and press the new keys (with at least one of ⌃ ⌥ ⌘). Esc cancels.", "Klicke auf ein Kürzel und drücke die neuen Tasten (mit ⌃ ⌥ oder ⌘). Esc bricht ab.", "Haz clic en un atajo y pulsa las nuevas teclas (con ⌃ ⌥ o ⌘). Esc cancela.", "Cliquez sur un raccourci et appuyez sur les nouvelles touches (avec ⌃ ⌥ ou ⌘). Échap annule.") }
+
     // MARK: PSN errors
     static var psnNotSignedIn: String { pick("PSN hesabı bağlı değil.", "No PSN account connected.", "Kein PSN-Konto verbunden.", "No hay ninguna cuenta de PSN conectada.", "Aucun compte PSN connecté.") }
     static var psnBadToken: String { pick("Oturum anahtarı geçersiz ya da süresi dolmuş. Yeni bir anahtar al.", "The session token is invalid or expired. Get a new one.", "Das Sitzungstoken ist ungültig oder abgelaufen. Hol dir ein neues.", "El token de sesión no es válido o caducó. Consigue uno nuevo.", "Le jeton de session est invalide ou expiré. Récupérez-en un nouveau.") }

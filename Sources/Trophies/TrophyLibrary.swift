@@ -104,12 +104,15 @@ final class TrophyLibrary {
     }
 
     func reset() {
+        guard ProcessInfo.processInfo.environment["SUBLENS_PREVIEW"] == nil else { snapshot = Snapshot(); return }
         cancelSync()
         snapshot = Snapshot()
         try? FileManager.default.removeItem(at: Self.fileURL)
     }
 
     private func save() {
+        // The preview tool shares this code but must never write over the real library.
+        guard ProcessInfo.processInfo.environment["SUBLENS_PREVIEW"] == nil else { return }
         if let data = try? JSONEncoder().encode(snapshot) {
             try? data.write(to: Self.fileURL, options: .atomic)
         }

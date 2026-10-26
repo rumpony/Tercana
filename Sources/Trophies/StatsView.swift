@@ -14,6 +14,7 @@ struct StatsPage: View {
                 if stats.isEmpty {
                     ContentUnavailableView(S.statsNeedSync, systemImage: "chart.bar.xaxis",
                                            description: Text(S.statsNeedSyncHint))
+                        .frame(maxWidth: .infinity)  // the page stacks leading-aligned; keep this centred
                 } else {
                     Fold(S.streaks, key: "streaks") { StreakBlock(stats: stats) }
                     Fold(S.milestones, key: "milestones") { MilestoneBlock(stats: stats, store: store) }

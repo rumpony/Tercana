@@ -8,7 +8,7 @@ struct SubLensApp: App {
         MenuBarExtra {
             MenuContent()
         } label: {
-            Image(systemName: AppController.shared.isLive ? "captions.bubble.fill" : "captions.bubble")
+            Image(nsImage: BrandMark.menuBarImage(live: AppController.shared.isLive))
         }
     }
 }
@@ -30,15 +30,11 @@ private struct MenuContent: View {
         Button(S.openSubLens) { app.showHome() }
         Divider()
         Button(app.isLive ? S.stopLive : S.startLive) { app.toggleLive() }
-            .keyboardShortcut("l", modifiers: [.control, .option])
         Button(S.newLiveArea) { app.startLive(reselect: true) }
         Button(S.translateArea) { app.translateArea() }
-            .keyboardShortcut("t", modifiers: [.control, .option])
         Divider()
         Button(S.subtitleLog) { app.showSubtitleLog() }
-            .keyboardShortcut("h", modifiers: [.control, .option])
         Button(S.trophies) { app.showTrophies() }
-            .keyboardShortcut("k", modifiers: [.control, .option])
         Divider()
         Text("🎮 " + (controller.summary ?? S.noController))
         if prefs.debugRecording {

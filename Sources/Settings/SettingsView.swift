@@ -1,3 +1,4 @@
+import AppKit
 import ServiceManagement
 import SwiftUI
 import Translation
@@ -99,8 +100,9 @@ struct SettingsView: View {
 
             Section(S.shortcuts) {
                 ForEach(HotKeys.Action.allCases, id: \.rawValue) { action in
-                    LabeledContent(action.title, value: action.combo.label)
+                    LabeledContent(action.title) { ShortcutRecorder(action: action) }
                 }
+                Text(S.shortcutHint).font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -130,5 +132,59 @@ extension HotKeys.Action {
         case .subtitleLog: return S.subtitleLog
         case .trophies: return S.trophies
         }
+    }
+}
+
+/// Click, then press the new combination. Esc cancels; the arrow restores the default.
+private struct ShortcutRecorder: View {
+    let action: HotKeys.Action
+    @State private var label = ""
+    @State private var recording = false
+    @State private var monitor: Any?
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button {
+                recording ? stop() : start()
+            } label: {
+                Text(recording ? S.pressShortcut : label).monospaced().frame(minWidth: 110)
+            }
+            .buttonStyle(.bordered)
+            if label != action.defaultCombo.label {
+                Button {
+                    HotKeys.shared.change(action, to: nil)
+                    label = action.combo.label
+                } label: {
+                    Image(systemName: "arrow.uturn.backward")
+                }
+                .buttonStyle(.borderless)
+                .help(S.restoreDefault)
+            }
+        }
+        .onAppear { label = action.combo.label }
+        .onDisappear { stop() }
+    }
+
+    private func start() {
+        recording = true
+        HotKeys.shared.suspend(true)
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 {  // Esc
+                stop()
+            } else if let combo = HotKeys.Combo(event: event) {
+                HotKeys.shared.change(action, to: combo)
+                label = combo.label
+                stop()
+            }
+            return nil
+        }
+    }
+
+    private func stop() {
+        guard recording else { return }
+        recording = false
+        if let monitor { NSEvent.removeMonitor(monitor) }
+        monitor = nil
+        HotKeys.shared.suspend(false)
     }
 }

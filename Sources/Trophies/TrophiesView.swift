@@ -82,6 +82,19 @@ private struct Sidebar: View {
             }
             .padding(10)
             list
+            Divider()
+            HStack {
+                Button(role: .destructive) {
+                    Task { await store.signOut() }
+                } label: {
+                    Label(S.signOutPSN, systemImage: "rectangle.portrait.and.arrow.right")
+                }
+                .buttonStyle(.borderless)
+                .font(.callout)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
         }
     }
 
