@@ -36,6 +36,8 @@ final class LiveTranslator {
     /// The subtitle currently on the game screen; a late translation for an older line is dropped.
     private var onScreen = ""
     private var translating = false
+    /// When each reading was first seen, for prefetching and end-to-end timing.
+    private var firstSeen: [String: ContinuousClock.Instant] = [:]
 
     init(region: CGRect) {
         self.region = region
@@ -54,7 +56,7 @@ final class LiveTranslator {
             while !Task.isCancelled {
                 guard let self, self.isRunning else { return }
                 await self.tick()
-                try? await Task.sleep(for: .milliseconds(200))
+                try? await Task.sleep(for: .milliseconds(120))
             }
         }
     }
@@ -107,6 +109,14 @@ final class LiveTranslator {
         let target = prefs.targetLanguage
         let readable = SubtitleText.likelyLanguage(of: reading.text, expected: prefs.sourceLanguage) == target
             ? "" : reading.text
+        // Start translating on first sight; by the time the line is confirmed the result is
+        // usually cached, which removes the confirmation wait from what the player feels.
+        if !readable.isEmpty, firstSeen[readable] == nil {
+            firstSeen[readable] = .now
+            if firstSeen.count > 200 { firstSeen.removeAll() }
+            let line = readable
+            Task { _ = try? await self.translate(line) }
+        }
         let change = stabilizer.feed(readable)
         switch change {
         case .show(let line):
@@ -134,23 +144,17 @@ final class LiveTranslator {
         translating = true
         Task { [weak self] in
             guard let self else { return }
-            let source = self.prefs.sourceLanguage
-            let target = self.prefs.targetLanguage
             let started = ContinuousClock.now
             do {
-                let parts = SubtitleText.splitSpeaker(line)
-                // Games mix in other languages ("Ai posti! Pronti!"); translate those from what they are.
-                let from = SubtitleText.likelyLanguage(of: parts.line, expected: source) ?? source
-                let body = from == target ? parts.line
-                    : try await Translator.shared.translate(parts.line, from: from, to: target)
-                let translated = parts.speaker.map { "\($0): \(body)" } ?? body
+                let translated = try await self.translate(line)
                 SubtitleLog.shared.add(original: line, translation: translated)
                 if self.recorder.isOn {
                     self.recorder.log(DebugRecorder.Record(
                         time: Date(), frame: nil, regionSize: self.region.size, quality: .fast, ocrMilliseconds: 0,
                         lines: [], accurateLines: nil, accurateMilliseconds: nil, cleaned: line, dropped: [],
                         decision: "translated", translation: translated,
-                        translationMilliseconds: Self.milliseconds(started.duration(to: .now))))
+                        translationMilliseconds: Self.milliseconds(started.duration(to: .now)),
+                        endToEndMilliseconds: self.firstSeen[line].map { Self.milliseconds($0.duration(to: .now)) }))
                 }
                 if self.isRunning, line == self.onScreen {
                     self.state = .subtitle(translated)
@@ -161,6 +165,18 @@ final class LiveTranslator {
             self.translating = false
             self.translateNext()
         }
+    }
+
+    /// Speaker names stay as they are; lines in another language are translated from that language.
+    private func translate(_ line: String) async throws -> String {
+        let source = prefs.sourceLanguage
+        let target = prefs.targetLanguage
+        let parts = SubtitleText.splitSpeaker(line)
+        // Games mix in other languages ("Ai posti! Pronti!"); translate those from what they are.
+        let from = SubtitleText.likelyLanguage(of: parts.line, expected: source) ?? source
+        let body = from == target ? parts.line
+            : try await Translator.shared.translate(parts.line, from: from, to: target)
+        return parts.speaker.map { "\($0): \(body)" } ?? body
     }
 
     /// Normalized image box (origin bottom-left) → global screen rectangle.

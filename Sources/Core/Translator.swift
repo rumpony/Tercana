@@ -23,15 +23,23 @@ final class Translator {
     private var sessionPair: (String, String)?
     private var cache: [String: String] = [:]
     private var cacheOrder: [String] = []
+    private var inFlight: [String: Task<String, Error>] = [:]
 
     func translate(_ text: String, from source: String, to target: String) async throws -> String {
         let key = "\(source)>\(target)|\(text)"
         if let hit = cache[key] { return hit }
+        // A prefetch for the same line may already be running; wait for it instead of asking twice.
+        if let running = inFlight[key] { return try await running.value }
 
-        let session = try await session(from: source, to: target)
-        let response = try await session.translate(text)
-        remember(response.targetText, for: key)
-        return response.targetText
+        let task = Task<String, Error> {
+            let session = try await self.session(from: source, to: target)
+            return try await session.translate(text).targetText
+        }
+        inFlight[key] = task
+        defer { inFlight[key] = nil }
+        let result = try await task.value
+        remember(result, for: key)
+        return result
     }
 
     static func status(from source: String, to target: String) async -> LanguageAvailability.Status {

@@ -21,6 +21,8 @@ final class DebugRecorder {
         var decision: String
         var translation: String?
         var translationMilliseconds: Int?
+        /// From the first frame the line was read to the translation appearing on screen.
+        var endToEndMilliseconds: Int?
     }
 
     static let shared = DebugRecorder()
