@@ -1,4 +1,6 @@
 import Foundation
+import Translation
+import Vision
 import Observation
 
 /// User preferences backed by UserDefaults.
@@ -111,6 +113,30 @@ enum RemotePlayAction: String, CaseIterable, Identifiable {
 
 /// Languages offered in settings. Recognition quality is best for Latin scripts.
 enum Language {
+    /// Shown until the system lists are in.
     static let sources = ["en", "ja", "fr", "de", "es", "it", "pt", "ru", "ko", "zh-Hans"]
     static let targets = ["tr", "en", "de", "fr", "es", "it", "pt", "ru", "ja"]
+
+    /// Languages the on-device text recognizer can read that Apple Translation can also translate from.
+    static func systemSources() async -> [String] {
+        let readable = Set(RecognizeTextRequest().supportedRecognitionLanguages.map(code))
+        let translatable = Set(await LanguageAvailability().supportedLanguages.map(code))
+        return sortedByName(readable.intersection(translatable))
+    }
+
+    /// Every language Apple Translation can translate into.
+    static func systemTargets() async -> [String] {
+        sortedByName(Set(await LanguageAvailability().supportedLanguages.map(code)))
+    }
+
+    /// "en-US" → "en", but keep script variants like "zh-Hans" apart.
+    private static func code(_ language: Locale.Language) -> String {
+        let base = language.languageCode?.identifier ?? language.minimalIdentifier
+        if let script = language.script?.identifier, base == "zh" { return "zh-\(script)" }
+        return base
+    }
+
+    private static func sortedByName(_ codes: Set<String>) -> [String] {
+        codes.sorted { S.languageName($0).localizedCompare(S.languageName($1)) == .orderedAscending }
+    }
 }

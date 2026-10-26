@@ -8,6 +8,8 @@ struct SettingsView: View {
     @State private var downloadConfig: TranslationSession.Configuration?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var psnSignedIn = false
+    @State private var sources = Language.sources
+    @State private var targets = Language.targets
 
     var body: some View {
         Form {
@@ -27,10 +29,10 @@ struct SettingsView: View {
 
             Section(S.translation) {
                 Picker(S.subtitleLanguage, selection: $prefs.sourceLanguage) {
-                    ForEach(Language.sources, id: \.self) { Text(S.languageName($0)).tag($0) }
+                    ForEach(sources, id: \.self) { Text(S.languageName($0)).tag($0) }
                 }
                 Picker(S.translateInto, selection: $prefs.targetLanguage) {
-                    ForEach(Language.targets, id: \.self) { Text(S.languageName($0)).tag($0) }
+                    ForEach(targets, id: \.self) { Text(S.languageName($0)).tag($0) }
                 }
                 HStack {
                     Text(S.languagePack)
@@ -108,6 +110,10 @@ struct SettingsView: View {
             packStatus = await Translator.status(from: prefs.sourceLanguage, to: prefs.targetLanguage)
         }
         .task { psnSignedIn = await PSNClient.shared.isSignedIn }
+        .task {
+            sources = await Language.systemSources()
+            targets = await Language.systemTargets()
+        }
         .translationTask(downloadConfig) { session in
             try? await session.prepareTranslation()
             let status = await Translator.status(from: prefs.sourceLanguage, to: prefs.targetLanguage)
