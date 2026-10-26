@@ -14,7 +14,7 @@
 <meta property="og:title" content="SubLens — Mac için PS Remote Play altyazı çevirici">
 <meta property="og:description" content="PS5 ve PS4 oyun altyazılarını Mac'te canlı olarak Türkçeye çevir. SubLens, PS Remote Play altyazılarını okur ve cihaz üstünde çevirir. Ücretsiz ve gizli.">
 <meta property="og:url" content="https://rumpony.github.io/SubLens/tr/">
-<meta property="og:image" content="https://rumpony.github.io/SubLens/assets/subtitle.png">
+<meta property="og:image" content="https://rumpony.github.io/SubLens/assets/icon.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="../assets/icon.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"SubLens","operatingSystem":"macOS 26","applicationCategory":"UtilitiesApplication","description":"PS5 ve PS4 oyun altyazılarını Mac'te canlı olarak Türkçeye çevir. SubLens, PS Remote Play altyazılarını okur ve cihaz üstünde çevirir. Ücretsiz ve gizli.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://rumpony.github.io/SubLens/tr/","image":"https://rumpony.github.io/SubLens/assets/icon.png"}</script>
@@ -38,6 +38,17 @@ details{background:var(--panel);border-radius:12px;padding:14px 18px;margin:10px
 footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 0 60px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:820px;margin:0 auto}.chip{background:var(--panel);border-radius:999px;padding:6px 14px;font-size:15px}.chip.hl{background:var(--accent);color:#111;font-weight:700}
 .lead{color:var(--muted);text-align:center;max-width:680px;margin:-8px auto 22px}.hunt{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}.hunt ul{margin:0;padding-left:20px}.hunt li{margin:8px 0}.hunt img{width:100%;border-radius:12px}
+.scene{position:relative;margin:36px auto 0;max-width:900px;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px #0006}.scene svg{display:block;width:100%;height:auto}
+.sub-line{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:max-content;max-width:90%;padding:8px 18px;border-radius:8px;background:#000a;color:#fff;font-weight:600;font-size:clamp(14px,2.2vw,21px);text-shadow:0 1px 2px #000;display:grid}
+.sub-line span{grid-area:1/1;text-align:center;animation:swap 7s infinite}.sub-line .trans{opacity:0;animation-delay:-3.5s}
+@keyframes swap{0%,40%{opacity:1}50%,90%{opacity:0}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sub-line .orig{display:none}.sub-line span{animation:none;opacity:1}}
+:root{--line:#ffffff1f}@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--line:#0000001a}}
+.tcard{background:var(--panel);border-radius:16px;padding:20px;display:grid;gap:12px}.trow{display:flex;gap:14px;align-items:center}.tmuted{color:var(--muted);font-size:14px}
+.tgame{display:flex;justify-content:space-between;font-size:15px}.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}
+.tlist{display:grid;gap:8px}.titem{display:flex;align-items:center;gap:10px;font-size:15px}.titem em{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px}
+.dot{width:10px;height:10px;border-radius:50%}.dot.g{background:#f2c740}.dot.s{background:#bfbfbf}.dot.b{background:#cc8040}
+.b.ur{background:#ff950033;color:#ff9500}.b.vr{background:#af52de33;color:#af52de}.b.r{background:#0a84ff33;color:#0a84ff}
 </style>
 </head>
 <body><div class="wrap">
@@ -47,11 +58,33 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 0 60px}
 <p class="sub">SubLens, PS Remote Play ile oynadığın oyunların altyazılarını okur ve Türkçe gösterir. Mac'inde çalışır ve ücretsizdir.</p>
 <a class="btn" href="https://github.com/Rumpony/SubLens/releases/latest">Mac için indir</a><a class="btn ghost" href="https://github.com/Rumpony/SubLens">GitHub</a>
 <p class="note">Ücretsiz · macOS 26 · Apple silicon</p>
-<div class="shot"><img src="../assets/subtitle.png" alt="Oyun üstünde çevrilmiş altyazı"></div>
+<div class="scene" role="img" aria-label="İngilizce altyazısı Türkçeye dönüşen bir oyun sahnesi">
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2a44"/><stop offset=".55" stop-color="#7a5a6e"/><stop offset="1" stop-color="#d79a6a"/></linearGradient>
+<linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2f3f"/><stop offset="1" stop-color="#1c1820"/></linearGradient>
+</defs>
+<rect width="900" height="420" fill="url(#sky)"/>
+<circle cx="690" cy="150" r="46" fill="#f3c27a" opacity=".85"/>
+<path d="M0 300 C150 240 260 270 380 250 S640 210 900 260 V420 H0Z" fill="#4a3a48" opacity=".8"/>
+<path d="M0 330 C180 290 320 320 470 300 S730 280 900 310 V420 H0Z" fill="url(#hill)"/>
+<g fill="#151218"><rect x="120" y="250" width="18" height="70"/><rect x="146" y="232" width="22" height="88"/><path d="M110 250 L157 205 L204 250Z"/></g>
+<g fill="#100d12"><circle cx="560" cy="282" r="13"/><rect x="549" y="294" width="22" height="46" rx="8"/><circle cx="604" cy="286" r="12"/><rect x="594" y="297" width="20" height="43" rx="8"/></g>
+</svg>
+<div class="sub-line"><span class="orig">ENZO: Locked... Of course.</span><span class="trans">ENZO: Kilitli... Tabii ki.</span></div>
+</div>
 </header>
 <section><h2>Özellikler</h2><div class="grid"><div class="card"><h3>Canlı altyazı</h3><p>Altyazı alanını bir kez seç. Yeni satırlar bir saniyenin altında, orijinalin üstüne çevrilir.</p></div><div class="card"><h3>Temiz çeviri</h3><p>Tuş ipuçlarını ve ekran yazılarını atlar. Karakter adlarını çevirmez, renkli gösterir.</p></div><div class="card"><h3>Ekrandaki her yazı</h3><p>Mektup, menü, eşya açıklaması — tek kısayol.</p></div><div class="card"><h3>Gizli</h3><p>Okuma ve çeviri Mac'inde çalışır. Hiçbir şey buluta gitmez.</p></div><div class="card"><h3>Kupalar</h3><p>Nadirlik, istatistikler, platine en yakın oyunlar, notlu hedefler, rehber linkleri.</p></div><div class="card"><h3>Kumanda</h3><p>DualSense pili menü çubuğunda, pil azalınca oyunun üstünde uyarı.</p></div></div></section>
 <section><h2>Diller</h2><p class="lead">Apple'ın cihaz üstü çevirisinde bulunan bütün diller desteklenir.</p><div class="chips"><span class="chip">İngilizce</span><span class="chip hl">Türkçe</span><span class="chip">Almanca</span><span class="chip">Fransızca</span><span class="chip">İspanyolca</span><span class="chip">İtalyanca</span><span class="chip">Portekizce</span><span class="chip">Japonca</span><span class="chip">Korece</span><span class="chip">Çince</span><span class="chip">Rusça</span><span class="chip">Ukraynaca</span><span class="chip">Lehçe</span><span class="chip">Felemenkçe</span><span class="chip">İsveççe</span><span class="chip">Danca</span><span class="chip">Norveççe</span><span class="chip">Arapça</span><span class="chip">Hintçe</span><span class="chip">Tayca</span><span class="chip">Vietnamca</span><span class="chip">Endonezce</span></div></section>
-<section><h2>Kupa avcıları için</h2><p class="lead">PSNProfiles benzeri bir kupa görünümü, uygulamanın içinde.</p><div class="hunt"><ul><li>Profil, seviye ve kupa istatistikleri — seriler, kilometre taşları, en verimli günler</li><li>Her kupada nadirlik, Ultra nadir / Çok nadir rozetleri</li><li><b>Platine en yakın oyunlar</b> ve platin vitrini</li><li>Eksik kupaları hedefe sabitle, “3. bölümde kaçırılabilir” gibi notlar ekle</li><li>Oyunun PSNProfiles, PowerPyx ve YouTube rehberlerine tek tık</li><li>Oyunda varsa kupa metinleri Türkçe, yoksa otomatik çeviriyle</li></ul><img src="../assets/trophies.png" alt="Kupa avcıları için"></div><p class="note" style="text-align:center">SubLens'in PSNProfiles veya PowerPyx ile bağlantısı yoktur; herkese açık rehberlerine bağlantı verir.</p></section>
+<section><h2>Kupa avcıları için</h2><p class="lead">PSNProfiles benzeri bir kupa görünümü, uygulamanın içinde.</p><div class="hunt"><ul><li>Profil, seviye ve kupa istatistikleri — seriler, kilometre taşları, en verimli günler</li><li>Her kupada nadirlik, Ultra nadir / Çok nadir rozetleri</li><li><b>Platine en yakın oyunlar</b> ve platin vitrini</li><li>Eksik kupaları hedefe sabitle, “3. bölümde kaçırılabilir” gibi notlar ekle</li><li>Oyunun PSNProfiles, PowerPyx ve YouTube rehberlerine tek tık</li><li>Oyunda varsa kupa metinleri Türkçe, yoksa otomatik çeviriyle</li></ul><div class="tcard" role="img" aria-label="Seviye, ilerleme ve nadirlik rozetleriyle kupa görünümü">
+<div class="trow"><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="32" cy="32" r="27" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round" stroke-dasharray="119 170" transform="rotate(-90 32 32)"/><text x="32" y="38" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">224</text></svg>
+<div><b>Kupa seviyesi 224</b><div class="tmuted">Sonraki seviyeye %70</div></div></div>
+<div class="tgame"><span>Mafia: The Old Country</span><span class="tmuted">97%</span></div><div class="bar"><i style="width:97%"></i></div>
+<div class="tlist">
+<div class="titem"><span class="dot g"></span>Made Man<em class="b ur">Ultra nadir · 2.3%</em></div>
+<div class="titem"><span class="dot s"></span>Impeccable Timing<em class="b vr">Çok nadir · 10.7%</em></div>
+<div class="titem"><span class="dot b"></span>Collector<em class="b r">Nadir · 41.0%</em></div>
+</div></div></div><p class="note" style="text-align:center">SubLens'in PSNProfiles veya PowerPyx ile bağlantısı yoktur; herkese açık rehberlerine bağlantı verir.</p></section>
 <section><h2>Başlarken</h2><ol><li>SubLens'i indir ve Uygulamalar'a taşı.</li><li>PS Remote Play'i aç, oyununu başlat.</li><li><b>⌃⌥L</b>'ye bas ve altyazı alanını seç. Bu kadar — alanı hatırlar.</li></ol></section>
 <section><h2>Sık sorulanlar</h2><details><summary>Ücretsiz mi?</summary><p>Evet. SubLens ücretsiz ve MIT lisanslı açık kaynak.</p></details><details><summary>İnternet gerekiyor mu?</summary><p>Çeviri için hayır: dil paketi indirildikten sonra her şey Mac'inde çalışır. Kupalar için bağlantı gerekir.</p></details><details><summary>Hangi oyunlarda çalışır?</summary><p>PS Remote Play'de ekranda altyazısı olan her oyunda — ve altyazılı her videoda.</p></details><details><summary>Hangi diller var?</summary><p>Apple'ın cihaz üstü tanıma ve çevirisinin desteklediği bütün diller — 20'den fazla.</p></details><details><summary>Sony ile bağlantısı var mı?</summary><p>Hayır. SubLens bağımsız bir projedir.</p></details></section>
 <footer>SubLens bağımsız bir projedir, Sony Interactive Entertainment ile bağlantısı yoktur. PlayStation, PS5 ve PS Remote Play, Sony Interactive Entertainment Inc.'in ticari markalarıdır.</footer>

@@ -13,7 +13,6 @@
 
 SubLens sits in your menu bar. Point it at the subtitle area of a game streamed with **PS Remote Play**, and every new line is read and translated on your Mac, right over the original — usually in well under a second. Nothing is sent to the cloud.
 
-<p align="center"><img src="docs/assets/subtitle.png" alt="Translated subtitle over a game" width="760"></p>
 
 ## Features
 
@@ -26,7 +25,6 @@ SubLens sits in your menu bar. Point it at the subtitle area of a game streamed 
 - **20+ languages** — everything Apple's on-device recognition and translation support.
 - **Interface in** English, Türkçe, Deutsch, Español, Français.
 
-<p align="center"><img src="docs/assets/home.png" width="49%" alt="Home"> <img src="docs/assets/trophies.png" width="49%" alt="Trophies"></p>
 
 ## For trophy hunters
 

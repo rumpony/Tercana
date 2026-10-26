@@ -14,7 +14,7 @@
 <meta property="og:title" content="SubLens — Live subtitle translator for PS Remote Play on Mac">
 <meta property="og:description" content="Translate PS5 and PS4 game subtitles live on your Mac. SubLens reads subtitles from PS Remote Play and translates them on-device, free and private.">
 <meta property="og:url" content="https://rumpony.github.io/SubLens/">
-<meta property="og:image" content="https://rumpony.github.io/SubLens/assets/subtitle.png">
+<meta property="og:image" content="https://rumpony.github.io/SubLens/assets/icon.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/icon.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"SubLens","operatingSystem":"macOS 26","applicationCategory":"UtilitiesApplication","description":"Translate PS5 and PS4 game subtitles live on your Mac. SubLens reads subtitles from PS Remote Play and translates them on-device, free and private.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://rumpony.github.io/SubLens/","image":"https://rumpony.github.io/SubLens/assets/icon.png"}</script>
@@ -38,6 +38,17 @@ details{background:var(--panel);border-radius:12px;padding:14px 18px;margin:10px
 footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 0 60px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:820px;margin:0 auto}.chip{background:var(--panel);border-radius:999px;padding:6px 14px;font-size:15px}.chip.hl{background:var(--accent);color:#111;font-weight:700}
 .lead{color:var(--muted);text-align:center;max-width:680px;margin:-8px auto 22px}.hunt{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}.hunt ul{margin:0;padding-left:20px}.hunt li{margin:8px 0}.hunt img{width:100%;border-radius:12px}
+.scene{position:relative;margin:36px auto 0;max-width:900px;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px #0006}.scene svg{display:block;width:100%;height:auto}
+.sub-line{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:max-content;max-width:90%;padding:8px 18px;border-radius:8px;background:#000a;color:#fff;font-weight:600;font-size:clamp(14px,2.2vw,21px);text-shadow:0 1px 2px #000;display:grid}
+.sub-line span{grid-area:1/1;text-align:center;animation:swap 7s infinite}.sub-line .trans{opacity:0;animation-delay:-3.5s}
+@keyframes swap{0%,40%{opacity:1}50%,90%{opacity:0}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sub-line .orig{display:none}.sub-line span{animation:none;opacity:1}}
+:root{--line:#ffffff1f}@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--line:#0000001a}}
+.tcard{background:var(--panel);border-radius:16px;padding:20px;display:grid;gap:12px}.trow{display:flex;gap:14px;align-items:center}.tmuted{color:var(--muted);font-size:14px}
+.tgame{display:flex;justify-content:space-between;font-size:15px}.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--blue)}
+.tlist{display:grid;gap:8px}.titem{display:flex;align-items:center;gap:10px;font-size:15px}.titem em{margin-left:auto;font-style:normal;font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px}
+.dot{width:10px;height:10px;border-radius:50%}.dot.g{background:#f2c740}.dot.s{background:#bfbfbf}.dot.b{background:#cc8040}
+.b.ur{background:#ff950033;color:#ff9500}.b.vr{background:#af52de33;color:#af52de}.b.r{background:#0a84ff33;color:#0a84ff}
 </style>
 </head>
 <body><div class="wrap">
@@ -47,11 +58,33 @@ footer{color:var(--muted);font-size:13px;text-align:center;padding:40px 0 60px}
 <p class="sub">SubLens reads the subtitles of games you stream with PS Remote Play and shows them in your language. It runs on your Mac and is free.</p>
 <a class="btn" href="https://github.com/Rumpony/SubLens/releases/latest">Download for Mac</a><a class="btn ghost" href="https://github.com/Rumpony/SubLens">GitHub</a>
 <p class="note">Free · macOS 26 · Apple silicon</p>
-<div class="shot"><img src="assets/subtitle.png" alt="Translated subtitle shown over a game"></div>
+<div class="scene" role="img" aria-label="A game scene whose English subtitle turns into a Turkish translation">
+<svg viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2a44"/><stop offset=".55" stop-color="#7a5a6e"/><stop offset="1" stop-color="#d79a6a"/></linearGradient>
+<linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2f3f"/><stop offset="1" stop-color="#1c1820"/></linearGradient>
+</defs>
+<rect width="900" height="420" fill="url(#sky)"/>
+<circle cx="690" cy="150" r="46" fill="#f3c27a" opacity=".85"/>
+<path d="M0 300 C150 240 260 270 380 250 S640 210 900 260 V420 H0Z" fill="#4a3a48" opacity=".8"/>
+<path d="M0 330 C180 290 320 320 470 300 S730 280 900 310 V420 H0Z" fill="url(#hill)"/>
+<g fill="#151218"><rect x="120" y="250" width="18" height="70"/><rect x="146" y="232" width="22" height="88"/><path d="M110 250 L157 205 L204 250Z"/></g>
+<g fill="#100d12"><circle cx="560" cy="282" r="13"/><rect x="549" y="294" width="22" height="46" rx="8"/><circle cx="604" cy="286" r="12"/><rect x="594" y="297" width="20" height="43" rx="8"/></g>
+</svg>
+<div class="sub-line"><span class="orig">ENZO: Locked... Of course.</span><span class="trans">ENZO: Kilitli... Tabii ki.</span></div>
+</div>
 </header>
 <section><h2>Features</h2><div class="grid"><div class="card"><h3>Live subtitles</h3><p>Pick the subtitle area once. New lines are translated in under a second, right over the original.</p></div><div class="card"><h3>Clean output</h3><p>Skips button prompts and HUD text. Keeps speaker names and highlights them.</p></div><div class="card"><h3>Any text on screen</h3><p>Letters, menus, item descriptions — one shortcut.</p></div><div class="card"><h3>Private</h3><p>Recognition and translation run on your Mac. Nothing goes to the cloud.</p></div><div class="card"><h3>Trophies</h3><p>Rarity, statistics, closest to platinum, pinned goals with notes, guide links.</p></div><div class="card"><h3>Controller</h3><p>DualSense battery in the menu bar, low-battery warnings over your game.</p></div></div></section>
 <section><h2>Languages</h2><p class="lead">SubLens supports every language available in Apple's on-device translation.</p><div class="chips"><span class="chip">English</span><span class="chip hl">Turkish</span><span class="chip">German</span><span class="chip">French</span><span class="chip">Spanish</span><span class="chip">Italian</span><span class="chip">Portuguese</span><span class="chip">Japanese</span><span class="chip">Korean</span><span class="chip">Chinese</span><span class="chip">Russian</span><span class="chip">Ukrainian</span><span class="chip">Polish</span><span class="chip">Dutch</span><span class="chip">Swedish</span><span class="chip">Danish</span><span class="chip">Norwegian</span><span class="chip">Arabic</span><span class="chip">Hindi</span><span class="chip">Thai</span><span class="chip">Vietnamese</span><span class="chip">Indonesian</span></div></section>
-<section><h2>For trophy hunters</h2><p class="lead">A trophy view similar to PSNProfiles, built into the app.</p><div class="hunt"><ul><li>Profile, level and trophy statistics — streaks, milestones, busiest days</li><li>Rarity on every trophy, with Ultra Rare / Very Rare badges</li><li><b>Closest to platinum</b> and a platinum cabinet</li><li>Pin missing trophies as goals and add notes like “missable in chapter 3”</li><li>One click to the game's PSNProfiles, PowerPyx and YouTube guides</li><li>Trophy text in your language when the game has it, machine-translated when it doesn't</li></ul><img src="assets/trophies.png" alt="Built for trophy hunters"></div><p class="note" style="text-align:center">SubLens isn't affiliated with PSNProfiles or PowerPyx; it links to their public guides.</p></section>
+<section><h2>For trophy hunters</h2><p class="lead">A trophy view similar to PSNProfiles, built into the app.</p><div class="hunt"><ul><li>Profile, level and trophy statistics — streaks, milestones, busiest days</li><li>Rarity on every trophy, with Ultra Rare / Very Rare badges</li><li><b>Closest to platinum</b> and a platinum cabinet</li><li>Pin missing trophies as goals and add notes like “missable in chapter 3”</li><li>One click to the game's PSNProfiles, PowerPyx and YouTube guides</li><li>Trophy text in your language when the game has it, machine-translated when it doesn't</li></ul><div class="tcard" role="img" aria-label="Trophy overview with level, progress and rarity badges">
+<div class="trow"><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--line)" stroke-width="6"/><circle cx="32" cy="32" r="27" fill="none" stroke="var(--blue)" stroke-width="6" stroke-linecap="round" stroke-dasharray="119 170" transform="rotate(-90 32 32)"/><text x="32" y="38" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">224</text></svg>
+<div><b>Trophy level 224</b><div class="tmuted">70% to next level</div></div></div>
+<div class="tgame"><span>Mafia: The Old Country</span><span class="tmuted">97%</span></div><div class="bar"><i style="width:97%"></i></div>
+<div class="tlist">
+<div class="titem"><span class="dot g"></span>Made Man<em class="b ur">Ultra rare · 2.3%</em></div>
+<div class="titem"><span class="dot s"></span>Impeccable Timing<em class="b vr">Very rare · 10.7%</em></div>
+<div class="titem"><span class="dot b"></span>Collector<em class="b r">Rare · 41.0%</em></div>
+</div></div></div><p class="note" style="text-align:center">SubLens isn't affiliated with PSNProfiles or PowerPyx; it links to their public guides.</p></section>
 <section><h2>Getting started</h2><ol><li>Download SubLens and move it to Applications.</li><li>Open PS Remote Play and start your game.</li><li>Press <b>⌃⌥L</b> and drag over the subtitle area. Done — it remembers.</li></ol></section>
 <section><h2>FAQ</h2><details><summary>Is it free?</summary><p>Yes. SubLens is free and open source under the MIT license.</p></details><details><summary>Does it need the internet?</summary><p>No for translation: everything runs on your Mac once the language pack is downloaded. Trophies need a connection.</p></details><details><summary>Which games work?</summary><p>Any game with on-screen subtitles in PS Remote Play — and any video with subtitles.</p></details><details><summary>Which languages?</summary><p>Every language Apple's on-device recognition and translation support — more than 20.</p></details><details><summary>Is it affiliated with Sony?</summary><p>No. SubLens is an independent project.</p></details></section>
 <footer>SubLens is an independent project and is not affiliated with Sony Interactive Entertainment. PlayStation, PS5 and PS Remote Play are trademarks of Sony Interactive Entertainment Inc.</footer>
