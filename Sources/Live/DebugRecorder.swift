@@ -31,7 +31,7 @@ final class DebugRecorder {
 
     static var rootFolder: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("SubLens/Debug", isDirectory: true)
+            .appendingPathComponent("Tercana/Debug", isDirectory: true)
     }
 
     private var folder: URL?

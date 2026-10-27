@@ -1,8 +1,13 @@
 import SwiftUI
 
 @main
-struct SubLensApp: App {
+struct TercanaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+
+    init() {
+        // Before anything reads settings or data.
+        Migration.fromSubLens()
+    }
 
     var body: some Scene {
         MenuBarExtra {
@@ -27,7 +32,7 @@ private struct MenuContent: View {
     var body: some View {
         // Reading the language here makes the menu rebuild when it changes.
         let _ = prefs.appLanguage
-        Button(S.openSubLens) { app.showHome() }
+        Button(S.openTercana) { app.showHome() }
         Divider()
         Button(app.isLive ? S.stopLive : S.startLive) { app.toggleLive() }
         Button(S.newLiveArea) { app.startLive(reselect: true) }

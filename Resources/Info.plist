@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>SubLens</string>
+    <string>Tercana</string>
     <key>CFBundleDisplayName</key>
-    <string>SubLens</string>
+    <string>Tercana</string>
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleExecutable</key>
@@ -23,7 +23,7 @@
     <key>LSUIElement</key>
     <true/>
     <key>NSScreenCaptureUsageDescription</key>
-    <string>SubLens looks at the screen area you choose to read and translate its subtitles.</string>
+    <string>Tercana looks at the screen area you choose to read and translate its subtitles.</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleLocalizations</key>

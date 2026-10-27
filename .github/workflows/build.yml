@@ -18,17 +18,17 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          xcodebuild build -project SubLens.xcodeproj -scheme SubLens -configuration Release \
+          xcodebuild build -project Tercana.xcodeproj -scheme Tercana -configuration Release \
             -destination 'generic/platform=macOS' -derivedDataPath build \
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             2>&1 | tee build.log | grep -E "error:|warning: .*(deprecated|unused)|\*\* BUILD" || true
           grep -q "\*\* BUILD SUCCEEDED \*\*" build.log
       - name: Package
-        run: ditto -c -k --keepParent build/Build/Products/Release/SubLens.app SubLens.zip
+        run: ditto -c -k --keepParent build/Build/Products/Release/Tercana.app Tercana.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: SubLens
-          path: SubLens.zip
+          name: Tercana
+          path: Tercana.zip
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

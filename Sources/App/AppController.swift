@@ -172,7 +172,7 @@ final class AppController {
     /// Everything lives in one window; the menu and shortcuts just pick the tab.
     func showHome(_ tab: HomeView.Tab = .home) {
         withAnimation(.easeInOut(duration: 0.18)) { router.tab = tab }
-        present(id: "home", title: { "SubLens" }, size: CGSize(width: 1040, height: 720)) { [router] in
+        present(id: "home", title: { "Tercana" }, size: CGSize(width: 1040, height: 720)) { [router] in
             HomeView(router: router)
         }
     }

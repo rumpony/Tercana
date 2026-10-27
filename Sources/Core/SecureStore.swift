@@ -6,11 +6,11 @@ import Foundation
 /// Keychain items to each build's binary hash and asks for the login password after every update.
 enum SecureStore {
     /// The local UI preview tool runs this code outside the app; it must never touch real data.
-    private static let disabled = ProcessInfo.processInfo.environment["SUBLENS_PREVIEW"] != nil
+    private static let disabled = ProcessInfo.processInfo.environment["TERCANA_PREVIEW"] != nil
 
     private static var url: URL {
         let folder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("SubLens", isDirectory: true)
+            .appendingPathComponent("Tercana", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
         return folder.appendingPathComponent("credentials.json")

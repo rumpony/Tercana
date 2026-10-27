@@ -76,7 +76,7 @@ final class HotKeys {
     private func bind(_ action: Action) {
         if let old = refs.removeValue(forKey: action.rawValue) { UnregisterEventHotKey(old) }
         var ref: EventHotKeyRef?
-        let id = EventHotKeyID(signature: OSType(0x534C_4E53), id: action.rawValue)  // "SLNS"
+        let id = EventHotKeyID(signature: OSType(0x5452_434E), id: action.rawValue)  // "TRCN"
         let combo = action.combo
         if RegisterEventHotKey(combo.keyCode, combo.modifiers, id, GetApplicationEventTarget(), 0, &ref) == noErr,
            let ref {

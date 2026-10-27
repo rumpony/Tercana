@@ -19,14 +19,14 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
-          xcodebuild build -project SubLens.xcodeproj -scheme SubLens -configuration Release \
+          xcodebuild build -project Tercana.xcodeproj -scheme Tercana -configuration Release \
             -destination 'generic/platform=macOS' -derivedDataPath build \
             MARKETING_VERSION="${GITHUB_REF_NAME#v}" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
             | tail -5
       # Ad-hoc signature: runs on any Mac after right-click → Open. Notarization needs a paid Apple Developer ID.
-      - run: codesign --force --deep --sign - --entitlements Resources/SubLens.entitlements build/Build/Products/Release/SubLens.app
-      - run: ditto -c -k --keepParent build/Build/Products/Release/SubLens.app SubLens.zip
+      - run: codesign --force --deep --sign - --entitlements Resources/Tercana.entitlements build/Build/Products/Release/Tercana.app
+      - run: ditto -c -k --keepParent build/Build/Products/Release/Tercana.app Tercana.zip
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" SubLens.zip --clobber || gh release create "$GITHUB_REF_NAME" SubLens.zip --title "SubLens $GITHUB_REF_NAME" --generate-notes
+        run: gh release upload "$GITHUB_REF_NAME" Tercana.zip --clobber || gh release create "$GITHUB_REF_NAME" Tercana.zip --title "Tercana $GITHUB_REF_NAME" --generate-notes

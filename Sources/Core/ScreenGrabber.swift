@@ -13,7 +13,7 @@ enum ScreenGrabberError: LocalizedError {
     }
 }
 
-/// Captures a rectangle of the screen, leaving SubLens' own windows out of the image
+/// Captures a rectangle of the screen, leaving Tercana' own windows out of the image
 /// so the overlay never ends up in what we read.
 @MainActor
 final class ScreenGrabber {
@@ -59,7 +59,7 @@ final class ScreenGrabber {
 
     private func filter(for displayID: CGDirectDisplayID) async throws -> SCContentFilter {
         if let cached = cachedFilters[displayID] { return cached }
-        // Ask for all windows, not just on-screen ones: with only on-screen windows SubLens is
+        // Ask for all windows, not just on-screen ones: with only on-screen windows Tercana is
         // missing from the list whenever it has nothing showing yet, the exclusion silently
         // becomes empty, and the translation overlay later gets read back as a subtitle.
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)

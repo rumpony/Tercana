@@ -1,4 +1,4 @@
-// Local UI preview: renders SubLens screens with made-up data into PNGs, off screen.
+// Local UI preview: renders Tercana screens with made-up data into PNGs, off screen.
 // No network, no PSN account, nothing appears on the desktop. Run with Tools/Preview/run.sh.
 import AppKit
 import SwiftUI

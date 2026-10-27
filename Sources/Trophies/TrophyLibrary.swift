@@ -35,7 +35,7 @@ final class TrophyLibrary {
 
     private static var fileURL: URL {
         let folder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("SubLens", isDirectory: true)
+            .appendingPathComponent("Tercana", isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder.appendingPathComponent("trophies.json")
     }
@@ -104,7 +104,7 @@ final class TrophyLibrary {
     }
 
     func reset() {
-        guard ProcessInfo.processInfo.environment["SUBLENS_PREVIEW"] == nil else { snapshot = Snapshot(); return }
+        guard ProcessInfo.processInfo.environment["TERCANA_PREVIEW"] == nil else { snapshot = Snapshot(); return }
         cancelSync()
         snapshot = Snapshot()
         try? FileManager.default.removeItem(at: Self.fileURL)
@@ -112,7 +112,7 @@ final class TrophyLibrary {
 
     private func save() {
         // The preview tool shares this code but must never write over the real library.
-        guard ProcessInfo.processInfo.environment["SUBLENS_PREVIEW"] == nil else { return }
+        guard ProcessInfo.processInfo.environment["TERCANA_PREVIEW"] == nil else { return }
         if let data = try? JSONEncoder().encode(snapshot) {
             try? data.write(to: Self.fileURL, options: .atomic)
         }
