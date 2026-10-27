@@ -254,9 +254,7 @@ struct TrophyLine: View {
         } label: {
             HStack(spacing: 10) {
                 Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary).frame(width: 130, alignment: .leading)
-                AsyncImage(url: trophy.iconURL) { $0.resizable().scaledToFill() } placeholder: { Color.gray.opacity(0.2) }
-                    .frame(width: 32, height: 32)
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                RemoteIcon(url: trophy.iconURL, size: 32)
                 VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 5) {
                         Image(systemName: "trophy.fill").foregroundStyle(trophy.grade.color).font(.caption2)
@@ -295,9 +293,7 @@ struct ShowcaseBlock: View {
                         Task { await store.open(.game(item.gameID)) }
                     } label: {
                         VStack(spacing: 4) {
-                            AsyncImage(url: item.trophy.iconURL) { $0.resizable().scaledToFill() } placeholder: { Color.gray.opacity(0.2) }
-                                .frame(width: 72, height: 72)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            RemoteIcon(url: item.trophy.iconURL, size: 72)
                                 .overlay(alignment: .bottomTrailing) {
                                     Image(systemName: "trophy.fill").foregroundStyle(item.trophy.grade.color)
                                         .padding(3).background(.black.opacity(0.6), in: Circle())

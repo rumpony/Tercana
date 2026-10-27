@@ -99,36 +99,53 @@ private struct Sidebar: View {
     }
 
     private var list: some View {
-        List(selection: Binding(get: { store.page }, set: { page in
-            if let page { Task { await store.open(page) } }
-        })) {
+        // Selection is drawn here rather than by the system: it looks the same in the app and in
+        // rendered screenshots, which can't draw the system's translucent highlight.
+        List {
             Section(S.overview) {
-                Label(S.profile, systemImage: "person.crop.circle").tag(TrophyStore.Page.profile)
-                Label(S.statistics, systemImage: "chart.bar.xaxis").tag(TrophyStore.Page.stats)
-                Label(S.closestToFinish, systemImage: "flag.checkered").tag(TrophyStore.Page.closest)
-                Label(S.recentTrophies, systemImage: "clock").tag(TrophyStore.Page.recent)
-                Label(S.platinumCabinet, systemImage: "trophy.fill").tag(TrophyStore.Page.platinums)
-                Label(S.myTargets, systemImage: "pin")
-                    .badge(targets.items.count)
-                    .tag(TrophyStore.Page.targets)
+                row(.profile) { Label(S.profile, systemImage: "person.crop.circle") }
+                row(.stats) { Label(S.statistics, systemImage: "chart.bar.xaxis") }
+                row(.closest) { Label(S.closestToFinish, systemImage: "flag.checkered") }
+                row(.recent) { Label(S.recentTrophies, systemImage: "clock") }
+                row(.platinums) { Label(S.platinumCabinet, systemImage: "trophy.fill") }
+                row(.targets) { Label(S.myTargets, systemImage: "pin").badge(targets.items.count) }
             }
             if let playing = store.nowPlaying {
                 Section(S.nowPlaying) {
                     Button {
                         Task { await store.showNowPlaying() }
                     } label: {
-                        Label(playing, systemImage: "gamecontroller.fill")
+                        Label(playing, systemImage: "gamecontroller.fill").frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
             }
             Section(S.gamesCount(store.games.count)) {
                 ForEach(store.visibleGames) { game in
-                    GameRow(game: game).tag(TrophyStore.Page.game(game.id))
+                    row(.game(game.id)) { GameRow(game: game) }
                 }
             }
         }
         .listStyle(.sidebar)
+    }
+
+    private func row<Content: View>(_ page: TrophyStore.Page, @ViewBuilder _ content: () -> Content) -> some View {
+        let selected = store.page == page
+        return Button {
+            Task { await store.open(page) }
+        } label: {
+            content()
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .listRowBackground(
+            RoundedRectangle(cornerRadius: 7)
+                .fill(selected ? Color.accentColor : Color.clear)
+                .padding(.horizontal, 8)
+        )
     }
 }
 
@@ -622,15 +639,23 @@ private struct RarityBadge: View {
     }
 }
 
-private struct RemoteIcon: View {
+struct RemoteIcon: View {
     let url: URL?
     let size: CGFloat
+    /// Images supplied up front by the preview renderer, which can't wait for downloads.
+    nonisolated(unsafe) static var preloaded: [URL: NSImage] = [:]
 
     var body: some View {
-        AsyncImage(url: url) { image in
-            image.resizable().scaledToFill()
-        } placeholder: {
-            Color.gray.opacity(0.2)
+        Group {
+            if let url, let image = Self.preloaded[url] {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Color.gray.opacity(0.2)
+                }
+            }
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: size > 60 ? 10 : 6))
