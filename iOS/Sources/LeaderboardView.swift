@@ -1,10 +1,6 @@
-import SafariServices
 import SwiftUI
 
 struct LeaderboardView: View {
-    @State private var showingWeb: URL?
-    /// Picked once, kept for good (Turkey unless changed).
-    @AppStorage("leaderboardCountry") private var country = "tr"
     private var board: Leaderboard { .shared }
 
     var body: some View {
@@ -35,33 +31,18 @@ struct LeaderboardView: View {
             }
         }
         Section {
-            Picker(M.country, selection: $country) {
-                ForEach(Self.countries, id: \.code) { Text($0.name).tag($0.code) }
-            }
-            Button(M.countryBoard(Self.name(country)), systemImage: "flag") {
-                showingWeb = URL(string: "https://psnprofiles.com/leaderboard/all/\(country)")
-            }
-            if let me = board.latest.flatMap({ s in s.rows.first { $0.player.id == s.me } }) {
-                Button(M.myCountryRank, systemImage: "person.crop.circle.badge.questionmark") {
-                    showingWeb = URL(string: "https://psnprofiles.com/\(me.player.onlineId)")
+            Button(M.openPSNProfiles, systemImage: "safari") {
+                Task {
+                    var name = board.latest.flatMap { s in s.rows.first { $0.player.id == s.me } }?.player.onlineId
+                    if name == nil { name = try? await PSNClient.shared.me().onlineId }
+                    guard let id = name, let url = URL(string: "https://psnprofiles.com/\(id)") else { return }
+                    await UIApplication.shared.open(url)
                 }
             }
-        } header: {
-            Text("PSNProfiles")
         } footer: {
             Text(M.psnProfilesHint)
         }
-        .sheet(item: $showingWeb) { SafariView(url: $0).ignoresSafeArea() }
     }
-
-    private static func name(_ code: String) -> String {
-        S.locale.localizedString(forRegionCode: code.uppercased()) ?? code.uppercased()
-    }
-
-    private static let countries: [(code: String, name: String)] = Locale.Region.isoRegions
-        .filter { $0.identifier.count == 2 && $0.identifier.allSatisfy(\.isLetter) }
-        .map { (code: $0.identifier.lowercased(), name: name($0.identifier)) }
-        .sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
 
     private func summary(_ latest: Leaderboard.Snapshot) -> some View {
         Section {
@@ -107,14 +88,4 @@ struct LeaderboardView: View {
             Text(row.points.formatted()).font(.subheadline.monospacedDigit())
         }
     }
-}
-
-struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-    func makeUIViewController(context: Context) -> SFSafariViewController { SFSafariViewController(url: url) }
-    func updateUIViewController(_ controller: SFSafariViewController, context: Context) {}
-}
-
-extension URL: @retroactive Identifiable {
-    public var id: String { absoluteString }
 }

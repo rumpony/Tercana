@@ -107,12 +107,10 @@ extension M {
     static var sinceYesterday: String { t("Dünden beri", "Since yesterday") }
     static func rankMove(_ n: Int) -> String { n > 0 ? "↑\(n)" : n < 0 ? "↓\(-n)" : "–" }
     static func pointsMove(_ n: Int) -> String { n > 0 ? "+\(n.formatted())" : "\(n.formatted())" }
-    static var country: String { t("Ülke", "Country") }
-    static func countryBoard(_ name: String) -> String { t("\(name) sıralamasını aç", "Open \(name) leaderboard") }
-    static var myCountryRank: String { t("Ülkede ve dünyada kaçıncıyım?", "My country and world rank") }
+    static var openPSNProfiles: String { t("Türkiye ve dünya sıramı PSNProfiles'ta aç", "Open my country and world rank on PSNProfiles") }
     static var psnProfilesHint: String {
-        t("Ülke ve dünya sıralamasını PSNProfiles tutuyor; sayfası uygulamanın içinde açılır. Profilin PSNProfiles'ta yoksa önce sitede bir kez aratıp ekletmen gerekir.",
-          "Country and world ranks come from PSNProfiles; its page opens inside the app. If your profile isn't on PSNProfiles yet, search for it once on the site to add it.")
+        t("Profilin tarayıcıda açılır. Ülke ve dünya sıralamasını PSNProfiles tutuyor.",
+          "Your profile opens in the browser. Country and world ranks come from PSNProfiles.")
     }
     static var worldRank: String { t("Dünya sıralamamı PSNProfiles'ta aç", "Open my world rank on PSNProfiles") }
     static func updatedAt(_ s: String) -> String { t("Son güncelleme: \(s)", "Updated: \(s)") }
