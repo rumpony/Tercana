@@ -194,8 +194,10 @@ actor PSNClient {
         let payload: Payload = try await get("/userProfile/v1/internal/users/profiles",
                                              query: ["accountIds": ids.joined(separator: ",")], ttl: 600)
         return zip(ids, payload.profiles).map { id, profile in
-            let avatar = profile.avatars?.first { $0.size == "m" } ?? profile.avatars?.first
-            return Player(accountId: id, onlineId: profile.onlineId, avatarURL: avatar.flatMap { URL(string: $0.url) })
+            let avatar = profile.avatars?.first { $0.size == "l" } ?? profile.avatars?.first
+            // Sony sends plain http links, which iOS refuses to load; the same files are served over https.
+            let url = avatar.map { $0.url.replacingOccurrences(of: "http://", with: "https://") }
+            return Player(accountId: id, onlineId: profile.onlineId, avatarURL: url.flatMap(URL.init(string:)))
         }
     }
 
