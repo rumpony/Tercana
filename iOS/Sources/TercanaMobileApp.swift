@@ -32,10 +32,10 @@ struct TercanaMobileApp: App {
                     SignInView()
                 }
             }
-            .tint(Theme.colors[min(accent, Theme.colors.count - 1)])
+            .tint(Style.glow)
             .preferredColorScheme(.dark)
             // Strings are computed, so the tree is rebuilt when the language changes.
-            .id(language)
+            .id("\(language)-\(accent)")
         }
         .onChange(of: phase) {
             switch phase {
@@ -48,5 +48,5 @@ struct TercanaMobileApp: App {
 }
 
 enum Theme {
-    static let colors: [Color] = [.accentColor, .blue, .indigo, .purple, .pink, .orange, .green]
+    static let colors: [Color] = [Color(red: 0.20, green: 0.75, blue: 0.80), .blue, .indigo, .purple, .pink, .orange, .green]
 }

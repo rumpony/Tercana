@@ -59,7 +59,7 @@ struct ProfileCard: View {
                 Spacer()
                 Text(S.trophyLevel(profile.level)).font(.headline)
             }
-            ProgressView(value: Double(profile.progress), total: 100).tint(.yellow)
+            ProgressView(value: Double(profile.progress), total: 100).tint(Style.glow)
             HStack(spacing: 18) {
                 ForEach(TrophyGrade.allCases.reversed(), id: \.self) { grade in
                     VStack(spacing: 2) {
@@ -79,7 +79,7 @@ struct ProfileCard: View {
         .padding(24)
         .foregroundStyle(.white)
         .frame(width: 380)
-        .background(LinearGradient(colors: [Color(red: 0.05, green: 0.36, blue: 0.40), Color(red: 0.09, green: 0.13, blue: 0.30)],
+        .background(LinearGradient(colors: [Style.glow.mix(with: .black, by: 0.55), Color(red: 0.09, green: 0.13, blue: 0.30)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing))
     }
 }

@@ -2,9 +2,18 @@ import SwiftUI
 
 /// The app's look: deep navy backdrop, glass cards, trophy-colored accents.
 enum Style {
-    static let backdrop = LinearGradient(colors: [Color(red: 0.04, green: 0.10, blue: 0.20), Color(red: 0.02, green: 0.03, blue: 0.08)],
-                                         startPoint: .top, endPoint: .bottom)
-    static let glow = Color(red: 0.20, green: 0.75, blue: 0.80)
+    /// The color picked in settings; every highlight, chart and ring uses it.
+    /// The window is rebuilt when it changes (see TercanaMobileApp), so reading it directly is enough.
+    static var glow: Color {
+        Theme.colors[min(max(UserDefaults.standard.integer(forKey: "accent"), 0), Theme.colors.count - 1)]
+    }
+
+    /// Navy that leans toward the picked color at the top.
+    static var backdrop: LinearGradient {
+        LinearGradient(colors: [glow.mix(with: Color(red: 0.03, green: 0.06, blue: 0.14), by: 0.8),
+                                Color(red: 0.02, green: 0.03, blue: 0.08)],
+                       startPoint: .top, endPoint: .bottom)
+    }
 }
 
 extension View {

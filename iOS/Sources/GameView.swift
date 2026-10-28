@@ -107,7 +107,7 @@ struct TrophyRow: View {
                     Text(S.percent(rate / 100, digits: 1)).font(.caption).monospacedDigit()
                 }
                 if trophy.earned {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.caption)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Style.glow).font(.caption)
                 } else if markedDone {
                     Image(systemName: "checkmark.circle").foregroundStyle(.tint).font(.caption)
                 } else if let progress = trophy.progress, let target = trophy.progressTarget {
@@ -147,7 +147,7 @@ struct TrophySheet: View {
                         }
                         .font(.caption)
                         if let date = trophy.earnedDate {
-                            Text(date.shown(time: true)).font(.caption).foregroundStyle(.green)
+                            Text(date.shown(time: true)).font(.caption).foregroundStyle(Style.glow)
                         }
                     }
                     .frame(maxWidth: .infinity)

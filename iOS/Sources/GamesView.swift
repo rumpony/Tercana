@@ -87,7 +87,7 @@ struct GameRow: View {
                     }
                     Text("\(game.progress)%").font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
-                ProgressView(value: Double(game.progress), total: 100).tint(game.progress == 100 ? .green : .accentColor)
+                ProgressView(value: Double(game.progress), total: 100).tint(game.progress == 100 ? TrophyGrade.platinum.color : Style.glow)
                 GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies)
             }
         }

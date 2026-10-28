@@ -105,9 +105,9 @@ struct PlayerView: View {
                                 Text(pair.mine.name).font(.subheadline).lineLimit(2)
                                 Spacer()
                                 Text("\(pair.mine.progress)%").monospacedDigit()
-                                    .foregroundStyle(pair.mine.progress >= pair.theirs.progress ? .green : .secondary)
+                                    .foregroundStyle(pair.mine.progress >= pair.theirs.progress ? Style.glow : .secondary)
                                 Text("\(pair.theirs.progress)%").monospacedDigit()
-                                    .foregroundStyle(pair.theirs.progress > pair.mine.progress ? .green : .secondary)
+                                    .foregroundStyle(pair.theirs.progress > pair.mine.progress ? Style.glow : .secondary)
                             }
                             .font(.caption)
                         }
@@ -137,10 +137,10 @@ struct PlayerView: View {
             Text(title)
             Spacer()
             Text(mine.map { $0.formatted() } ?? "–").monospacedDigit()
-                .foregroundStyle((mine ?? 0) >= theirs ? .green : .secondary)
+                .foregroundStyle((mine ?? 0) >= theirs ? Style.glow : .secondary)
             Text("·").foregroundStyle(.tertiary)
             Text(theirs.formatted()).monospacedDigit()
-                .foregroundStyle(theirs > (mine ?? 0) ? .green : .secondary)
+                .foregroundStyle(theirs > (mine ?? 0) ? Style.glow : .secondary)
         }
     }
 }

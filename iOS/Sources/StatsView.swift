@@ -69,7 +69,7 @@ struct StatsView: View {
             Section(S.lastTwelveMonths) {
                 Chart(stats.byMonth(locale: locale)) { bucket in
                     BarMark(x: .value("", bucket.label), y: .value("", bucket.count))
-                        .foregroundStyle(Color.accentColor.gradient)
+                        .foregroundStyle(Style.glow.gradient)
                 }
                 .frame(height: 160)
             }
