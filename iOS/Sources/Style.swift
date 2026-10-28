@@ -36,22 +36,46 @@ struct LevelRing: View {
     let level: Int
     let progress: Int
     var size: CGFloat = 132
+    var showsPercent = true
+    @State private var shown = 0.0
 
     var body: some View {
         ZStack {
             Circle().stroke(.white.opacity(0.08), lineWidth: size * 0.09)
             Circle()
-                .trim(from: 0, to: Double(progress) / 100)
+                .trim(from: 0, to: shown)
                 .stroke(AngularGradient(colors: [Style.glow, TrophyGrade.platinum.color, TrophyGrade.gold.color, Style.glow], center: .center),
                         style: StrokeStyle(lineWidth: size * 0.09, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .shadow(color: Style.glow.opacity(0.6), radius: 10)
             VStack(spacing: 0) {
-                Text("\(level)").font(.system(size: size * 0.3, weight: .heavy, design: .rounded)).monospacedDigit()
-                Text("%\(progress)").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text(showsPercent ? "\(level)" : "%\(level)")
+                    .font(.system(size: size * (showsPercent ? 0.3 : 0.24), weight: .heavy, design: .rounded)).monospacedDigit()
+                    .contentTransition(.numericText())
+                if showsPercent {
+                    Text("%\(progress)").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                }
             }
         }
         .frame(width: size, height: size)
+        // Fills up when it first appears.
+        .onAppear { withAnimation(.easeOut(duration: 0.9)) { shown = Double(progress) / 100 } }
+        .onChange(of: progress) { withAnimation(.easeOut(duration: 0.6)) { shown = Double(progress) / 100 } }
+    }
+}
+
+enum Haptic {
+    @MainActor static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+}
+
+/// List whose rows sit on glass-like panels over the app backdrop.
+struct GlassList<Content: View>: View {
+    @ViewBuilder let content: Content
+    var body: some View {
+        List {
+            Group { content }.listRowBackground(Color.white.opacity(0.07))
+        }
+        .onBackdrop()
     }
 }
 

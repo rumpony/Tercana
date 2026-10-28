@@ -11,7 +11,7 @@ struct FriendsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            GlassList {
                 Picker("", selection: $showingBoard) {
                     Text(M.leaderboard).tag(true)
                     Text(M.friendsList).tag(false)
@@ -92,7 +92,7 @@ struct PlayerView: View {
     }
 
     var body: some View {
-        List {
+        GlassList {
             if hidden {
                 Text(M.privateProfile).foregroundStyle(.secondary)
             }

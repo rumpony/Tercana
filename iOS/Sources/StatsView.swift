@@ -41,7 +41,7 @@ struct StatsView: View {
     private func content(_ stats: TrophyStats) -> some View {
         let streaks = stats.streaks()
         let locale = S.locale
-        return List {
+        return GlassList {
             Section(S.summary) {
                 LazyVGrid(columns: [GridItem(), GridItem()], spacing: 16) {
                     Figure(value: "\(stats.earned.count)", caption: S.totalTrophies)
@@ -62,7 +62,7 @@ struct StatsView: View {
                 }
             }
             Section {
-                NavigationLink(M.yearReview) { YearReview(earned: stats.earned) }
+                NavigationLink(M.yearReview) { YearStory(earned: stats.earned) }
                 NavigationLink(M.nextUp) { NextUpView(items: Insights.nextUp(library.entries)) }
                 NavigationLink(M.platinumWall) { PlatinumWall(games: store.platinumGames) }
             }

@@ -9,6 +9,11 @@ enum Demo {
     /// Tab to open first, for screenshots (TERCANA_TAB=0…3).
     static var startTab: Int { Int(ProcessInfo.processInfo.environment["TERCANA_TAB"] ?? "") ?? 0 }
 
+    /// Game page to open right away, for screenshots (TERCANA_OPEN=game).
+    static var openGame: TrophyGame? {
+        ProcessInfo.processInfo.environment["TERCANA_OPEN"] == "game" ? TrophyStore.shared.games.first : nil
+    }
+
     static func load() {
         func counts(_ p: Int, _ g: Int, _ s: Int, _ b: Int) -> TrophyCounts { TrophyCounts(bronze: b, silver: s, gold: g, platinum: p) }
         let titles = [("Shadows of Velmora", 62), ("Neon Drift", 97), ("The Last Lighthouse", 100), ("Kingdom of Ash", 88),

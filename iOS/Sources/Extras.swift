@@ -127,7 +127,7 @@ struct YearReview: View {
     var body: some View {
         let years = Insights.years(earned)
         let review = Insights.year(year, earned)
-        List {
+        GlassList {
             Picker(M.yearReview, selection: $year) {
                 ForEach(years, id: \.self) { Text(String($0)).tag($0) }
             }
@@ -161,7 +161,7 @@ struct NextUpView: View {
     let items: [(trophy: Trophy, game: TrophyGame)]
 
     var body: some View {
-        List {
+        GlassList {
             Section {
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                     NavigationLink(value: item.game) { TrophyRow(trophy: item.trophy, subtitle: item.game.name) }

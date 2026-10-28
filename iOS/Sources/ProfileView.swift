@@ -12,6 +12,9 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    if let playing = playingGame {
+                        NavigationLink(value: playing) { nowPlaying(playing) }.tint(.primary)
+                    }
                     if let profile = store.profile {
                         hero(profile)
                         planner(profile)
@@ -69,9 +72,31 @@ struct ProfileView: View {
         .card(padding: 20)
     }
 
+    /// The game PSN says is running now, matched to the trophy list by name.
+    private var playingGame: TrophyGame? {
+        guard let name = store.nowPlaying?.lowercased() else { return nil }
+        return store.games.first { $0.name.lowercased() == name }
+            ?? store.games.first { $0.name.lowercased().contains(name) || name.contains($0.name.lowercased()) }
+    }
+
+    private func nowPlaying(_ game: TrophyGame) -> some View {
+        HStack(spacing: 14) {
+            Artwork(url: game.iconURL, size: 56)
+            VStack(alignment: .leading, spacing: 4) {
+                Label(S.nowPlaying, systemImage: "dot.radiowaves.left.and.right")
+                    .font(.caption.weight(.semibold)).foregroundStyle(Style.glow)
+                    .symbolEffect(.variableColor.iterative)
+                Text(game.name).font(.headline).lineLimit(1)
+                ProgressView(value: Double(game.progress), total: 100).tint(Style.glow)
+            }
+            Image(systemName: "chevron.right").foregroundStyle(.secondary)
+        }
+        .card(padding: 14)
+    }
+
     private func stat(_ value: String, _ caption: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.title3.bold().monospacedDigit())
+            Text(value).font(.title3.bold().monospacedDigit()).contentTransition(.numericText())
             Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity)
@@ -88,7 +113,7 @@ struct ProfileView: View {
             NavigationLink { PlatinumWall(games: store.platinumGames) } label: {
                 action("trophy", "\(store.platinumGames.count)")
             }
-            NavigationLink { YearReview(earned: TrophyStats(TrophyLibrary.shared.entries).earned) } label: {
+            NavigationLink { YearStory(earned: TrophyStats(TrophyLibrary.shared.entries).earned) } label: {
                 action("calendar", M.yearReview)
             }
         }

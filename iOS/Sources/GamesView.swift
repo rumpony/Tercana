@@ -4,6 +4,7 @@ struct GamesView: View {
     enum Scope: Hashable { case all, close, plats }
     @State private var scope = Scope.all
     @State private var search = ""
+    @State private var path: [TrophyGame] = Demo.openGame.map { [$0] } ?? []
     @State private var sort = Sort.recent
     @State private var platform = ""
     enum Sort: Hashable { case recent, progress, name }
@@ -27,7 +28,7 @@ struct GamesView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 Picker("", selection: $scope) {
                     Text(M.all).tag(Scope.all)
@@ -39,6 +40,18 @@ struct GamesView: View {
                 .listRowInsets(EdgeInsets())
                 ForEach(games) { game in
                     NavigationLink(value: game) { GameRow(game: game) }
+                        .swipeActions(edge: .leading) {
+                            Button { Local.shared.toggleHunting(game); Haptic.tap() } label: {
+                                Label(Local.shared.isHunting(game) ? M.stopHunting : M.startHunting, systemImage: "scope")
+                            }
+                            .tint(Style.glow)
+                        }
+                        .contextMenu {
+                            Button(Local.shared.isHunting(game) ? M.stopHunting : M.startHunting, systemImage: "scope") { Local.shared.toggleHunting(game) }
+                            ForEach(GuideLinks.forGame(game.name)) { link in
+                                Link(destination: link.url) { Label(link.title, systemImage: "book") }
+                            }
+                        }
                         .listRowBackground(RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .fill(.white.opacity(0.06)).padding(.vertical, 4))
                         .listRowSeparator(.hidden)

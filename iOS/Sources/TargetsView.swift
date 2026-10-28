@@ -6,7 +6,7 @@ struct TargetsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
+            GlassList {
                 ForEach(targets.sorted) { target in
                     let game = store.games.first { $0.id == target.gameID }
                     NavigationLink(value: game) {
