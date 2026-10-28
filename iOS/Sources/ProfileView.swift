@@ -18,7 +18,7 @@ struct ProfileView: View {
                         Figure(value: "\(store.games.count)", caption: S.gamesPlayed)
                         Figure(value: "\(store.platinumGames.count)", caption: S.platinums)
                         Figure(value: "\(store.completedCount)", caption: S.completedGames)
-                        Figure(value: S.percent(store.averageCompletion / 100), caption: S.averageCompletion)
+                        Figure(value: S.percent(store.averageCompletion), caption: S.averageCompletion)
                     }
                     .padding(.vertical, 4)
                 }
@@ -93,7 +93,7 @@ struct AccountSheet: View {
                     Button(M.syncLibrary) { library.sync(with: TrophyStore.shared.games) }
                         .disabled(library.syncing)
                     if let date = library.snapshot.syncedAt {
-                        Text(S.lastSynced(date.formatted(date: .abbreviated, time: .shortened)))
+                        Text(S.lastSynced(date.shown(time: true)))
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }

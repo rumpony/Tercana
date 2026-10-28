@@ -48,7 +48,7 @@ struct StatsView: View {
                 }
                 .padding(.vertical, 4)
                 if let day = stats.busiestDay {
-                    LabeledContent(S.busiestDay, value: "\(day.date.formatted(date: .abbreviated, time: .omitted)) · \(day.count)")
+                    LabeledContent(S.busiestDay, value: "\(day.date.shown()) · \(day.count)")
                         .font(.footnote)
                 }
             }
@@ -91,7 +91,7 @@ struct StatsView: View {
             Section {
                 Button(S.syncNow) { library.sync(with: store.games) }.disabled(library.syncing)
                 if let date = library.snapshot.syncedAt {
-                    Text(S.lastSynced(date.formatted(date: .abbreviated, time: .shortened)))
+                    Text(S.lastSynced(date.shown(time: true)))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }

@@ -127,7 +127,7 @@ struct TrophySheet: View {
                         }
                         .font(.caption)
                         if let date = trophy.earnedDate {
-                            Text(date.formatted(date: .long, time: .shortened)).font(.caption).foregroundStyle(.green)
+                            Text(date.shown(time: true)).font(.caption).foregroundStyle(.green)
                         }
                     }
                     .frame(maxWidth: .infinity)

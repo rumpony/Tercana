@@ -33,3 +33,10 @@ enum M {
     static var cancel: String { t("Vazgeç", "Cancel") }
     static var points15: String { t("Bronz 15 · Gümüş 30 · Altın 90 · Platin 300 puan", "Bronze 15 · Silver 30 · Gold 90 · Platinum 300 points") }
 }
+
+extension Date {
+    /// Date in the interface language rather than the phone's region.
+    func shown(time: Bool = false) -> String {
+        formatted(Date.FormatStyle(date: .abbreviated, time: time ? .shortened : .omitted).locale(S.locale))
+    }
+}

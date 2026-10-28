@@ -6,6 +6,8 @@ import Foundation
 @MainActor
 enum Demo {
     static var isOn: Bool { ProcessInfo.processInfo.environment["TERCANA_PREVIEW"] != nil }
+    /// Tab to open first, for screenshots (TERCANA_TAB=0…3).
+    static var startTab: Int { Int(ProcessInfo.processInfo.environment["TERCANA_TAB"] ?? "") ?? 0 }
 
     static func load() {
         func counts(_ p: Int, _ g: Int, _ s: Int, _ b: Int) -> TrophyCounts { TrophyCounts(bronze: b, silver: s, gold: g, platinum: p) }
