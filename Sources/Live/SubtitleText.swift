@@ -14,7 +14,7 @@ enum SubtitleText {
     /// Words that only ever appear as on-screen button prompts.
     private static let promptWords: Set<String> = [
         "SKIP", "RESUME", "BACK", "MENU", "MAIN", "OPTIONS", "SELECT", "CONFIRM", "CANCEL",
-        "CONTINUE", "PAUSE", "HOLD", "PRESS", "TO", "OK",
+        "CONTINUE", "PAUSE", "HOLD", "PRESS", "TO", "OK", "ROTATE", "RESET", "MOVE", "UP", "DOWN", "ZOOM", "MAP",
     ]
 
     /// Real subtitle lines come back near 1.0; texture on busy backgrounds read as
@@ -26,6 +26,10 @@ enum SubtitleText {
         var dropped: [String] = []
         // Control hints come back in pieces ("PRESS" · "R3" · "to CROUCH"); everything on the
         // same row as a hint word belongs to it.
+        // A PS trophy notification over the subtitle area mixes its title into the line.
+        if lines.contains(where: { isTrophyNotice($0.text) }) {
+            return Result(text: "", box: nil, dropped: lines.map(\.text))
+        }
         let hintRows = lines.filter { isControlHint($0.text) }.map(\.box)
         for line in lines {
             let onHintRow = hintRows.contains { Self.sameRow($0, line.box) }
@@ -59,9 +63,16 @@ enum SubtitleText {
         if text.range(of: #"\b\d{1,2}:\d{2}(:\d{2})?\b"#, options: .regularExpression) != nil { return true }
         if text.contains("%"), words.count <= 3 { return true }
         guard !letters.contains(where: \.isLowercase) else { return false }
+        // A lone short all-caps fragment ("PHI", "RASSI") is a HUD or map label; shouted lines carry punctuation.
+        if words.count == 1, letters.count <= 5, !text.contains(where: { "!?.,".contains($0) }) { return true }
         return !words.isEmpty && words.allSatisfy { word in
             word.count >= 2 && promptWords.contains { $0 == word || ($0.hasPrefix(word) && word.count >= 3) }
         }
+    }
+
+    private static func isTrophyNotice(_ line: String) -> Bool {
+        line.range(of: #"^(Bronze?|Silver|Gold|Platinum|Gümüş|Altın|Platin)\b|Hidden [Tt]rophy|Gizli kupa|Trophy earned|Kupa kazan"#,
+                   options: .regularExpression) != nil
     }
 
     private static func isControlHint(_ line: String) -> Bool {

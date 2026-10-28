@@ -38,6 +38,7 @@ final class LiveTranslator {
     private var translating = false
     /// When each reading was first seen, for prefetching and end-to-end timing.
     private var firstSeen: [String: ContinuousClock.Instant] = [:]
+    private var lastReadable = ""
 
     init(region: CGRect) {
         self.region = region
@@ -111,12 +112,18 @@ final class LiveTranslator {
             ? "" : reading.text
         // Start translating on first sight; by the time the line is confirmed the result is
         // usually cached, which removes the confirmation wait from what the player feels.
-        if !readable.isEmpty, firstSeen[readable] == nil {
-            firstSeen[readable] = .now
+        // The clock restarts whenever a line reappears, so repeated lines don't report
+        // the time since their first appearance minutes ago.
+        if !readable.isEmpty, readable != lastReadable {
+            let isNew = firstSeen[readable] == nil
             if firstSeen.count > 200 { firstSeen.removeAll() }
-            let line = readable
-            Task { _ = try? await self.translate(line) }
+            firstSeen[readable] = .now
+            if isNew {
+                let line = readable
+                Task { _ = try? await self.translate(line) }
+            }
         }
+        lastReadable = readable
         let change = stabilizer.feed(readable)
         switch change {
         case .show(let line):
