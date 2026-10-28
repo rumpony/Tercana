@@ -201,6 +201,13 @@ actor PSNClient {
         }
     }
 
+    /// The signed-in player's own PSN ID and avatar.
+    func me() async throws -> Player {
+        let id = try await accountID()
+        guard let player = try await profiles([id]).first else { throw PSNError.server(0) }
+        return player
+    }
+
     /// Looks a player up by PSN ID.
     func player(named onlineId: String) async throws -> Player {
         struct Payload: Decodable {

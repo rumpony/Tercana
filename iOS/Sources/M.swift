@@ -92,3 +92,28 @@ extension M {
     static var notifyHunting: String { t("Av listesi hatırlatması", "Hunt list nudges") }
     static func huntingNudge(_ game: String, _ left: Int) -> String { t("\(game): platine \(left) kupa kaldı. Bir tur daha?", "\(game): \(left) trophies left to platinum. One more session?") }
 }
+
+extension M {
+    static var leaderboard: String { t("Sıralama", "Leaderboard") }
+    static var friendsList: String { t("Arkadaşlar", "Friends") }
+    static var refreshLeaderboard: String { t("Sıralamayı güncelle", "Update leaderboard") }
+    static func refreshing(_ done: Int, _ total: Int) -> String { t("Güncelleniyor… \(done)/\(total)", "Updating… \(done)/\(total)") }
+    static var leaderboardHint: String {
+        t("Sen ve PSN arkadaşların, kupa puanına göre. Sadece bu butona bastığında güncellenir; arka planda hiçbir şey çalışmaz. Kupaları gizli olan arkadaşlar listede görünmez.",
+          "You and your PSN friends by trophy points. Updates only when you tap the button; nothing runs in the background. Friends with private trophies aren't listed.")
+    }
+    static func yourRank(_ rank: Int, _ count: Int) -> String { t("\(count) kişi arasında \(rank). sıradasın", "You're #\(rank) of \(count)") }
+    static var today: String { t("Bugün", "Today") }
+    static var sinceYesterday: String { t("Dünden beri", "Since yesterday") }
+    static func rankMove(_ n: Int) -> String { n > 0 ? "↑\(n)" : n < 0 ? "↓\(-n)" : "–" }
+    static func pointsMove(_ n: Int) -> String { n > 0 ? "+\(n.formatted())" : "\(n.formatted())" }
+    static var country: String { t("Ülke", "Country") }
+    static func countryBoard(_ name: String) -> String { t("\(name) sıralamasını aç", "Open \(name) leaderboard") }
+    static var myCountryRank: String { t("Ülkede ve dünyada kaçıncıyım?", "My country and world rank") }
+    static var psnProfilesHint: String {
+        t("Ülke ve dünya sıralamasını PSNProfiles tutuyor; sayfası uygulamanın içinde açılır. Profilin PSNProfiles'ta yoksa önce sitede bir kez aratıp ekletmen gerekir.",
+          "Country and world ranks come from PSNProfiles; its page opens inside the app. If your profile isn't on PSNProfiles yet, search for it once on the site to add it.")
+    }
+    static var worldRank: String { t("Dünya sıralamamı PSNProfiles'ta aç", "Open my world rank on PSNProfiles") }
+    static func updatedAt(_ s: String) -> String { t("Son güncelleme: \(s)", "Updated: \(s)") }
+}

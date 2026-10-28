@@ -7,10 +7,21 @@ struct FriendsView: View {
     @State private var query = ""
     @State private var found: PSNClient.Player?
     @State private var searchProblem: String?
+    @State private var showingBoard = true
 
     var body: some View {
         NavigationStack {
             List {
+                Picker("", selection: $showingBoard) {
+                    Text(M.leaderboard).tag(true)
+                    Text(M.friendsList).tag(false)
+                }
+                .pickerStyle(.segmented)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                if showingBoard && query.isEmpty {
+                    LeaderboardView()
+                } else {
                 if let found {
                     Section { NavigationLink(value: found) { PlayerRow(player: found) } }
                 }
@@ -18,10 +29,11 @@ struct FriendsView: View {
                 Section {
                     ForEach(friends) { player in NavigationLink(value: player) { PlayerRow(player: player) } }
                 }
+                }
             }
             .overlay {
                 if loading && friends.isEmpty { ProgressView() }
-                else if friends.isEmpty && found == nil && searchProblem == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
+                else if !showingBoard && friends.isEmpty && found == nil && searchProblem == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
             }
             .onBackdrop()
             .screen(M.friendsTab)

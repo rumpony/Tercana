@@ -36,6 +36,12 @@ enum Demo {
         let profile = try? JSONDecoder().decode(TrophyProfile.self, from: Data(
             #"{"trophyLevel":312,"progress":64,"tier":4,"earnedTrophies":{"bronze":1184,"silver":352,"gold":121,"platinum":27}}"#.utf8))
         TrophyStore.shared.usePreviewData(profile: profile, games: games, trophies: list, recent: [], nowPlaying: nil)
+        let people = [("NightHarbor", 418, 9), ("you", 312, 27), ("PixelMara", 287, 31), ("ColdBrew_77", 240, 12), ("Velkan", 198, 4)]
+        let rows = people.map { name, level, plats in
+            Leaderboard.Row(player: PSNClient.Player(accountId: name, onlineId: name == "you" ? "Rumpony" : name, avatarURL: nil),
+                            level: level, points: level * 160, counts: counts(plats, level / 3, level, level * 4))
+        }
+        Leaderboard.shared.useDemo(Leaderboard.Snapshot(date: Date(), rows: rows, me: "you"))
         let names = ["Dawnbreaker", "Silent Step", "Old Friends", "Iron Will", "Long Way Home", "Night Owl"]
         TrophyLibrary.shared.usePreviewData(games.prefix(6).enumerated().map { i, game in
             TrophyLibrary.Entry(game: game, trophies: (0..<25).map { n in
