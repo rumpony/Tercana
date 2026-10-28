@@ -10,95 +10,133 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let profile = store.profile {
-                    Section { header(profile) }
-                    Section(M.levelPlanner) { planner(profile) }
-                }
-                Section {
-                    LazyVGrid(columns: [GridItem(), GridItem()], spacing: 16) {
-                        Figure(value: "\(store.games.count)", caption: S.gamesPlayed)
-                        Figure(value: "\(store.platinumGames.count)", caption: S.platinums)
-                        Figure(value: "\(store.completedCount)", caption: S.completedGames)
-                        Figure(value: S.percent(store.averageCompletion), caption: S.averageCompletion)
+            ScrollView {
+                VStack(spacing: 16) {
+                    if let profile = store.profile {
+                        hero(profile)
+                        planner(profile)
                     }
-                    .padding(.vertical, 4)
-                }
-                let hunted = local.hunting.compactMap { id in store.games.first { $0.id == id } }
-                if !hunted.isEmpty {
-                    Section(M.hunting) {
-                        ForEach(hunted) { game in NavigationLink(value: game) { GameRow(game: game) } }
-                    }
-                }
-                if !memories.isEmpty {
-                    Section(M.onThisDay) {
-                        ForEach(Array(memories.prefix(5).enumerated()), id: \.offset) { _, item in
-                            TrophyRow(trophy: item.trophy, subtitle: "\(M.yearsAgo(Calendar.current.component(.year, from: Date()) - Calendar.current.component(.year, from: item.date))) · \(item.game.name)")
+                    quickActions
+                    rail(M.hunting, local.hunting.compactMap { id in store.games.first { $0.id == id } })
+                    rail(S.closestToFinish, Array(store.closestGames.prefix(10)))
+                    if !memories.isEmpty {
+                        SectionTitle(text: M.onThisDay)
+                        VStack(spacing: 12) {
+                            ForEach(Array(memories.prefix(3).enumerated()), id: \.offset) { _, item in
+                                TrophyRow(trophy: item.trophy, subtitle: "\(M.yearsAgo(Calendar.current.component(.year, from: Date()) - Calendar.current.component(.year, from: item.date))) · \(item.game.name)")
+                            }
                         }
+                        .card()
                     }
-                }
-                if !store.platinumGames.isEmpty {
-                    Section {
-                        NavigationLink(M.platinumWall + " (\(store.platinumGames.count))") { PlatinumWall(games: store.platinumGames) }
-                    }
-                }
-                if !showcase.items.isEmpty {
-                    Section(S.showcase) {
-                        ForEach(showcase.items) { item in
-                            TrophyRow(trophy: item.trophy, subtitle: item.gameName)
+                    if !showcase.items.isEmpty {
+                        SectionTitle(text: S.showcase)
+                        VStack(spacing: 12) {
+                            ForEach(showcase.items) { TrophyRow(trophy: $0.trophy, subtitle: $0.gameName) }
                         }
+                        .card()
                     }
                 }
-                if !store.closestGames.isEmpty {
-                    Section(S.closestToFinish) {
-                        ForEach(store.closestGames.prefix(5)) { game in
-                            NavigationLink(value: game) { GameRow(game: game) }
-                        }
-                    }
-                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
+            .onBackdrop()
             .screen(S.profile)
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
             .refreshable { await store.load() }
             .toolbar {
-                if let profile = store.profile {
-                    let card = snapshot(ProfileCard(profile: profile, platinums: store.platinumGames, name: nil))
-                    ShareLink(item: card, preview: SharePreview(M.shareCard, image: card))
-                }
-                Button { showingAccount = true } label: { Image(systemName: "person.crop.circle") }
+                Button { showingAccount = true } label: { Image(systemName: "gearshape") }
             }
             .sheet(isPresented: $showingAccount) { AccountSheet() }
         }
     }
 
-    private func header(_ profile: TrophyProfile) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(S.trophyLevel(profile.level)).font(.title2.bold())
-                Spacer()
-                Text(S.percent(Double(profile.progress) / 100)).foregroundStyle(.secondary).monospacedDigit()
+    private func hero(_ profile: TrophyProfile) -> some View {
+        VStack(spacing: 18) {
+            HStack(spacing: 20) {
+                LevelRing(level: profile.level, progress: profile.progress)
+                VStack(alignment: .leading, spacing: 10) {
+                    stat(Level.points(profile.earnedTrophies).formatted(), M.points)
+                    stat("\(store.games.count)", S.gamesPlayed)
+                    stat(S.percent(store.averageCompletion), S.averageCompletion)
+                }
             }
-            ProgressView(value: Double(profile.progress), total: 100)
-            GradeCounts(counts: profile.earnedTrophies)
-            Text("\(M.points): \(Level.points(profile.earnedTrophies).formatted())")
-                .font(.footnote).foregroundStyle(.secondary)
+            HStack {
+                ForEach(TrophyGrade.allCases.reversed(), id: \.self) {
+                    GradeChip(grade: $0, count: profile.earnedTrophies.value($0))
+                }
+            }
         }
-        .padding(.vertical, 4)
+        .card(padding: 20)
+    }
+
+    private func stat(_ value: String, _ caption: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(value).font(.title3.bold().monospacedDigit())
+            Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        }
+    }
+
+    private var quickActions: some View {
+        HStack(spacing: 12) {
+            if let profile = store.profile {
+                let card = snapshot(ProfileCard(profile: profile, platinums: store.platinumGames, name: nil))
+                ShareLink(item: card, preview: SharePreview(M.shareCard, image: card)) {
+                    action("square.and.arrow.up", M.share)
+                }
+            }
+            NavigationLink { PlatinumWall(games: store.platinumGames) } label: {
+                action("trophy", "\(store.platinumGames.count)")
+            }
+            NavigationLink { YearReview(earned: TrophyStats(TrophyLibrary.shared.entries).earned) } label: {
+                action("calendar", M.yearReview)
+            }
+        }
+        .tint(.primary)
+    }
+
+    private func action(_ icon: String, _ title: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon).font(.title3)
+            Text(title).font(.caption.weight(.medium)).lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
+        .card(padding: 12)
+    }
+
+    @ViewBuilder
+    private func rail(_ title: String, _ games: [TrophyGame]) -> some View {
+        if !games.isEmpty {
+            SectionTitle(text: title)
+            ScrollView(.horizontal) {
+                HStack(spacing: 14) {
+                    ForEach(games) { game in
+                        NavigationLink(value: game) { GameTile(game: game) }.tint(.primary)
+                    }
+                }
+            }
+            .scrollIndicators(.hidden)
+            .contentMargins(.horizontal, 16, for: .scrollContent)
+            .padding(.horizontal, -16)
+        }
     }
 
     private func planner(_ profile: TrophyProfile) -> some View {
         let goal = max(target ?? profile.level + 1, profile.level + 1)
         let needed = Level.pointsNeeded(from: profile.level, progress: profile.progress, to: goal)
         return VStack(alignment: .leading, spacing: 8) {
-            Stepper(M.targetLevel(goal), value: Binding(get: { goal }, set: { target = $0 }),
-                    in: (profile.level + 1)...999)
-            Text(M.pointsLeft(needed)).font(.headline)
+            HStack {
+                Label(M.levelPlanner, systemImage: "target").font(.subheadline.weight(.semibold))
+                Spacer()
+                Stepper(M.targetLevel(goal), value: Binding(get: { goal }, set: { target = $0 }),
+                        in: (profile.level + 1)...999).labelsHidden()
+            }
+            Text("\(M.targetLevel(goal)) · \(M.pointsLeft(needed))").font(.headline)
             Text(M.roughly(gold: Int((Double(needed) / 90).rounded(.up)),
                            bronze: Int((Double(needed) / 15).rounded(.up)),
                            plats: Int((Double(needed) / 300).rounded(.up))))
                 .font(.footnote).foregroundStyle(.secondary)
-            Text(M.points15).font(.caption2).foregroundStyle(.tertiary)
         }
+        .card()
     }
 }
 

@@ -33,6 +33,7 @@ struct TercanaMobileApp: App {
                 }
             }
             .tint(Theme.colors[min(accent, Theme.colors.count - 1)])
+            .preferredColorScheme(.dark)
             // Strings are computed, so the tree is rebuilt when the language changes.
             .id(language)
         }

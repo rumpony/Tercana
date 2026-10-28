@@ -23,6 +23,7 @@ struct FriendsView: View {
                 if loading && friends.isEmpty { ProgressView() }
                 else if friends.isEmpty && found == nil && searchProblem == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
             }
+            .onBackdrop()
             .screen(M.friendsTab)
             .searchable(text: $query, prompt: M.searchPlayer)
             .onSubmit(of: .search) { Task { await search() } }

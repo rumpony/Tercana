@@ -14,6 +14,7 @@ struct StatsView: View {
                     syncPrompt
                 }
             }
+            .onBackdrop()
             .screen(M.statsTab)
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
         }

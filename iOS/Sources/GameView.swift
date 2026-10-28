@@ -61,6 +61,7 @@ struct GameView: View {
                 }
             }
         }
+        .onBackdrop()
         .navigationTitle(game.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

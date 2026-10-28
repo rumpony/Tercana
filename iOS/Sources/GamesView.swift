@@ -39,8 +39,13 @@ struct GamesView: View {
                 .listRowInsets(EdgeInsets())
                 ForEach(games) { game in
                     NavigationLink(value: game) { GameRow(game: game) }
+                        .listRowBackground(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(.white.opacity(0.06)).padding(.vertical, 4))
+                        .listRowSeparator(.hidden)
                 }
             }
+            .listStyle(.plain)
+            .onBackdrop()
             .screen(M.gamesTab)
             .searchable(text: $search, prompt: S.searchGames)
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
