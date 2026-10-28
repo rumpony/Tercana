@@ -30,7 +30,7 @@ struct TargetsView: View {
                     ContentUnavailableView(S.noTargets, systemImage: "pin", description: Text(S.noTargetsHint))
                 }
             }
-            .navigationTitle(M.targetsTab)
+            .screen(M.targetsTab)
             .navigationDestination(for: TrophyGame?.self) { game in
                 if let game { GameView(game: game) }
             }

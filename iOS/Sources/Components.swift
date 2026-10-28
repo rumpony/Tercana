@@ -87,3 +87,14 @@ struct Figure: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+extension View {
+    /// Shared look for every tab: small centered title and tight section gaps, so short or
+    /// empty pages don't open with a block of empty space.
+    func screen(_ title: String) -> some View {
+        navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .listSectionSpacing(.compact)
+            .contentMargins(.top, 8, for: .scrollContent)
+    }
+}

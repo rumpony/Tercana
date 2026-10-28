@@ -14,7 +14,7 @@ struct StatsView: View {
                     syncPrompt
                 }
             }
-            .navigationTitle(M.statsTab)
+            .screen(M.statsTab)
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
         }
     }
@@ -22,6 +22,7 @@ struct StatsView: View {
     private var syncPrompt: some View {
         VStack(spacing: 16) {
             ContentUnavailableView(S.statsNeedSync, systemImage: "chart.bar", description: Text(S.statsNeedSyncHint))
+                .fixedSize(horizontal: false, vertical: true)
             if library.syncing {
                 ProgressView(value: Double(library.syncDone), total: Double(max(library.syncTotal, 1)))
                     .padding(.horizontal, 40)
@@ -32,8 +33,8 @@ struct StatsView: View {
                     .disabled(store.games.isEmpty)
             }
             if let problem = library.syncProblem { Text(problem).font(.footnote).foregroundStyle(.red) }
-            Spacer()
         }
+        .frame(maxHeight: .infinity)
     }
 
     private func content(_ stats: TrophyStats) -> some View {

@@ -57,7 +57,7 @@ struct ProfileView: View {
                     }
                 }
             }
-            .navigationTitle(S.profile)
+            .screen(S.profile)
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
             .refreshable { await store.load() }
             .toolbar {

@@ -41,7 +41,7 @@ struct GamesView: View {
                     NavigationLink(value: game) { GameRow(game: game) }
                 }
             }
-            .navigationTitle(M.gamesTab)
+            .screen(M.gamesTab)
             .searchable(text: $search, prompt: S.searchGames)
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
             .refreshable { await store.load() }

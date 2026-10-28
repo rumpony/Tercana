@@ -21,9 +21,9 @@ struct FriendsView: View {
             }
             .overlay {
                 if loading && friends.isEmpty { ProgressView() }
-                else if failed && found == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
+                else if friends.isEmpty && found == nil && searchProblem == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
             }
-            .navigationTitle(M.friendsTab)
+            .screen(M.friendsTab)
             .searchable(text: $query, prompt: M.searchPlayer)
             .onSubmit(of: .search) { Task { await search() } }
             .navigationDestination(for: PSNClient.Player.self) { PlayerView(player: $0) }
