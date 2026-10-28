@@ -104,6 +104,25 @@ struct GameView: View {
                 LevelRing(level: game.progress, progress: game.progress, size: 56, showsPercent: false)
             }
             GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies).fixedSize()
+            if !trophies.isEmpty, game.progress < 100 {
+                let missable = Route.plan(trophies).first { $0.phase == .missable }?.trophies.count ?? 0
+                NavigationLink {
+                    RouteView(game: game, trophies: trophies)
+                } label: {
+                    HStack {
+                        Label(M.route, systemImage: "map").font(.subheadline.weight(.semibold))
+                        Spacer()
+                        if missable > 0 {
+                            Label("\(missable)", systemImage: "exclamationmark.triangle.fill")
+                                .font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                                .accessibilityLabel(M.missableWarning(missable))
+                        }
+                    }
+                    .padding(12)
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .tint(.primary)
+            }
             HStack(spacing: 8) {
                 if let days = Insights.platinumETA(trophies) {
                     pill(M.platinumETA(days), "hourglass")

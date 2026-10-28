@@ -115,3 +115,13 @@ extension M {
     static var worldRank: String { t("Dünya sıralamamı PSNProfiles'ta aç", "Open my world rank on PSNProfiles") }
     static func updatedAt(_ s: String) -> String { t("Son güncelleme: \(s)", "Updated: \(s)") }
 }
+
+extension M {
+    static var route: String { t("Platin rotası", "Platinum route") }
+    static var routeIntro: String {
+        t("Kupa açıklamalarından çıkarılmış tahmini bir sıra. Sony kaçırılabilir kupaları işaretlemiyor; emin olmak için rehbere bak.",
+          "An estimated order read from the trophy texts. Sony doesn't flag missable trophies; check a guide to be sure.")
+    }
+    static var routeGuide: String { t("PowerPyx rehberini aç", "Open the PowerPyx guide") }
+    static func missableWarning(_ n: Int) -> String { t("\(n) kupa kaçırılabilir olabilir", "\(n) trophies may be missable") }
+}
