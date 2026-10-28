@@ -125,3 +125,7 @@ extension M {
     static var routeGuide: String { t("PowerPyx rehberini aç", "Open the PowerPyx guide") }
     static func missableWarning(_ n: Int) -> String { t("\(n) kupa kaçırılabilir olabilir", "\(n) trophies may be missable") }
 }
+
+extension M {
+    static var showSpoilers: String { t("Gizli kupaları göster (spoiler)", "Show hidden trophies (spoilers)") }
+}

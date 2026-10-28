@@ -6,6 +6,7 @@ struct GameView: View {
     @State private var selected: Trophy?
     @State private var celebrating: Date?
     @Bindable private var store = TrophyStore.shared
+    @AppStorage("showSpoilers") private var spoilers = false
     private var online: Bool { Connectivity.shared.online }
 
     /// Fresh list from PSN when it has loaded, otherwise the copy from the last library sync.
@@ -53,7 +54,8 @@ struct GameView: View {
                         Button { selected = trophy } label: {
                             TrophyRow(trophy: trophy,
                                       subtitle: store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail,
-                                      markedDone: !online && Local.shared.isDone(trophy, in: game))
+                                      markedDone: !online && Local.shared.isDone(trophy, in: game),
+                                      spoilers: spoilers)
                         }
                         .tint(.primary)
                         .trophyActions(trophy, in: game, canMark: !online)
@@ -75,6 +77,7 @@ struct GameView: View {
                     ForEach(TrophyRarity.allCases) { Text($0.title).tag(TrophyRarity?.some($0)) }
                 }
                 Toggle(S.translateDescriptions, isOn: $store.showTranslations)
+                Toggle(M.showSpoilers, systemImage: "eye", isOn: $spoilers)
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
             }
@@ -196,6 +199,7 @@ struct TrophyRow: View {
     let trophy: Trophy
     let subtitle: String
     var markedDone = false
+    var spoilers = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -206,7 +210,7 @@ struct TrophyRow: View {
                     Circle().fill(trophy.grade.color).frame(width: 8, height: 8)
                     Text(trophy.name).font(.subheadline.weight(.medium)).lineLimit(1)
                 }
-                Text(trophy.hidden && !trophy.earned ? S.hiddenTrophy : subtitle)
+                Text(trophy.hidden && !trophy.earned && !spoilers ? S.hiddenTrophy : subtitle)
                     .font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
             Spacer(minLength: 4)
@@ -284,7 +288,10 @@ struct TrophySheet: View {
             }
             .background(Style.backdrop.ignoresSafeArea())
             .toolbar { Button(S.close) { dismiss() } }
-            .onAppear { note = targets.note(for: trophy, in: game) }
+            .onAppear {
+                note = targets.note(for: trophy, in: game)
+                revealed = UserDefaults.standard.bool(forKey: "showSpoilers")
+            }
         }
         .presentationDetents([.large])
     }
