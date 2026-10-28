@@ -1,0 +1,37 @@
+name: TercanaMobile
+options:
+  bundleIdPrefix: com.rumpony
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  TercanaMobile:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - Resources
+      - path: ../Sources/Trophies
+        excludes: [PSNWebLogin.swift, TrophiesView.swift, StatsView.swift]
+      - ../Sources/Core/Strings.swift
+      - ../Sources/Core/AppLog.swift
+      - ../Sources/Core/SecureStore.swift
+      - ../Sources/Core/Translator.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rumpony.TercanaMobile
+        PRODUCT_NAME: Tercana
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Tercana
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

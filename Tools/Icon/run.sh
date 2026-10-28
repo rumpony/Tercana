@@ -11,3 +11,4 @@ for s in 16 32 128 256 512; do
   sips -z $((s*2)) $((s*2)) "$tmp/icon1024.png" --out "$set/icon_${s}x${s}@2x.png" >/dev/null
 done
 cp "$tmp/icon1024.png" docs/assets/icon.png
+"$tmp/icon" iOS/Resources/Assets.xcassets/AppIcon.appiconset/icon-ios.png ios
