@@ -51,15 +51,15 @@ struct ProfileView: View {
     }
 
     private func hero(_ profile: TrophyProfile) -> some View {
-        VStack(spacing: 18) {
-            HStack(spacing: 20) {
-                LevelRing(level: profile.level, progress: profile.progress)
-                VStack(alignment: .leading, spacing: 10) {
-                    stat(Level.points(profile.earnedTrophies).formatted(), M.points)
-                    stat("\(store.games.count)", S.gamesPlayed)
-                    stat(S.percent(store.averageCompletion), S.averageCompletion)
-                }
+        VStack(spacing: 20) {
+            LevelRing(level: profile.level, progress: profile.progress, size: 168)
+                .padding(.top, 4)
+            HStack {
+                stat(Level.points(profile.earnedTrophies).formatted(), M.points)
+                stat("\(store.games.count)", S.gamesPlayed)
+                stat(S.percent(store.averageCompletion), S.averageCompletion)
             }
+            Divider().overlay(.white.opacity(0.1))
             HStack {
                 ForEach(TrophyGrade.allCases.reversed(), id: \.self) {
                     GradeChip(grade: $0, count: profile.earnedTrophies.value($0))
@@ -70,10 +70,11 @@ struct ProfileView: View {
     }
 
     private func stat(_ value: String, _ caption: String) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 2) {
             Text(value).font(.title3.bold().monospacedDigit())
-            Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(caption).font(.caption).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.8)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var quickActions: some View {

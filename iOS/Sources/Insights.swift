@@ -5,7 +5,7 @@ enum Insights {
     typealias Earned = (trophy: Trophy, game: TrophyGame, date: Date)
 
     /// Trophies per calendar day over the last `days` days.
-    static func perDay(_ earned: [Earned], days: Int = 364) -> [Date: Int] {
+    static func perDay(_ earned: [Earned], days: Int = 120) -> [Date: Int] {
         let calendar = Calendar.current
         let start = calendar.date(byAdding: .day, value: -days, to: calendar.startOfDay(for: Date()))!
         var counts: [Date: Int] = [:]

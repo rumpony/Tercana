@@ -1,32 +1,47 @@
 import SwiftUI
 
-/// GitHub-style year of trophy days: one column per week, darker means more trophies.
+/// Recent weeks as a grid of days (rows Mon…Sun), big enough to read; color shows how many trophies.
 struct Heatmap: View {
     let counts: [Date: Int]
+    var weeks = 15
 
     var body: some View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let peak = max(counts.values.max() ?? 1, 1)
-        Canvas { context, size in
-            let weeks = 53
-            let gap: CGFloat = 2
-            let cell = min((size.width - gap * CGFloat(weeks - 1)) / CGFloat(weeks), (size.height - gap * 6) / 7)
-            let todayColumn = weeks - 1
-            let todayRow = calendar.component(.weekday, from: today) - 1
-            for column in 0..<weeks {
-                for row in 0..<7 {
-                    let back = (todayColumn - column) * 7 + (todayRow - row)
-                    guard back >= 0, let day = calendar.date(byAdding: .day, value: -back, to: today) else { continue }
-                    let value = counts[day] ?? 0
-                    let rect = CGRect(x: CGFloat(column) * (cell + gap), y: CGFloat(row) * (cell + gap), width: cell, height: cell)
-                    let color = value == 0 ? Color.secondary.opacity(0.15)
-                        : Color.accentColor.opacity(0.3 + 0.7 * Double(value) / Double(peak))
-                    context.fill(Path(roundedRect: rect, cornerRadius: cell * 0.25), with: .color(color))
+        // Monday-first column start for the week holding today.
+        let weekday = (calendar.component(.weekday, from: today) + 5) % 7
+        let lastMonday = calendar.date(byAdding: .day, value: -weekday, to: today)!
+        let symbols = S.locale.calendar.veryShortWeekdaySymbols
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                Color.clear.frame(width: 14, height: 1)
+                ForEach(0..<weeks, id: \.self) { column in
+                    let monday = calendar.date(byAdding: .day, value: (column - weeks + 1) * 7, to: lastMonday)!
+                    let day = calendar.component(.day, from: monday)
+                    Text(day <= 7 ? S.locale.calendar.shortMonthSymbols[calendar.component(.month, from: monday) - 1] : "")
+                        .font(.system(size: 9)).foregroundStyle(.secondary).fixedSize()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            ForEach(0..<7, id: \.self) { row in
+                HStack(spacing: 4) {
+                    Text(symbols[(row + 1) % 7]).font(.system(size: 9)).foregroundStyle(.secondary).frame(width: 14)
+                    ForEach(0..<weeks, id: \.self) { column in
+                        let day = calendar.date(byAdding: .day, value: (column - weeks + 1) * 7 + row, to: lastMonday)!
+                        let value = counts[day] ?? 0
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(day > today ? Color.clear
+                                  : value == 0 ? Color.white.opacity(0.07)
+                                  : Style.glow.opacity(0.35 + 0.65 * Double(value) / Double(peak)))
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay {
+                                if value > 0 { Text("\(value)").font(.system(size: 8, weight: .bold)).foregroundStyle(.black.opacity(0.7)) }
+                            }
+                    }
                 }
             }
         }
-        .frame(height: 64)
     }
 }
 
