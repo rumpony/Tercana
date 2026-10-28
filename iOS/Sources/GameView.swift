@@ -5,6 +5,12 @@ struct GameView: View {
     @State private var selected: Trophy?
     @Bindable private var store = TrophyStore.shared
 
+    private var groups: [String] {
+        var seen: [String] = []
+        for trophy in store.trophies where !seen.contains(trophy.groupId ?? "default") { seen.append(trophy.groupId ?? "default") }
+        return seen
+    }
+
     private var loaded: Bool { store.selectedGame?.id == game.id && !store.trophies.isEmpty }
 
     var body: some View {
@@ -18,6 +24,12 @@ struct GameView: View {
                         GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies)
                     }
                 }
+                if loaded, let days = Insights.platinumETA(store.trophies) {
+                    Label(M.platinumETA(days), systemImage: "hourglass").font(.footnote)
+                }
+                Button(Local.shared.isHunting(game) ? M.stopHunting : M.startHunting,
+                       systemImage: "scope") { Local.shared.toggleHunting(game) }
+                    .font(.footnote)
                 if let stats = store.gameStats, loaded {
                     Text(S.spanDays(max(1, Calendar.current.dateComponents([.day], from: stats.first, to: stats.last).day ?? 0)))
                         .font(.footnote).foregroundStyle(.secondary)
@@ -33,15 +45,19 @@ struct GameView: View {
                 .pickerStyle(.segmented)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
-                if loaded {
-                    ForEach(store.visibleTrophies) { trophy in
-                        Button { selected = trophy } label: {
-                            TrophyRow(trophy: trophy, subtitle: store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail)
+                if !loaded { ProgressView().frame(maxWidth: .infinity) }
+            }
+            if loaded {
+                ForEach(groups, id: \.self) { group in
+                    Section(groups.count > 1 ? (group == "default" ? M.baseGame : M.dlc(group)) : "") {
+                        ForEach(store.visibleTrophies.filter { ($0.groupId ?? "default") == group }) { trophy in
+                            Button { selected = trophy } label: {
+                                TrophyRow(trophy: trophy, subtitle: store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail,
+                                          markedDone: Local.shared.isDone(trophy, in: game))
+                            }
+                            .tint(.primary)
                         }
-                        .tint(.primary)
                     }
-                } else {
-                    ProgressView().frame(maxWidth: .infinity)
                 }
             }
         }
@@ -70,6 +86,7 @@ struct GameView: View {
 struct TrophyRow: View {
     let trophy: Trophy
     let subtitle: String
+    var markedDone = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -90,6 +107,8 @@ struct TrophyRow: View {
                 }
                 if trophy.earned {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.caption)
+                } else if markedDone {
+                    Image(systemName: "checkmark.circle").foregroundStyle(.tint).font(.caption)
                 } else if let progress = trophy.progress, let target = trophy.progressTarget {
                     Text("\(progress)/\(target)").font(.caption2).foregroundStyle(.secondary)
                 }
@@ -139,6 +158,9 @@ struct TrophySheet: View {
                             showcase.toggle(trophy, in: game)
                         }
                     } else {
+                        Button(Local.shared.isDone(trophy, in: game) ? M.unmarkDone : M.markDone) {
+                            Local.shared.toggleDone(trophy, in: game)
+                        }
                         Button(targets.isPinned(trophy, in: game) ? S.unpinTarget : S.pinTarget) {
                             targets.toggle(trophy, in: game)
                         }

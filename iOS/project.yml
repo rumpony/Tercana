@@ -23,6 +23,17 @@ targets:
       - ../Sources/Core/AppLog.swift
       - ../Sources/Core/SecureStore.swift
       - ../Sources/Core/Translator.swift
+    dependencies:
+      - target: TercanaWidget
+    entitlements:
+      path: Resources/TercanaMobile.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.rumpony.TercanaMobile]
+    info:
+      path: Resources/Info.plist
+      properties:
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.rumpony.TercanaMobile.refresh]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.rumpony.TercanaMobile
@@ -35,3 +46,24 @@ targets:
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  TercanaWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widget
+      - Sources/WidgetData.swift
+    entitlements:
+      path: Widget/Widget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.rumpony.TercanaMobile]
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Tercana
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rumpony.TercanaMobile.Widget
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"

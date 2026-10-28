@@ -5,6 +5,8 @@ struct ProfileView: View {
     @State private var showingAccount = false
     private var store: TrophyStore { .shared }
     private var showcase: TrophyShowcase { .shared }
+    private var local: Local { .shared }
+    private var memories: [Insights.Earned] { Insights.onThisDay(TrophyStats(TrophyLibrary.shared.entries).earned) }
 
     var body: some View {
         NavigationStack {
@@ -21,6 +23,24 @@ struct ProfileView: View {
                         Figure(value: S.percent(store.averageCompletion), caption: S.averageCompletion)
                     }
                     .padding(.vertical, 4)
+                }
+                let hunted = local.hunting.compactMap { id in store.games.first { $0.id == id } }
+                if !hunted.isEmpty {
+                    Section(M.hunting) {
+                        ForEach(hunted) { game in NavigationLink(value: game) { GameRow(game: game) } }
+                    }
+                }
+                if !memories.isEmpty {
+                    Section(M.onThisDay) {
+                        ForEach(Array(memories.prefix(5).enumerated()), id: \.offset) { _, item in
+                            TrophyRow(trophy: item.trophy, subtitle: "\(M.yearsAgo(Calendar.current.component(.year, from: Date()) - Calendar.current.component(.year, from: item.date))) · \(item.game.name)")
+                        }
+                    }
+                }
+                if !store.platinumGames.isEmpty {
+                    Section {
+                        NavigationLink(M.platinumWall + " (\(store.platinumGames.count))") { PlatinumWall(games: store.platinumGames) }
+                    }
                 }
                 if !showcase.items.isEmpty {
                     Section(S.showcase) {
@@ -41,6 +61,10 @@ struct ProfileView: View {
             .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
             .refreshable { await store.load() }
             .toolbar {
+                if let profile = store.profile {
+                    let card = snapshot(ProfileCard(profile: profile, platinums: store.platinumGames, name: nil))
+                    ShareLink(item: card, preview: SharePreview(M.shareCard, image: card))
+                }
                 Button { showingAccount = true } label: { Image(systemName: "person.crop.circle") }
             }
             .sheet(isPresented: $showingAccount) { AccountSheet() }
@@ -81,6 +105,7 @@ struct ProfileView: View {
 struct AccountSheet: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppLanguage.defaultsKey) private var language = AppLanguage.system.rawValue
+    @AppStorage("accent") private var accent = 0
     private var library: TrophyLibrary { .shared }
 
     var body: some View {
@@ -88,6 +113,19 @@ struct AccountSheet: View {
             Form {
                 Picker(M.language, selection: $language) {
                     ForEach(AppLanguage.allCases) { Text($0.nativeName).tag($0.rawValue) }
+                }
+                Picker(M.theme, selection: $accent) {
+                    ForEach(Theme.colors.indices, id: \.self) { i in
+                        Image(systemName: "circle.fill").foregroundStyle(Theme.colors[i]).tag(i)
+                    }
+                }
+                .pickerStyle(.navigationLink)
+                Section {
+                    ForEach(Notifier.Kind.allCases, id: \.self) { kind in NotifyToggle(kind: kind) }
+                } header: {
+                    Text(M.notifications)
+                } footer: {
+                    Text(M.notifyHint)
                 }
                 Section {
                     Button(M.syncLibrary) { library.sync(with: TrophyStore.shared.games) }
@@ -107,5 +145,20 @@ struct AccountSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { Button(S.close) { dismiss() } }
         }
+    }
+}
+
+private struct NotifyToggle: View {
+    let kind: Notifier.Kind
+    @AppStorage private var on: Bool
+
+    init(kind: Notifier.Kind) {
+        self.kind = kind
+        _on = AppStorage(wrappedValue: false, kind.key)
+    }
+
+    var body: some View {
+        Toggle(kind.title, isOn: $on)
+            .onChange(of: on) { if on { Task { await Notifier.requestPermission(); Notifier.schedule() } } }
     }
 }

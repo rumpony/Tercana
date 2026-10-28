@@ -115,11 +115,12 @@ actor PSNClient {
 
     // MARK: Trophies
 
-    func games() async throws -> [TrophyGame] {
+    /// `user` is "me" or another player's account id (their list must be public).
+    func games(user: String = "me") async throws -> [TrophyGame] {
         var all: [TrophyGame] = []
         var offset = 0
         repeat {
-            let page: TrophyGamesPage = try await get("/trophy/v1/users/me/trophyTitles",
+            let page: TrophyGamesPage = try await get("/trophy/v1/users/\(user)/trophyTitles",
                                                       query: ["limit": "200", "offset": "\(offset)"], ttl: 300)
             all += page.trophyTitles
             guard let next = page.nextOffset, next > offset, all.count < page.totalItemCount else { break }
@@ -128,13 +129,13 @@ actor PSNClient {
         return all
     }
 
-    func trophies(for game: TrophyGame) async throws -> [Trophy] {
+    func trophies(for game: TrophyGame, user: String = "me") async throws -> [Trophy] {
         let service = ["npServiceName": game.npServiceName]
         let definitions: TrophyDefinitionsPayload = try await get(
             "/trophy/v1/npCommunicationIds/\(game.npCommunicationId)/trophyGroups/all/trophies",
             query: service, ttl: 3600)
         let progress: TrophyProgressPayload = try await get(
-            "/trophy/v1/users/me/npCommunicationIds/\(game.npCommunicationId)/trophyGroups/all/trophies",
+            "/trophy/v1/users/\(user)/npCommunicationIds/\(game.npCommunicationId)/trophyGroups/all/trophies",
             query: service, ttl: 120)
         let byID = Dictionary(progress.trophies.map { ($0.trophyId, $0) }, uniquingKeysWith: { a, _ in a })
         let dateParser = ISO8601DateFormatter()
@@ -157,8 +158,59 @@ actor PSNClient {
         }
     }
 
-    func profile() async throws -> TrophyProfile {
-        try await get("/trophy/v1/users/me/trophySummary", query: [:], ttl: 300)
+    func profile(user: String = "me") async throws -> TrophyProfile {
+        try await get("/trophy/v1/users/\(user)/trophySummary", query: [:], ttl: 300)
+    }
+
+    // MARK: Players
+
+    struct Player: Codable, Identifiable, Hashable {
+        let accountId: String
+        let onlineId: String
+        let avatarURL: URL?
+        var id: String { accountId }
+    }
+
+    func friends() async throws -> [Player] {
+        struct List: Decodable { let friends: [String] }
+        let list: List = try await get("/userProfile/v1/internal/users/me/friends", query: ["limit": "1000"], ttl: 600)
+        var players: [Player] = []
+        for chunk in stride(from: 0, to: list.friends.count, by: 100) {
+            let ids = list.friends[chunk..<min(chunk + 100, list.friends.count)]
+            players += try await profiles(Array(ids))
+        }
+        return players.sorted { $0.onlineId.localizedCaseInsensitiveCompare($1.onlineId) == .orderedAscending }
+    }
+
+    private func profiles(_ ids: [String]) async throws -> [Player] {
+        struct Payload: Decodable {
+            struct Profile: Decodable {
+                struct Avatar: Decodable { let size: String; let url: String }
+                let onlineId: String
+                let avatars: [Avatar]?
+            }
+            let profiles: [Profile]
+        }
+        let payload: Payload = try await get("/userProfile/v1/internal/users/profiles",
+                                             query: ["accountIds": ids.joined(separator: ",")], ttl: 600)
+        return zip(ids, payload.profiles).map { id, profile in
+            let avatar = profile.avatars?.first { $0.size == "m" } ?? profile.avatars?.first
+            return Player(accountId: id, onlineId: profile.onlineId, avatarURL: avatar.flatMap { URL(string: $0.url) })
+        }
+    }
+
+    /// Looks a player up by PSN ID.
+    func player(named onlineId: String) async throws -> Player {
+        struct Payload: Decodable {
+            struct Profile: Decodable { let accountId: String; let onlineId: String }
+            let profile: Profile
+        }
+        let name = onlineId.trimmingCharacters(in: .whitespaces)
+        let payload: Payload = try await get(
+            "https://us-prof.np.community.playstation.net/userProfile/v1/users/\(name)/profile2",
+            query: ["fields": "accountId,onlineId"], ttl: 3600)
+        return try await profiles([payload.profile.accountId]).first
+            ?? Player(accountId: payload.profile.accountId, onlineId: payload.profile.onlineId, avatarURL: nil)
     }
 
     /// Name of the game the player is in right now, if PSN reports one.
@@ -184,7 +236,7 @@ actor PSNClient {
     }
 
     private func get<T: Decodable>(_ path: String, query: [String: String], ttl: TimeInterval) async throws -> T {
-        var components = URLComponents(string: Self.apiBase + path)!
+        var components = URLComponents(string: path.hasPrefix("https:") ? path : Self.apiBase + path)!
         components.queryItems = query.isEmpty ? nil
             : query.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         let url = components.url!

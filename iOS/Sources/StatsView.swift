@@ -15,6 +15,7 @@ struct StatsView: View {
                 }
             }
             .navigationTitle(M.statsTab)
+            .navigationDestination(for: TrophyGame.self) { GameView(game: $0) }
         }
     }
 
@@ -51,6 +52,17 @@ struct StatsView: View {
                     LabeledContent(S.busiestDay, value: "\(day.date.shown()) · \(day.count)")
                         .font(.footnote)
                 }
+            }
+            Section(M.heatmap) {
+                Heatmap(counts: Insights.perDay(stats.earned))
+                if let average = Insights.averageRarity(stats.earned) {
+                    LabeledContent(M.averageRarity, value: S.percent(average / 100, digits: 1)).font(.footnote)
+                }
+            }
+            Section {
+                NavigationLink(M.yearReview) { YearReview(earned: stats.earned) }
+                NavigationLink(M.nextUp) { NextUpView(items: Insights.nextUp(library.entries)) }
+                NavigationLink(M.platinumWall) { PlatinumWall(games: store.platinumGames) }
             }
             Section(S.lastTwelveMonths) {
                 Chart(stats.byMonth(locale: locale)) { bucket in
