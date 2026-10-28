@@ -1,3 +1,4 @@
+import Network
 import SwiftUI
 
 struct GameView: View {
@@ -5,80 +6,27 @@ struct GameView: View {
     @State private var selected: Trophy?
     @State private var celebrating: Date?
     @Bindable private var store = TrophyStore.shared
+    private var online: Bool { Connectivity.shared.online }
+
+    /// Fresh list from PSN when it has loaded, otherwise the copy from the last library sync.
+    private var trophies: [Trophy] {
+        if loaded { return store.trophies }
+        return TrophyLibrary.shared.snapshot.entries[game.id]?.trophies ?? []
+    }
+
+    private var visible: [Trophy] {
+        if loaded { return store.visibleTrophies }
+        switch store.filter {
+        case .all: return trophies
+        case .missing: return trophies.filter { !$0.earned }
+        case .earned: return trophies.filter(\.earned)
+        }
+    }
 
     private var groups: [String] {
         var seen: [String] = []
-        for trophy in store.trophies where !seen.contains(trophy.groupId ?? "default") { seen.append(trophy.groupId ?? "default") }
+        for trophy in trophies where !seen.contains(trophy.groupId ?? "default") { seen.append(trophy.groupId ?? "default") }
         return seen
-    }
-
-    private var header: some View {
-        ZStack {
-            // The game's own artwork, blurred, as the backdrop of the header.
-            AsyncImage(url: game.iconURL) { $0.resizable().scaledToFill() } placeholder: { Style.glow.opacity(0.3) }
-                .blur(radius: 40).opacity(0.7)
-                .frame(maxWidth: .infinity, maxHeight: .infinity).clipped()
-            VStack(spacing: 14) {
-                HStack(spacing: 16) {
-                    Artwork(url: game.iconURL, size: 84)
-                        .shadow(color: .black.opacity(0.5), radius: 12, y: 6)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(game.name).font(.title3.bold()).lineLimit(2).minimumScaleFactor(0.8)
-                        Text(game.platform).font(.caption).foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .layoutPriority(1)
-                    LevelRing(level: game.progress, progress: game.progress, size: 60, showsPercent: false)
-                }
-                GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies)
-                    .fixedSize()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                HStack(spacing: 8) {
-                    if loaded, let days = Insights.platinumETA(store.trophies) {
-                        pill(M.platinumETA(days), "hourglass")
-                    }
-                    if let stats = store.gameStats, loaded {
-                        pill(S.spanDays(max(1, Calendar.current.dateComponents([.day], from: stats.first, to: stats.last).day ?? 0)), "calendar")
-                    }
-                    Spacer(minLength: 0)
-                }
-                HStack(spacing: 10) {
-                    Button {
-                        Local.shared.toggleHunting(game)
-                        Haptic.tap()
-                    } label: {
-                        Label(Local.shared.isHunting(game) ? M.stopHunting : M.startHunting, systemImage: "scope")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glassProminent)
-                    Menu {
-                        ForEach(GuideLinks.forGame(game.name)) { Link($0.title, destination: $0.url) }
-                    } label: {
-                        Label(S.guides, systemImage: "book").frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.glass)
-                }
-                .font(.footnote.weight(.semibold))
-            }
-            .padding(18)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-    }
-
-    private func pill(_ text: String, _ icon: String) -> some View {
-        Label(text, systemImage: icon).font(.caption.weight(.medium)).lineLimit(1)
-            .padding(.horizontal, 10).padding(.vertical, 6)
-            .glassEffect(.regular, in: Capsule())
-    }
-
-    /// Platinum earned in the last week and not celebrated yet on this phone.
-    private func celebrateIfNew() {
-        guard loaded, let date = store.trophies.first(where: { $0.grade == .platinum && $0.earned })?.earnedDate,
-              Date().timeIntervalSince(date) < 7 * 86_400 else { return }
-        let key = "celebrated.\(game.id)"
-        guard !UserDefaults.standard.bool(forKey: key) else { return }
-        UserDefaults.standard.set(true, forKey: key)
-        celebrating = date
     }
 
     private var loaded: Bool { store.selectedGame?.id == game.id && !store.trophies.isEmpty }
@@ -87,34 +35,34 @@ struct GameView: View {
         GlassList {
             Section {
                 header
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-            }
-            Section {
                 Picker("", selection: $store.filter) {
                     ForEach(TrophyStore.Filter.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-                if !loaded { ProgressView().frame(maxWidth: .infinity) }
             }
-            if loaded {
-                ForEach(groups, id: \.self) { group in
-                    Section(groups.count > 1 ? (group == "default" ? M.baseGame : M.dlc(group)) : "") {
-                        ForEach(store.visibleTrophies.filter { ($0.groupId ?? "default") == group }) { trophy in
-                            Button { selected = trophy } label: {
-                                TrophyRow(trophy: trophy, subtitle: store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail,
-                                          markedDone: Local.shared.isDone(trophy, in: game))
-                            }
-                            .tint(.primary)
-                            .trophyActions(trophy, in: game)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+            .listRowSeparator(.hidden)
+
+            if trophies.isEmpty {
+                ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
+            }
+            ForEach(groups, id: \.self) { group in
+                Section(groups.count > 1 ? (group == "default" ? M.baseGame : M.dlc(group)) : "") {
+                    ForEach(visible.filter { ($0.groupId ?? "default") == group }) { trophy in
+                        Button { selected = trophy } label: {
+                            TrophyRow(trophy: trophy,
+                                      subtitle: store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail,
+                                      markedDone: !online && Local.shared.isDone(trophy, in: game))
                         }
+                        .tint(.primary)
+                        .trophyActions(trophy, in: game, canMark: !online)
                     }
                 }
             }
         }
-        .onBackdrop()
+        .listSectionSpacing(.compact)
+        .contentMargins(.horizontal, 16, for: .scrollContent)
         .navigationTitle(game.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -128,14 +76,100 @@ struct GameView: View {
                 }
                 Toggle(S.translateDescriptions, isOn: $store.showTranslations)
             } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle")
+                Image(systemName: "line.3.horizontal.decrease")
             }
         }
         .task(id: game.id) { await store.open(.game(game.id)) }
         .refreshable { await store.open(.game(game.id)) }
+        .onChange(of: loaded, initial: true) {
+            guard loaded else { return }
+            // Online, PSN is the truth: hand marks for this game are dropped.
+            Local.shared.clearMarks(for: game)
+            celebrateIfNew()
+        }
         .fullScreenCover(item: $celebrating) { PlatinumMoment(game: game, date: $0) }
-        .onChange(of: loaded) { celebrateIfNew() }
-        .sheet(item: $selected) { TrophySheet(trophy: $0, game: game) }
+        .sheet(item: $selected) { TrophySheet(trophy: $0, game: game, canMark: !online) }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 14) {
+                Artwork(url: game.iconURL, size: 76)
+                    .shadow(color: .black.opacity(0.4), radius: 10, y: 4)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(game.name).font(.headline).lineLimit(2)
+                    Text(game.platform).font(.caption).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                LevelRing(level: game.progress, progress: game.progress, size: 56, showsPercent: false)
+            }
+            GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies).fixedSize()
+            HStack(spacing: 8) {
+                if let days = Insights.platinumETA(trophies) {
+                    pill(M.platinumETA(days), "hourglass")
+                } else if let stats = store.gameStats, loaded {
+                    pill(S.spanDays(max(1, Calendar.current.dateComponents([.day], from: stats.first, to: stats.last).day ?? 0)), "calendar")
+                }
+                Spacer(minLength: 0)
+                Button {
+                    Local.shared.toggleHunting(game)
+                    Haptic.tap()
+                } label: {
+                    Image(systemName: Local.shared.isHunting(game) ? "scope" : "plus.viewfinder")
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.glass)
+                .tint(Local.shared.isHunting(game) ? Style.glow : nil)
+                .accessibilityLabel(Local.shared.isHunting(game) ? M.stopHunting : M.startHunting)
+                Menu {
+                    ForEach(GuideLinks.forGame(game.name)) { Link($0.title, destination: $0.url) }
+                } label: {
+                    Image(systemName: "book").frame(width: 22, height: 22)
+                }
+                .buttonStyle(.glass)
+                .accessibilityLabel(S.guides)
+            }
+        }
+        .padding(16)
+        .background {
+            // The game's own artwork, blurred, behind the header.
+            AsyncImage(url: game.iconURL) { $0.resizable().scaledToFill() } placeholder: { Style.glow.opacity(0.25) }
+                .blur(radius: 40).opacity(0.6)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(.white.opacity(0.08)))
+    }
+
+    private func pill(_ text: String, _ icon: String) -> some View {
+        Label(text, systemImage: icon).font(.caption.weight(.medium)).lineLimit(1)
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .glassEffect(.regular, in: Capsule())
+    }
+
+    /// Platinum earned in the last week and not celebrated yet on this phone.
+    private func celebrateIfNew() {
+        guard let date = store.trophies.first(where: { $0.grade == .platinum && $0.earned })?.earnedDate,
+              Date().timeIntervalSince(date) < 7 * 86_400 else { return }
+        let key = "celebrated.\(game.id)"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        celebrating = date
+    }
+}
+
+/// Whether the phone has a network connection right now.
+@MainActor
+@Observable
+final class Connectivity {
+    static let shared = Connectivity()
+    private(set) var online = true
+    @ObservationIgnored private let monitor = NWPathMonitor()
+
+    private init() {
+        monitor.pathUpdateHandler = { path in
+            Task { @MainActor in Connectivity.shared.online = path.status == .satisfied }
+        }
+        monitor.start(queue: .global(qos: .utility))
     }
 }
 
@@ -176,6 +210,7 @@ struct TrophyRow: View {
 struct TrophySheet: View {
     let trophy: Trophy
     let game: TrophyGame
+    var canMark = true
     @State private var note = ""
     @State private var revealed = false
     @Environment(\.dismiss) private var dismiss
@@ -266,8 +301,10 @@ struct TrophySheet: View {
                 actionButton(targets.isPinned(trophy, in: game) ? S.unpinTarget : S.pinTarget, "pin") {
                     targets.toggle(trophy, in: game)
                 }
-                actionButton(local.isDone(trophy, in: game) ? M.unmarkDone : M.markDone, "checkmark") {
-                    local.toggleDone(trophy, in: game)
+                if canMark {
+                    actionButton(local.isDone(trophy, in: game) ? M.unmarkDone : M.markDone, "checkmark") {
+                        local.toggleDone(trophy, in: game)
+                    }
                 }
             }
         }
@@ -290,7 +327,8 @@ struct TrophySheet: View {
 
 extension View {
     /// Swipe right to pin as a target, left to mark done; long press for the same and guides.
-    func trophyActions(_ trophy: Trophy, in game: TrophyGame) -> some View {
+    /// `canMark` is false while online: PSN then knows what's done, so hand marks aren't offered.
+    func trophyActions(_ trophy: Trophy, in game: TrophyGame, canMark: Bool = true) -> some View {
         let targets = TrophyTargets.shared
         let local = Local.shared
         return self
@@ -303,7 +341,7 @@ extension View {
                 }
             }
             .swipeActions(edge: .trailing) {
-                if !trophy.earned {
+                if !trophy.earned && canMark {
                     Button { local.toggleDone(trophy, in: game); Haptic.tap() } label: {
                         Label(local.isDone(trophy, in: game) ? M.unmarkDone : M.markDone, systemImage: "checkmark")
                     }
@@ -313,7 +351,9 @@ extension View {
             .contextMenu {
                 if !trophy.earned {
                     Button(targets.isPinned(trophy, in: game) ? S.unpinTarget : S.pinTarget, systemImage: "pin") { targets.toggle(trophy, in: game) }
-                    Button(local.isDone(trophy, in: game) ? M.unmarkDone : M.markDone, systemImage: "checkmark") { local.toggleDone(trophy, in: game) }
+                    if canMark {
+                        Button(local.isDone(trophy, in: game) ? M.unmarkDone : M.markDone, systemImage: "checkmark") { local.toggleDone(trophy, in: game) }
+                    }
                 }
                 Link(destination: GuideLinks.forTrophy(trophy.name, game: game.name)) { Label(S.searchYouTube, systemImage: "play.rectangle") }
                 Link(destination: GuideLinks.webSearch(trophy.name, game: game.name)) { Label(S.searchWebGuide, systemImage: "magnifyingglass") }

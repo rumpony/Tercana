@@ -23,6 +23,11 @@ final class Local {
 
     func isDone(_ trophy: Trophy, in game: TrophyGame) -> Bool { done.contains(TrophyTargets.key(game.id, trophy.id)) }
 
+    /// Drops every hand mark for a game once PSN has answered for it.
+    func clearMarks(for game: TrophyGame) {
+        done = done.filter { !$0.hasPrefix(game.id + "#") }
+    }
+
     func toggleDone(_ trophy: Trophy, in game: TrophyGame) {
         let key = TrophyTargets.key(game.id, trophy.id)
         if done.contains(key) { done.remove(key) } else { done.insert(key) }
