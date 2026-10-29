@@ -73,18 +73,23 @@ struct LevelRing: View {
     }
 }
 
-/// List whose rows sit on glass-like panels over the app backdrop.
+/// List whose rows sit on soft panels over the app backdrop. On the Mac a grouped form, whose
+/// sections come out as rounded cards instead of the square bands a Mac list draws.
 struct GlassList<Content: View>: View {
     @ViewBuilder let content: Content
     var body: some View {
+        #if os(iOS)
         List {
             Group { content }.listRowBackground(Color.white.opacity(0.07))
         }
-        #if os(macOS)
-        .frame(maxWidth: 820)
-        .frame(maxWidth: .infinity)
-        #endif
         .onBackdrop()
+        #else
+        Form { content }
+            .formStyle(.grouped)
+            .frame(maxWidth: 820)
+            .frame(maxWidth: .infinity)
+            .onBackdrop()
+        #endif
     }
 }
 
