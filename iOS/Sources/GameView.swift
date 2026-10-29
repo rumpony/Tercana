@@ -40,6 +40,8 @@ struct GameView: View {
                     ForEach(TrophyStore.Filter.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))

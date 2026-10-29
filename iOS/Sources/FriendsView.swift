@@ -17,6 +17,8 @@ struct FriendsView: View {
                     Text(M.friendsList).tag(false)
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
                 if showingBoard && query.isEmpty {

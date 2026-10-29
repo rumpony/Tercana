@@ -64,10 +64,15 @@ struct HomeView: View {
                 Button {
                     router.tab = tab
                 } label: {
-                    Label(tab.title, systemImage: tab.symbol)
+                    // Icon and text spelled out: a Label in the toolbar would drop its title.
+                    HStack(spacing: 6) {
+                        Image(systemName: tab.symbol)
+                        Text(tab.title).lineLimit(1)
+                    }
                         .font(.callout.weight(selected ? .semibold : .regular))
                         .foregroundStyle(selected ? .primary : .secondary)
-                        .frame(width: 128, height: 30)
+                        .padding(.horizontal, 14)
+                        .frame(height: 30)
                         .background {
                             if selected {
                                 Capsule().fill(Style.glow.opacity(0.25))

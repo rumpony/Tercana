@@ -199,6 +199,8 @@ final class AppController {
         host.sizingOptions = [.minSize]
         // SwiftUI toolbars reach the window, so every tab shares one toolbar (and one title bar height).
         host.sceneBridgingOptions = [.toolbars]
+        // The tab bar in the toolbar names the page; a window title next to it is noise.
+        window.titleVisibility = .hidden
         window.contentView = host
         window.center()
         windows[id] = (window, title)

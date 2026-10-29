@@ -36,6 +36,8 @@ struct GamesView: View {
                     Text(M.plats).tag(Scope.plats)
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
                 ForEach(games) { game in
@@ -104,7 +106,7 @@ struct GameRow: View {
                     }
                     Text("\(game.progress)%").font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
-                ProgressView(value: Double(game.progress), total: 100).tint(game.progress == 100 ? TrophyGrade.platinum.color : Style.glow)
+                Bar(value: Double(game.progress) / 100, color: game.progress == 100 ? TrophyGrade.platinum.color : Style.glow)
                 GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies)
             }
         }

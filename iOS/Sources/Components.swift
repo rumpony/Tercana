@@ -98,3 +98,19 @@ extension View {
             .contentMargins(.top, 8, for: .scrollContent)
     }
 }
+
+/// Thin rounded progress bar that looks the same on the phone and the Mac (the system one turns grey on macOS).
+struct Bar: View {
+    let value: Double
+    var color: Color = Style.glow
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.white.opacity(0.1))
+                Capsule().fill(color.gradient).frame(width: proxy.size.width * min(max(value, 0), 1))
+            }
+        }
+        .frame(height: 5)
+    }
+}

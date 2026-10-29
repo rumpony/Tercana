@@ -118,7 +118,7 @@ struct GameTile: View {
                     .padding(8)
             }
             Text(game.name).font(.subheadline.weight(.semibold)).lineLimit(1)
-            ProgressView(value: Double(game.progress), total: 100).tint(Style.glow)
+            Bar(value: Double(game.progress) / 100)
         }
         .frame(width: 150)
     }

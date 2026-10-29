@@ -59,7 +59,7 @@ struct ProfileCard: View {
                 Spacer()
                 Text(S.trophyLevel(profile.level)).font(.headline)
             }
-            ProgressView(value: Double(profile.progress), total: 100).tint(Style.glow)
+            Bar(value: Double(profile.progress) / 100)
             HStack(spacing: 18) {
                 ForEach(TrophyGrade.allCases.reversed(), id: \.self) { grade in
                     VStack(spacing: 2) {

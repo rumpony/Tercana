@@ -89,7 +89,7 @@ struct ProfileView: View {
                     .font(.caption.weight(.semibold)).foregroundStyle(Style.glow)
                     .symbolEffect(.variableColor.iterative)
                 Text(game.name).font(.headline).lineLimit(1)
-                ProgressView(value: Double(game.progress), total: 100).tint(Style.glow)
+                Bar(value: Double(game.progress) / 100)
             }
             Image(systemName: "chevron.right").foregroundStyle(.secondary)
         }
