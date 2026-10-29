@@ -30,14 +30,7 @@ struct GamesView: View {
     var body: some View {
         NavigationStack(path: $path) {
             List {
-                Picker("", selection: $scope) {
-                    Text(M.all).tag(Scope.all)
-                    Text(M.close).tag(Scope.close)
-                    Text(M.plats).tag(Scope.plats)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: .infinity)
+                Chips(selection: $scope, options: [(.all, M.all), (.close, M.close), (.plats, M.plats)])
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
                 ForEach(games) { game in

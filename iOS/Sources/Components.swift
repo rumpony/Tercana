@@ -114,3 +114,42 @@ struct Bar: View {
         .frame(height: 5)
     }
 }
+
+/// Row of capsule buttons for switching a view's scope; the same on the phone and the Mac,
+/// with a clear selected state and a roomy hit area.
+struct Chips<Value: Hashable>: View {
+    @Binding var selection: Value
+    let options: [(value: Value, title: String)]
+    @Namespace private var glow
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(options.indices, id: \.self) { index in
+                let option = options[index]
+                let selected = option.value == selection
+                Button {
+                    withAnimation(.spring(duration: 0.3)) { selection = option.value }
+                    Haptic.tap()
+                } label: {
+                    Text(option.title)
+                        .font(.subheadline.weight(selected ? .semibold : .regular))
+                        .foregroundStyle(selected ? .primary : .secondary)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 9)
+                        .background {
+                            if selected {
+                                Capsule().fill(Style.glow.opacity(0.3)).matchedGeometryEffect(id: "chip", in: glow)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(.white.opacity(0.06), in: Capsule())
+        .overlay(Capsule().stroke(.white.opacity(0.08)))
+        .padding(.vertical, 6)
+    }
+}

@@ -12,13 +12,7 @@ struct FriendsView: View {
     var body: some View {
         NavigationStack {
             GlassList {
-                Picker("", selection: $showingBoard) {
-                    Text(M.leaderboard).tag(true)
-                    Text(M.friendsList).tag(false)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: .infinity)
+                Chips(selection: $showingBoard, options: [(true, M.leaderboard), (false, M.friendsList)])
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
                 if showingBoard && query.isEmpty {

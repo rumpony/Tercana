@@ -36,12 +36,7 @@ struct GameView: View {
         GlassList {
             Section {
                 header
-                Picker("", selection: $store.filter) {
-                    ForEach(TrophyStore.Filter.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: .infinity)
+                Chips(selection: $store.filter, options: TrophyStore.Filter.allCases.map { ($0, $0.title) })
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
