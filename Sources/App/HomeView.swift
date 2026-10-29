@@ -26,31 +26,60 @@ struct HomeView: View {
     }
 
     @Bindable var router: HomeRouter
+    @AppStorage("accent") private var accent = 0
+    @Namespace private var tabs
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("", selection: $router.tab) {
-                ForEach(Tab.allCases) { tab in
-                    Label(tab.title, systemImage: tab.symbol).tag(tab)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 560)
-            .padding(.vertical, 10)
-            Divider()
+            tabBar
+                .padding(.vertical, 12)
             ZStack {
                 switch router.tab {
                 case .home: HomePage().transition(.opacity)
-                case .history: SubtitleLogView().transition(.opacity)
+                case .history: SubtitleLogView().frame(maxWidth: 820).transition(.opacity)
                 case .trophies: TrophiesView().transition(.opacity)
                 case .settings: SettingsView().transition(.opacity)
                 }
             }
+            // Lists and forms sit on the window backdrop like the trophy screens.
+            .scrollContentBackground(.hidden)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.18), value: router.tab)
         }
+        .background(Style.backdrop.ignoresSafeArea())
+        // One look for the whole window, the same as the phone app.
+        .preferredColorScheme(.dark)
+        .tint(Style.glow)
+        .id(accent)
         .frame(minWidth: 1040, minHeight: 660)
+    }
+
+    private var tabBar: some View {
+        HStack(spacing: 4) {
+            ForEach(Tab.allCases) { tab in
+                let selected = router.tab == tab
+                Button {
+                    router.tab = tab
+                } label: {
+                    Label(tab.title, systemImage: tab.symbol)
+                        .font(.callout.weight(selected ? .semibold : .regular))
+                        .foregroundStyle(selected ? .primary : .secondary)
+                        .frame(width: 128, height: 30)
+                        .background {
+                            if selected {
+                                Capsule().fill(Style.glow.opacity(0.25))
+                                    .matchedGeometryEffect(id: "tab", in: tabs)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(.white.opacity(0.06), in: Capsule())
+        .overlay(Capsule().stroke(.white.opacity(0.06)))
+        .animation(.spring(duration: 0.3), value: router.tab)
     }
 }
 
@@ -69,11 +98,15 @@ private struct HomePage: View {
         VStack(spacing: 22) {
             Spacer(minLength: 10)
             ZStack {
-                Circle().fill(app.isLive ? Color.green.opacity(0.18) : Color.secondary.opacity(0.12))
-                    .frame(width: 120, height: 120)
+                Circle().fill(app.isLive ? Style.glow.opacity(0.22) : Color.white.opacity(0.06))
+                    .frame(width: 132, height: 132)
+                    .shadow(color: app.isLive ? Style.glow.opacity(0.6) : .clear, radius: 24)
+                Circle().stroke(app.isLive ? Style.glow : Color.white.opacity(0.1), lineWidth: 3)
+                    .frame(width: 132, height: 132)
                 Image(systemName: app.isLive ? "captions.bubble.fill" : "captions.bubble")
-                    .font(.system(size: 48))
-                    .foregroundStyle(app.isLive ? .green : .secondary)
+                    .font(.system(size: 50))
+                    .foregroundStyle(app.isLive ? Style.glow : .secondary)
+                    .symbolEffect(.pulse, isActive: app.isLive)
             }
             Text(app.isLive ? S.liveOn : S.liveOff).font(.title2.bold())
             HStack(spacing: 16) {
@@ -88,7 +121,7 @@ private struct HomePage: View {
                         .frame(width: 210)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(app.isLive ? .red : .accentColor)
+                .tint(app.isLive ? .red : Style.glow)
                 .controlSize(.large)
                 Button { app.translateArea() } label: {
                     Label(S.translateArea, systemImage: "viewfinder").frame(width: 210)
@@ -116,6 +149,7 @@ private struct HomePage: View {
             .frame(width: 210)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .background(.quaternary.opacity(0.6), in: Capsule())
+            .background(.white.opacity(0.06), in: Capsule())
+            .overlay(Capsule().stroke(.white.opacity(0.06)))
     }
 }

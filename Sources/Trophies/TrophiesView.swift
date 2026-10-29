@@ -28,7 +28,6 @@ struct TrophiesView: View {
 
     @State private var store = TrophyStore.shared
     @AppStorage("trophyHubSection") private var section = Section.profile.rawValue
-    @AppStorage("accent") private var accent = 0
 
     var body: some View {
         Group {
@@ -39,15 +38,10 @@ struct TrophiesView: View {
                     page
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .background(Style.backdrop)
-                // The hub is always dark, like the phone app, whatever the Mac's appearance.
-                .preferredColorScheme(.dark)
             } else {
                 SignInView(store: store)
             }
         }
-        .tint(Style.glow)
-        .id(accent)
         .frame(minWidth: 1040, minHeight: 600)
         .task { await store.load() }
     }

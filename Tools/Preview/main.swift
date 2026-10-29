@@ -153,7 +153,7 @@ func run() async {
             let router = HomeRouter()
             router.tab = tab
             for (label, w, h) in [("min", 1040.0, 660.0), ("default", 1040.0, 720.0)] {
-                render("\(language)-home-\(tab.rawValue)-\(label)", width: w, height: h, HomeView(router: router))
+                render("\(language)-home-\(tab.rawValue)-\(label)", width: w, height: h, dark: true, HomeView(router: router))
             }
         }
         render("\(language)-psn-signin", width: 900, height: 600, SignInView(store: TrophyStore.shared))
