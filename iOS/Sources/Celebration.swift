@@ -45,7 +45,7 @@ struct PlatinumMoment: View {
                 ShareLink(item: image, preview: SharePreview(M.newPlatinum, image: image)) {
                     Label(M.share, systemImage: "square.and.arrow.up").frame(maxWidth: 220)
                 }
-                .buttonStyle(.glassProminent)
+                .softButton(prominent: true)
                 .controlSize(.large)
                 Button(S.close) { dismiss() }.foregroundStyle(.secondary)
                 Spacer()
@@ -95,7 +95,7 @@ struct YearStory: View {
                         ShareLink(item: image, preview: SharePreview(M.yearReview, image: image)) {
                             Label(M.share, systemImage: "square.and.arrow.up")
                         }
-                        .buttonStyle(.glass)
+                        .softButton()
                     }
                 }
             }

@@ -26,7 +26,10 @@ final class Leaderboard {
     }
 
     private(set) var history: [Snapshot] = [] {
-        didSet { try? JSONEncoder().encode(history).write(to: Self.url) }
+        didSet {
+            guard ProcessInfo.processInfo.environment["TERCANA_PREVIEW"] == nil else { return }
+            try? JSONEncoder().encode(history).write(to: Self.url)
+        }
     }
     private(set) var refreshing = false
     private(set) var done = 0
@@ -51,6 +54,8 @@ final class Leaderboard {
     }
 
     private init() {
+        // The local UI preview tool must never see or touch real data.
+        guard ProcessInfo.processInfo.environment["TERCANA_PREVIEW"] == nil else { return }
         history = (try? Data(contentsOf: Self.url)).flatMap { try? JSONDecoder().decode([Snapshot].self, from: $0) } ?? []
     }
 

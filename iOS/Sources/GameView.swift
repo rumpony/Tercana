@@ -140,7 +140,7 @@ struct GameView: View {
                     Image(systemName: Local.shared.isHunting(game) ? "scope" : "plus.viewfinder")
                         .frame(width: 22, height: 22)
                 }
-                .buttonStyle(.glass)
+                .softButton()
                 .tint(Local.shared.isHunting(game) ? Style.glow : nil)
                 .accessibilityLabel(Local.shared.isHunting(game) ? M.stopHunting : M.startHunting)
                 Menu {
@@ -148,7 +148,7 @@ struct GameView: View {
                 } label: {
                     Image(systemName: "book").frame(width: 22, height: 22)
                 }
-                .buttonStyle(.glass)
+                .softButton()
                 .accessibilityLabel(S.guides)
             }
         }
@@ -282,12 +282,12 @@ struct TrophySheet: View {
                             Label(S.searchWebGuide, systemImage: "magnifyingglass").frame(maxWidth: .infinity)
                         }
                     }
-                    .buttonStyle(.glass)
+                    .softButton()
                 }
                 .padding(20)
             }
             .background(Style.backdrop.ignoresSafeArea())
-            .toolbar { Button(S.close) { dismiss() } }
+            .closeButton { dismiss() }
             .onAppear {
                 note = targets.note(for: trophy, in: game)
                 revealed = UserDefaults.standard.bool(forKey: "showSpoilers")
@@ -347,7 +347,7 @@ struct TrophySheet: View {
             }
             .frame(maxWidth: .infinity, minHeight: 64)
         }
-        .buttonStyle(.glass)
+        .softButton()
     }
 }
 

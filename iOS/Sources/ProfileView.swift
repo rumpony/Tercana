@@ -213,7 +213,7 @@ struct AccountSheet: View {
             }
             .navigationTitle(M.account)
             .inlineTitle()
-            .toolbar { Button(S.close) { dismiss() } }
+            .closeButton { dismiss() }
         }
     }
 }
