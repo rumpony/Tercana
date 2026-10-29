@@ -197,6 +197,8 @@ final class AppController {
         let host = NSHostingView(rootView: LocalizedRoot(content: content))
         // Let SwiftUI's minimum size bound the window, so it can't be shrunk until content spills out.
         host.sizingOptions = [.minSize]
+        // SwiftUI toolbars reach the window, so every tab shares one toolbar (and one title bar height).
+        host.sceneBridgingOptions = [.toolbars]
         window.contentView = host
         window.center()
         windows[id] = (window, title)

@@ -31,8 +31,6 @@ struct HomeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            tabBar
-                .padding(.vertical, 12)
             ZStack {
                 switch router.tab {
                 case .home: HomePage().transition(.opacity)
@@ -45,6 +43,11 @@ struct HomeView: View {
             .scrollContentBackground(.hidden)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeInOut(duration: 0.18), value: router.tab)
+        }
+        // The tab bar lives in the window toolbar on every tab, so the title bar never changes height
+        // when the trophy hub adds its own buttons there.
+        .toolbar {
+            ToolbarItem(placement: .principal) { tabBar }
         }
         .background(Style.backdrop.ignoresSafeArea())
         // One look for the whole window, the same as the phone app.
