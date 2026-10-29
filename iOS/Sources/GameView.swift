@@ -7,6 +7,9 @@ struct GameView: View {
     @State private var celebrating: Date?
     @Bindable private var store = TrophyStore.shared
     @AppStorage("showSpoilers") private var spoilers = false
+    @AppStorage("baseGameOnly") private var baseOnly = false
+    @State private var groupInfo: [String: TrophyGroupInfo] = [:]
+    @State private var collapsed: Set<String> = []
     private var online: Bool { Connectivity.shared.online }
 
     /// Fresh list from PSN when it has loaded, otherwise the copy from the last library sync.
@@ -27,7 +30,7 @@ struct GameView: View {
     private var groups: [String] {
         var seen: [String] = []
         for trophy in trophies where !seen.contains(trophy.groupId ?? "default") { seen.append(trophy.groupId ?? "default") }
-        return seen
+        return baseOnly ? seen.filter { $0 == "default" } : seen
     }
 
     private var loaded: Bool { store.selectedGame?.id == game.id && !store.trophies.isEmpty }
@@ -46,13 +49,16 @@ struct GameView: View {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
             }
             ForEach(groups, id: \.self) { group in
-                Section(groups.count > 1 ? (group == "default" ? M.baseGame : M.dlc(group)) : "") {
+                Section {
+                    if hasPacks { groupHeader(group) }
+                    if !collapsed.contains(group) {
                     ForEach(visible.filter { ($0.groupId ?? "default") == group }) { trophy in
                         Button { selected = trophy } label: {
                             row(trophy)
                         }
                         .tint(.primary)
                         .trophyActions(trophy, in: game, canMark: !online)
+                    }
                     }
                 }
             }
@@ -72,11 +78,18 @@ struct GameView: View {
                 }
                 Toggle(S.translateDescriptions, isOn: $store.showTranslations)
                 Toggle(M.showSpoilers, systemImage: "eye", isOn: $spoilers)
+                if hasPacks {
+                    Toggle(M.baseGameOnly, systemImage: "shippingbox", isOn: $baseOnly)
+                }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
             }
         }
         .task(id: game.id) { await store.open(.game(game.id)) }
+        .task(id: game.id) {
+            guard hasPacks, let list = try? await PSNClient.shared.groups(for: game) else { return }
+            groupInfo = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        }
         .refreshable { await store.open(.game(game.id)) }
         .onChange(of: loaded, initial: true) {
             guard loaded else { return }
@@ -86,6 +99,46 @@ struct GameView: View {
         }
         .cover(item: $celebrating) { PlatinumMoment(game: game, date: $0) }
         .sheet(item: $selected) { TrophySheet(trophy: $0, game: game, canMark: !online) }
+    }
+
+    /// True when the game has at least one DLC pack.
+    private var hasPacks: Bool { trophies.contains { ($0.groupId ?? "default") != "default" } }
+
+    private func groupHeader(_ group: String) -> some View {
+        let all = trophies.filter { ($0.groupId ?? "default") == group }
+        let earned = all.filter(\.earned).count
+        let missing = all.count - earned
+        let isBase = group == "default"
+        let info = groupInfo[group]
+        let title = isBase ? M.baseGame : (info?.name ?? M.dlc(group))
+        return Button {
+            withAnimation(.snappy) {
+                if collapsed.contains(group) { collapsed.remove(group) } else { collapsed.insert(group) }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Artwork(url: info?.iconURL ?? game.iconURL)
+                    .frame(width: 44, height: 44)
+                    .clipShape(.rect(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 6) {
+                        Text(isBase ? M.baseTag : M.dlcTag)
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(isBase ? Style.glow.opacity(0.35) : Color.white.opacity(0.12), in: .capsule)
+                        Text(title).font(.subheadline.weight(.semibold)).lineLimit(1)
+                    }
+                    Bar(value: all.isEmpty ? 0 : Double(earned) / Double(all.count), color: Style.glow)
+                    Text(missing == 0 ? M.groupDone(all.count) : M.groupMissing(missing, earned, all.count))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(collapsed.contains(group) ? -90 : 0))
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
     }
 
     private func row(_ trophy: Trophy) -> TrophyRow {

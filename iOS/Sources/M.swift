@@ -75,6 +75,13 @@ extension M {
     static var unmarkDone: String { t("İşareti kaldır", "Unmark") }
     static var doneLocally: String { t("Kendi işaretin", "Your mark") }
     static var baseGame: String { t("Ana oyun", "Base game") }
+    static var baseGameOnly: String { t("Sadece ana oyun", "Base game only") }
+    static var baseTag: String { t("ANA OYUN", "BASE") }
+    static var dlcTag: String { t("EK PAKET", "DLC") }
+    static func groupDone(_ total: Int) -> String { t("Tamamlandı · \(total) kupa", "Complete · \(total) trophies") }
+    static func groupMissing(_ missing: Int, _ earned: Int, _ total: Int) -> String {
+        t("\(missing) eksik · \(earned)/\(total)", "\(missing) missing · \(earned)/\(total)")
+    }
     static func dlc(_ id: String) -> String { t("Ek paket \(id)", "DLC \(id)") }
     static var notifications: String { t("Bildirimler", "Notifications") }
     static var notifyNew: String { t("Yeni kupa bildirimi", "New trophy alerts") }

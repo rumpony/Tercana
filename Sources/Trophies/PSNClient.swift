@@ -129,6 +129,17 @@ actor PSNClient {
         return all
     }
 
+    /// Names and icons of the base game and each DLC pack.
+    func groups(for game: TrophyGame) async throws -> [TrophyGroupInfo] {
+        let payload: TrophyGroupsPayload = try await get(
+            "/trophy/v1/npCommunicationIds/\(game.npCommunicationId)/trophyGroups",
+            query: ["npServiceName": game.npServiceName], ttl: 86400)
+        return payload.trophyGroups.map {
+            TrophyGroupInfo(id: $0.trophyGroupId, name: $0.trophyGroupName,
+                            iconURL: $0.trophyGroupIconUrl.flatMap(URL.init(string:)))
+        }
+    }
+
     func trophies(for game: TrophyGame, user: String = "me") async throws -> [Trophy] {
         let service = ["npServiceName": game.npServiceName]
         let definitions: TrophyDefinitionsPayload = try await get(
@@ -335,4 +346,19 @@ private extension Data {
         text += String(repeating: "=", count: (4 - text.count % 4) % 4)
         self.init(base64Encoded: text)
     }
+}
+
+struct TrophyGroupInfo: Hashable {
+    let id: String
+    let name: String?
+    let iconURL: URL?
+}
+
+private struct TrophyGroupsPayload: Decodable {
+    struct Group: Decodable {
+        let trophyGroupId: String
+        let trophyGroupName: String?
+        let trophyGroupIconUrl: String?
+    }
+    let trophyGroups: [Group]
 }
