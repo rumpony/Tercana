@@ -55,7 +55,7 @@ struct SignInView: View {
                 }
                 .ignoresSafeArea(edges: .bottom)
                 .navigationTitle(S.signInWithPlayStation)
-                .navigationBarTitleDisplayMode(.inline)
+                .inlineTitle()
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(M.cancel) { showingWeb = false } } }
             }
         }

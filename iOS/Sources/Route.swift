@@ -114,9 +114,9 @@ struct RouteView: View {
                 }
             }
         }
-        .listSectionSpacing(.compact)
+        .compactSections()
         .navigationTitle(M.route)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
         .sheet(item: $selected) { TrophySheet(trophy: $0, game: game, canMark: !Connectivity.shared.online) }
     }
 }

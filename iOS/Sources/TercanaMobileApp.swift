@@ -46,7 +46,3 @@ struct TercanaMobileApp: App {
         }
     }
 }
-
-enum Theme {
-    static let colors: [Color] = [Color(red: 0.20, green: 0.75, blue: 0.80), .blue, .indigo, .purple, .pink, .orange, .green]
-}

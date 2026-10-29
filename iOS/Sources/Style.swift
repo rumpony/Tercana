@@ -19,9 +19,18 @@ enum Style {
 extension View {
     /// Rounded glass panel used for every block of content.
     func card(padding: CGFloat = 16) -> some View {
-        self.padding(padding)
+        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
+        #if os(iOS)
+        return self.padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .glassEffect(.regular, in: shape)
+        #else
+        // On the Mac a plain translucent panel: steadier on a wide window than live glass.
+        return self.padding(padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.white.opacity(0.06), in: shape)
+            .overlay(shape.stroke(.white.opacity(0.06)))
+        #endif
     }
 
     /// Lists drawn on the app backdrop instead of the system grey.
@@ -64,10 +73,6 @@ struct LevelRing: View {
     }
 }
 
-enum Haptic {
-    @MainActor static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
-}
-
 /// List whose rows sit on glass-like panels over the app backdrop.
 struct GlassList<Content: View>: View {
     @ViewBuilder let content: Content
@@ -75,6 +80,10 @@ struct GlassList<Content: View>: View {
         List {
             Group { content }.listRowBackground(Color.white.opacity(0.07))
         }
+        #if os(macOS)
+        .frame(maxWidth: 820)
+        .frame(maxWidth: .infinity)
+        #endif
         .onBackdrop()
     }
 }
@@ -120,4 +129,8 @@ struct SectionTitle: View {
     var body: some View {
         Text(text).font(.title3.bold()).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
     }
+}
+
+enum Theme {
+    static let colors: [Color] = [Color(red: 0.20, green: 0.75, blue: 0.80), .blue, .indigo, .purple, .pink, .orange, .green]
 }

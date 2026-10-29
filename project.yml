@@ -16,6 +16,9 @@ targets:
     sources:
       - Sources
       - Resources/Assets.xcassets
+      # The trophy screens are shared with the iPhone app.
+      - path: iOS/Sources
+        excludes: [TercanaMobileApp.swift, SignInView.swift, Notifier.swift, WidgetData.swift]
       - path: Resources
         includes:
           - "*.lproj/**"

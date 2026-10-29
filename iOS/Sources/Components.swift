@@ -93,8 +93,8 @@ extension View {
     /// empty pages don't open with a block of empty space.
     func screen(_ title: String) -> some View {
         navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .listSectionSpacing(.compact)
+            .inlineTitle()
+            .compactSections()
             .contentMargins(.top, 8, for: .scrollContent)
     }
 }

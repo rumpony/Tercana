@@ -84,14 +84,6 @@ struct ProfileCard: View {
     }
 }
 
-/// Renders a view to an image that ShareLink can send. Artwork must already be cached to show up.
-@MainActor
-func snapshot(_ view: some View) -> Image {
-    let renderer = ImageRenderer(content: view)
-    renderer.scale = 3
-    return renderer.uiImage.map(Image.init(uiImage:)) ?? Image(systemName: "photo")
-}
-
 struct PlatinumWall: View {
     let games: [TrophyGame]
 

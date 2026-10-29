@@ -57,6 +57,7 @@ struct StatsView: View {
             }
             Section(M.heatmap) {
                 Heatmap(counts: Insights.perDay(stats.earned))
+                    .frame(maxWidth: 520)
                 if let average = Insights.averageRarity(stats.earned) {
                     LabeledContent(M.averageRarity, value: S.percent(average / 100, digits: 1)).font(.footnote)
                 }

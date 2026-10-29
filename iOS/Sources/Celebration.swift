@@ -52,7 +52,7 @@ struct PlatinumMoment: View {
             }
             Confetti()
         }
-        .onAppear { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+        .onAppear { Haptic.success() }
     }
 
     private var card: some View {
@@ -99,11 +99,11 @@ struct YearStory: View {
                     }
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
+            .pagedTabs()
         }
         .background(Style.backdrop.ignoresSafeArea())
         .navigationTitle(M.yearReview)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
         .onAppear { if let first = years.first, !years.contains(year) { year = first } }
     }
 

@@ -130,20 +130,14 @@ func run() async {
         TrophyTargets.shared.toggle(trophies[1], in: games[0])
         TrophyTargets.shared.setNote("Bölüm 3'te kaçırılabilir", for: trophies[1], in: games[0])
 
-        let pages: [(String, TrophyStore.Page)] = [
-            ("profile", .profile), ("stats", .stats), ("closest", .closest), ("recent", .recent),
-            ("platinums", .platinums), ("targets", .targets), ("game", .game("G1")),
-        ]
-        for (name, page) in pages {
-            await store.open(page)
-            render("\(language)-trophies-\(name)", width: 1100, height: 720, TrophiesView())
-            render("\(language)-trophies-\(name)-min", width: 1040, height: 620, TrophiesView())
-        }
         await store.open(.game("G1"))
-        render("\(language)-trophies-game-min", width: 1040, height: 600, TrophiesView())
-        render("\(language)-trophies-game-dark", width: 1100, height: 720, dark: true, TrophiesView())
+        for section in TrophiesView.Section.allCases {
+            UserDefaults.standard.set(section.rawValue, forKey: "trophyHubSection")
+            render("\(language)-trophies-\(section)", width: 1100, height: 720, dark: true, TrophiesView())
+            render("\(language)-trophies-\(section)-min", width: 1040, height: 620, TrophiesView())
+        }
+        UserDefaults.standard.set(TrophiesView.Section.stats.rawValue, forKey: "trophyHubSection")
         TrophyLibrary.shared.usePreviewData([])
-        await store.open(.stats)
         render("\(language)-trophies-stats-empty", width: 1100, height: 720, TrophiesView())
         TrophyLibrary.shared.usePreviewData(entries)
         render("\(language)-settings", width: 900, height: 900, SettingsView())

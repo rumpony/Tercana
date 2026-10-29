@@ -133,7 +133,7 @@ struct PlayerView: View {
             }
         }
         .navigationTitle(player.onlineId)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
         .task {
             do {
                 profile = try await PSNClient.shared.profile(user: player.accountId)

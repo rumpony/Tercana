@@ -6,5 +6,7 @@ out=${1:-/tmp/tercana-preview}
 langs=${2:-tr}
 bin=$(mktemp -d)/preview
 swiftc -swift-version 5 -target arm64-apple-macos26.0 -sdk "$(xcrun --show-sdk-path)" -o "$bin" \
-  $(find Sources -name '*.swift' ! -name 'TercanaApp.swift') Tools/Preview/main.swift
+  $(find Sources -name '*.swift' ! -name 'TercanaApp.swift') \
+  $(find iOS/Sources -name '*.swift' ! -name 'TercanaMobileApp.swift' ! -name 'SignInView.swift' ! -name 'Notifier.swift' ! -name 'WidgetData.swift') \
+  Tools/Preview/main.swift
 TERCANA_PREVIEW=1 "$bin" "$out" "$PWD/Tools/Preview/assets" "$langs"

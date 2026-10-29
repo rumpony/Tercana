@@ -52,10 +52,7 @@ struct GameView: View {
                 Section(groups.count > 1 ? (group == "default" ? M.baseGame : M.dlc(group)) : "") {
                     ForEach(visible.filter { ($0.groupId ?? "default") == group }) { trophy in
                         Button { selected = trophy } label: {
-                            TrophyRow(trophy: trophy,
-                                      subtitle: store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail,
-                                      markedDone: !online && Local.shared.isDone(trophy, in: game),
-                                      spoilers: spoilers)
+                            row(trophy)
                         }
                         .tint(.primary)
                         .trophyActions(trophy, in: game, canMark: !online)
@@ -63,10 +60,10 @@ struct GameView: View {
                 }
             }
         }
-        .listSectionSpacing(.compact)
+        .compactSections()
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .navigationTitle(game.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineTitle()
         .toolbar {
             Menu {
                 Picker(S.order, selection: $store.order) {
@@ -90,8 +87,14 @@ struct GameView: View {
             Local.shared.clearMarks(for: game)
             celebrateIfNew()
         }
-        .fullScreenCover(item: $celebrating) { PlatinumMoment(game: game, date: $0) }
+        .cover(item: $celebrating) { PlatinumMoment(game: game, date: $0) }
         .sheet(item: $selected) { TrophySheet(trophy: $0, game: game, canMark: !online) }
+    }
+
+    private func row(_ trophy: Trophy) -> TrophyRow {
+        let detail = store.showTranslations ? (store.translatedDetails[trophy.id] ?? trophy.detail) : trophy.detail
+        let marked = !online && Local.shared.isDone(trophy, in: game)
+        return TrophyRow(trophy: trophy, subtitle: detail, markedDone: marked, spoilers: spoilers)
     }
 
     private var header: some View {

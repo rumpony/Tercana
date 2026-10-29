@@ -58,6 +58,10 @@ struct GamesView: View {
                 }
             }
             .listStyle(.plain)
+            #if os(macOS)
+            .frame(maxWidth: 820)
+            .frame(maxWidth: .infinity)
+            #endif
             .onBackdrop()
             .screen(M.gamesTab)
             .searchable(text: $search, prompt: S.searchGames)

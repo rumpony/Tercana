@@ -1,641 +1,88 @@
 import AppKit
 import SwiftUI
 
+/// The trophy hub in the home window: the same screens as the iPhone app, with a sidebar.
 struct TrophiesView: View {
+    enum Section: Int, CaseIterable, Identifiable {
+        case profile, games, targets, friends, stats
+        var id: Int { rawValue }
+        var title: String {
+            switch self {
+            case .profile: return M.profileTab
+            case .games: return M.gamesTab
+            case .targets: return M.targetsTab
+            case .friends: return M.friendsTab
+            case .stats: return M.statsTab
+            }
+        }
+        var icon: String {
+            switch self {
+            case .profile: return "person"
+            case .games: return "gamecontroller"
+            case .targets: return "pin"
+            case .friends: return "person.2"
+            case .stats: return "chart.bar"
+            }
+        }
+    }
+
     @State private var store = TrophyStore.shared
+    @AppStorage("trophyHubSection") private var section = Section.profile.rawValue
+    @AppStorage("accent") private var accent = 0
 
     var body: some View {
         Group {
             if store.signedIn {
-                // A plain two-column layout: NavigationSplitView inside a hand-made NSWindow has no
-                // toolbar to host its search field, which pushed the sidebar content around.
                 HStack(spacing: 0) {
-                    Sidebar(store: store)
-                        .frame(width: 290)
+                    sidebar
                     Divider()
-                    detail
+                    page
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .background(Style.backdrop)
+                // The hub is always dark, like the phone app, whatever the Mac's appearance.
+                .preferredColorScheme(.dark)
             } else {
                 SignInView(store: store)
             }
         }
+        .tint(Style.glow)
+        .id(accent)
         .frame(minWidth: 1040, minHeight: 600)
         .task { await store.load() }
     }
 
-    @ViewBuilder
-    private var detail: some View {
-        switch store.page {
-        case .profile: ProfilePage(store: store)
-        case .stats: StatsPage(store: store)
-        case .closest: GameGridPage(store: store, title: S.closestToFinish, empty: S.closestToFinish, games: store.closestGames)
-        case .recent: RecentPage(store: store)
-        case .platinums: GameGridPage(store: store, title: S.platinumCabinet, empty: S.noPlatinums, games: store.platinumGames)
-        case .targets: TargetsPage(store: store)
-        case .game:
-            if let game = store.selectedGame {
-                GameTrophies(store: store, game: game)
-            } else {
-                ContentUnavailableView(S.pickAGame, systemImage: "trophy")
-            }
-        }
-    }
-}
-
-// MARK: - Sidebar
-
-private struct Sidebar: View {
-    @Bindable var store: TrophyStore
-    private let targets = TrophyTargets.shared
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                HStack(spacing: 6) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                    TextField(S.searchGames, text: $store.searchText)
-                        .textFieldStyle(.plain)
-                    if !store.searchText.isEmpty {
-                        Button {
-                            store.searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7))
-                if store.loading {
-                    ProgressView().controlSize(.small).frame(width: 16)
-                } else {
-                    Button {
-                        Task { await store.load() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    .buttonStyle(.borderless)
-                    .help(S.refresh)
-                }
-            }
-            .padding(10)
-            list
-            Divider()
-            HStack {
-                Button(role: .destructive) {
-                    Task { await store.signOut() }
-                } label: {
-                    Label(S.signOutPSN, systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .buttonStyle(.borderless)
-                .font(.callout)
-                Spacer()
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-        }
-    }
-
-    private var list: some View {
-        // Selection is drawn here rather than by the system: it looks the same in the app and in
-        // rendered screenshots, which can't draw the system's translucent highlight.
-        List {
-            Section(S.overview) {
-                row(.profile) { Label(S.profile, systemImage: "person.crop.circle") }
-                row(.stats) { Label(S.statistics, systemImage: "chart.bar.xaxis") }
-                row(.closest) { Label(S.closestToFinish, systemImage: "flag.checkered") }
-                row(.recent) { Label(S.recentTrophies, systemImage: "clock") }
-                row(.platinums) { Label(S.platinumCabinet, systemImage: "trophy.fill") }
-                row(.targets) { Label(S.myTargets, systemImage: "pin").badge(targets.items.count) }
-            }
-            if let playing = store.nowPlaying {
-                Section(S.nowPlaying) {
-                    Button {
-                        Task { await store.showNowPlaying() }
-                    } label: {
-                        Label(playing, systemImage: "gamecontroller.fill").frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            Section(S.gamesCount(store.games.count)) {
-                ForEach(store.visibleGames) { game in
-                    row(.game(game.id)) { GameRow(game: game) }
-                }
-            }
-        }
-        .listStyle(.sidebar)
-    }
-
-    private func row<Content: View>(_ page: TrophyStore.Page, @ViewBuilder _ content: () -> Content) -> some View {
-        let selected = store.page == page
-        return Button {
-            Task { await store.open(page) }
-        } label: {
-            content()
-                .foregroundStyle(selected ? Color.white : Color.primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .listRowBackground(
-            RoundedRectangle(cornerRadius: 7)
-                .fill(selected ? Color.accentColor : Color.clear)
-                .padding(.horizontal, 8)
-        )
-    }
-}
-
-private struct GameRow: View {
-    let game: TrophyGame
-
-    var body: some View {
-        HStack(spacing: 10) {
-            RemoteIcon(url: game.iconURL, size: 44)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(game.name).lineLimit(1)
-                ProgressView(value: Double(game.progress), total: 100)
-                    .tint(game.progress == 100 ? .yellow : .accentColor)
-                HStack(spacing: 6) {
-                    Text(S.percent(Double(game.progress) / 100))
-                    if game.platinumEarned { Text(S.platinumEarned).foregroundStyle(.yellow) }
-                    Text(game.platform).foregroundStyle(.tertiary)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.vertical, 2)
-    }
-}
-
-// MARK: - Profile
-
-private struct ProfilePage: View {
-    let store: TrophyStore
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                if let profile = store.profile {
-                    HStack(spacing: 18) {
-                        ZStack {
-                            Circle().stroke(.quaternary, lineWidth: 8)
-                            Circle()
-                                .trim(from: 0, to: Double(profile.progress) / 100)
-                                .stroke(.tint, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                            Text(verbatim: "\(profile.level)").font(.system(size: 28, weight: .bold)).monospacedDigit()
-                        }
-                        .frame(width: 92, height: 92)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(S.trophyLevel(profile.level)).font(.title2.bold())
-                            Text(S.toNextLevel(Double(profile.progress) / 100) + "  ·  " + S.gamesPlayed + ": \(store.games.count)")
-                                .foregroundStyle(.secondary)
-                            GradeCounts(counts: profile.earnedTrophies)
-                        }
-                    }
-                }
-
-                Fold(S.summary, key: "summary") {
-                // Four equal tiles in one row; games played moves to the header line.
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
-                    StatTile(title: S.totalTrophies,
-                             value: "\(store.profile?.earnedTrophies.total ?? store.games.map(\.earnedTrophies.total).reduce(0, +))",
-                             symbol: "trophy")
-                    StatTile(title: S.platinums, value: "\(store.platinumGames.count)", symbol: "trophy.fill")
-                    StatTile(title: S.completedGames, value: "\(store.completedCount)", symbol: "checkmark.seal")
-                    StatTile(title: S.averageCompletion, value: S.percent(store.averageCompletion), symbol: "chart.pie")
-                }
-                }
-
-                Fold(S.showcase, key: "showcase") { ShowcaseBlock(store: store) }
-
-                if !store.closestGames.isEmpty {
-                    Fold(S.closestToFinish, key: "profileClosest") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(store.closestGames.prefix(5)) { game in
-                            Button {
-                                Task { await store.open(.game(game.id)) }
-                            } label: {
-                                GameRow(game: game).contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    }
-                }
-                if let problem = store.problem {
-                    Text(problem).foregroundStyle(.red)
-                }
-            }
-            .padding(24)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .navigationTitle(S.profile)
-    }
-}
-
-private struct StatTile: View {
-    let title: String
-    let value: String
-    let symbol: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(title, systemImage: symbol).font(.callout).foregroundStyle(.secondary)
-                .lineLimit(1)
-            Text(verbatim: value).font(.system(size: 26, weight: .semibold)).monospacedDigit()
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
-    }
-}
-
-private struct GradeCounts: View {
-    let counts: TrophyCounts
-    var total: TrophyCounts?
-
-    var body: some View {
-        HStack(spacing: 12) {
-            if (total?.platinum ?? 1) > 0 { badge(.platinum, counts.platinum, total?.platinum) }
-            badge(.gold, counts.gold, total?.gold)
-            badge(.silver, counts.silver, total?.silver)
-            badge(.bronze, counts.bronze, total?.bronze)
-        }
-    }
-
-    private func badge(_ grade: TrophyGrade, _ earned: Int, _ of: Int?) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: "trophy.fill").foregroundStyle(grade.color)
-            Text(verbatim: of.map { "\(earned)/\($0)" } ?? "\(earned)").monospacedDigit()
-        }
-        .help(grade.label)
-    }
-}
-
-// MARK: - Game grids & lists
-
-private struct GameGridPage: View {
-    let store: TrophyStore
-    let title: String
-    let empty: String
-    let games: [TrophyGame]
-
-    var body: some View {
-        Group {
-            if games.isEmpty {
-                ContentUnavailableView(empty, systemImage: "trophy")
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 16)], spacing: 18) {
-                        ForEach(games) { game in
-                            Button {
-                                Task { await store.open(.game(game.id)) }
-                            } label: {
-                                VStack(spacing: 6) {
-                                    RemoteIcon(url: game.iconURL, size: 120)
-                                    // Fixed two-line height keeps every cell's bar on the same line.
-                                    Text(game.name).font(.callout).lineLimit(2).multilineTextAlignment(.center)
-                                        .frame(height: 38, alignment: .top)
-                                    ProgressView(value: Double(game.progress), total: 100)
-                                        .tint(game.progress == 100 ? .yellow : .accentColor)
-                                    Text(S.percent(Double(game.progress) / 100)).font(.caption).foregroundStyle(.secondary)
-                                }
-                                .frame(width: 140)
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(20)
-                }
-            }
-        }
-        .navigationTitle(title)
-    }
-}
-
-private struct RecentPage: View {
-    let store: TrophyStore
-
-    var body: some View {
-        Group {
-            if store.recent.isEmpty {
-                if store.loadingRecent {
-                    ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ContentUnavailableView(S.noRecent, systemImage: "clock")
-                }
-            } else {
-                List(store.recent) { item in
-                    Button {
-                        Task { await store.open(.game(item.game.id)) }
-                    } label: {
-                        HStack(spacing: 12) {
-                            RemoteIcon(url: item.trophy.iconURL, size: 40)
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "trophy.fill").foregroundStyle(item.trophy.grade.color).font(.caption)
-                                    Text(item.trophy.name).font(.headline)
-                                }
-                                Text(item.game.name).font(.callout).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 4) {
-                                if let rarity = item.trophy.rarity { RarityBadge(rarity: rarity, rate: item.trophy.earnedRate) }
-                                if let date = item.trophy.earnedDate {
-                                    Text(date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(S.locale)))
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .navigationTitle(S.recentTrophies)
-    }
-}
-
-private struct TargetsPage: View {
-    let store: TrophyStore
-    private let targets = TrophyTargets.shared
-
-    private var groups: [(gameID: String, items: [TrophyTargets.Target])] {
-        Dictionary(grouping: targets.sorted, by: \.gameID)
-            .map { (gameID: $0.key, items: $0.value) }
-            .sorted { $0.items[0].added > $1.items[0].added }
-    }
-
-    var body: some View {
-        Group {
-            if targets.items.isEmpty {
-                ContentUnavailableView(S.noTargets, systemImage: "pin", description: Text(S.noTargetsHint))
-            } else {
-                List {
-                    ForEach(groups, id: \.gameID) { group in
-                        Section {
-                            ForEach(group.items) { target in
-                                TargetRow(target: target)
-                            }
-                        } header: {
-                            HStack {
-                                Text(group.items[0].gameName)
-                                Spacer()
-                                Button(S.openGame) { Task { await store.open(.game(group.gameID)) } }
-                                    .buttonStyle(.link)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .navigationTitle(S.myTargets)
-    }
-}
-
-private struct TargetRow: View {
-    let target: TrophyTargets.Target
-    @State private var note = ""
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Image(systemName: "pin.fill").foregroundStyle(.orange)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(target.trophyName).font(.headline)
-                TextField(S.notePlaceholder, text: $note)
-                    .textFieldStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .onChange(of: note) { TrophyTargets.shared.setNote(note, forKey: target.id) }
-            }
-            Spacer()
-            Button {
-                TrophyTargets.shared.remove(target)
-            } label: {
-                Image(systemName: "xmark.circle")
-            }
-            .buttonStyle(.borderless)
-            .help(S.unpinTarget)
-        }
-        .onAppear { note = target.note }
-    }
-}
-
-// MARK: - Trophies of a game
-
-private struct GameTrophies: View {
-    @Bindable var store: TrophyStore
-    let game: TrophyGame
-    @State private var revealed: Set<Int> = []
-
-    var body: some View {
-        VStack(spacing: 0) {
-            header
-            Divider()
-            if store.loading && store.trophies.isEmpty {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                List(store.visibleTrophies) { trophy in
-                    TrophyRow(trophy: trophy, game: game,
-                              translation: store.showTranslations ? store.translatedDetails[trophy.id] : nil,
-                              revealed: revealed.contains(trophy.id)) {
-                        revealed.insert(trophy.id)
-                    }
-                }
-            }
-            if let problem = store.problem {
-                Text(problem).font(.callout).foregroundStyle(.red).padding(8)
-            }
-        }
-        .navigationTitle(game.name)
-    }
-
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 14) {
-                GradeCounts(counts: game.earnedTrophies, total: game.definedTrophies)
-                Spacer()
-                Menu {
-                    ForEach(GuideLinks.forGame(game.name)) { link in
-                        Button(link.title) { NSWorkspace.shared.open(link.url) }
-                    }
-                } label: {
-                    Label(S.guides, systemImage: "book")
-                }
-                .fixedSize()
-            }
-            if let stats = store.gameStats {
-                HStack(spacing: 18) {
-                    stat(S.firstTrophy, Self.day(stats.first))
-                    stat(S.latestTrophy, Self.day(stats.last))
-                    stat(S.duration, S.spanDays(max(1, Calendar.current.dateComponents([.day], from: stats.first, to: stats.last).day ?? 0)))
-                    if let rarest = stats.rarest {
-                        stat(S.rarestEarned, rarest.name + (rarest.earnedRate.map { " · " + S.percent($0 / 100, digits: 1) } ?? ""))
-                    }
-                }
-                .font(.caption)
-            }
-            // Two rows so nothing gets pushed out of narrow windows.
-            HStack {
-                Picker("", selection: $store.filter) {
-                    ForEach(TrophyStore.Filter.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 320)
-                Spacer(minLength: 12)
-                Toggle(S.translateDescriptions, isOn: $store.showTranslations)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-            }
-            HStack(spacing: 12) {
-                // The options name themselves ("Easiest first", "Any rarity"), so no side labels.
-                Picker(S.order, selection: $store.order) {
-                    ForEach(TrophyStore.Order.allCases) { Text($0.title).tag($0) }
-                }
-                .labelsHidden()
-                .fixedSize()
-                Picker(S.rarity, selection: $store.rarityFilter) {
-                    Text(S.anyRarity).tag(TrophyRarity?.none)
-                    ForEach(TrophyRarity.allCases) { Text($0.label).tag(TrophyRarity?.some($0)) }
-                }
-                .labelsHidden()
-                .fixedSize()
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(14)
-    }
-
-    private static func day(_ date: Date) -> String {
-        date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(S.locale))
-    }
-
-    private func stat(_ title: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).foregroundStyle(.secondary)
-            Text(verbatim: value).lineLimit(1)
-        }
-    }
-}
-
-private struct TrophyRow: View {
-    let trophy: Trophy
-    let game: TrophyGame
-    let translation: String?
-    let revealed: Bool
-    let onReveal: () -> Void
-    private let targets = TrophyTargets.shared
-    private let showcase = TrophyShowcase.shared
-    @State private var note = ""
-
-    private var concealed: Bool { trophy.hidden && !trophy.earned && !revealed }
-    private var pinned: Bool { targets.isPinned(trophy, in: game) }
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            RemoteIcon(url: trophy.iconURL, size: 48)
-                .saturation(trophy.earned ? 1 : 0)
-                .opacity(trophy.earned ? 1 : 0.7)
-                .blur(radius: concealed ? 6 : 0)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Image(systemName: "trophy.fill").foregroundStyle(trophy.grade.color).font(.caption)
-                    Text(concealed ? S.hiddenTrophy : trophy.name).font(.headline)
-                    if trophy.earned {
-                        Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
-                    }
-                    if let rarity = trophy.rarity { RarityBadge(rarity: rarity, rate: trophy.earnedRate) }
-                }
-                if concealed {
-                    Button(S.revealSpoiler, action: onReveal)
-                        .buttonStyle(.link)
-                        .font(.callout)
-                } else {
-                    Text(translation ?? trophy.detail)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
-                HStack(spacing: 10) {
-                    if let progress = trophy.progress, let target = trophy.progressTarget, !trophy.earned {
-                        Text(S.progress(progress, target))
-                    }
-                    if let date = trophy.earnedDate {
-                        Text(date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(S.locale)))
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                if pinned {
-                    TextField(S.notePlaceholder, text: $note)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.callout)
-                        .onChange(of: note) { targets.setNote(note, for: trophy, in: game) }
-                }
-            }
-            Spacer()
-            if trophy.earned {
-                let shown = showcase.contains(trophy, in: game)
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(Section.allCases) { item in
                 Button {
-                    showcase.toggle(trophy, in: game)
+                    section = item.rawValue
                 } label: {
-                    Image(systemName: shown ? "star.fill" : "star").foregroundStyle(shown ? .yellow : .secondary)
+                    Label(item.title, systemImage: item.icon)
+                        .font(.body.weight(section == item.rawValue ? .semibold : .regular))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12).padding(.vertical, 9)
+                        .background(section == item.rawValue ? Style.glow.opacity(0.22) : .clear,
+                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.borderless)
-                .help(shown ? S.removeFromShowcase : S.addToShowcase)
-            } else {
-                VStack(spacing: 8) {
-                    Button {
-                        targets.toggle(trophy, in: game)
-                    } label: {
-                        Image(systemName: pinned ? "pin.fill" : "pin")
-                            .foregroundStyle(pinned ? .orange : .secondary)
-                    }
-                    .buttonStyle(.borderless)
-                    .help(pinned ? S.unpinTarget : S.pinTarget)
-                    if !concealed {
-                        Menu {
-                            Button(S.searchYouTube) { NSWorkspace.shared.open(GuideLinks.forTrophy(trophy.name, game: game.name)) }
-                            Button(S.searchWebGuide) { NSWorkspace.shared.open(GuideLinks.webSearch(trophy.name, game: game.name)) }
-                        } label: {
-                            Image(systemName: "questionmark.circle")
-                        }
-                        .menuStyle(.borderlessButton)
-                        .fixedSize()
-                        .help(S.howToGet)
-                    }
-                }
-                // Same width on every row so the pins line up, with or without the help menu.
-                .frame(width: 44, alignment: .top)
+                .buttonStyle(.plain)
             }
+            Spacer()
         }
-        .padding(.vertical, 4)
-        .onAppear { note = targets.note(for: trophy, in: game) }
+        .padding(12)
+        .frame(width: 210)
     }
-}
 
-// MARK: - Shared bits
-
-private struct RarityBadge: View {
-    let rarity: TrophyRarity
-    let rate: Double?
-
-    var body: some View {
-        Text(verbatim: rate.map { "\(rarity.label) · \(S.percent($0 / 100, digits: 1))" } ?? rarity.label)
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(rarity.color.opacity(0.2), in: Capsule())
-            .foregroundStyle(rarity.color)
+    @ViewBuilder
+    private var page: some View {
+        switch Section(rawValue: section) ?? .profile {
+        case .profile: ProfileView()
+        case .games: GamesView()
+        case .targets: TargetsView()
+        case .friends: FriendsView()
+        case .stats: StatsView()
+        }
     }
 }
 
@@ -727,17 +174,6 @@ struct SignInView: View {
             return String(input[range])
         }
         return input.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
-extension TrophyGrade {
-    var color: Color {
-        switch self {
-        case .bronze: return Color(red: 0.80, green: 0.50, blue: 0.25)
-        case .silver: return Color(white: 0.75)
-        case .gold: return Color(red: 0.95, green: 0.78, blue: 0.25)
-        case .platinum: return Color(red: 0.62, green: 0.78, blue: 0.95)
-        }
     }
 }
 

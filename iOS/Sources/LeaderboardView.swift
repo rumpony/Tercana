@@ -36,7 +36,7 @@ struct LeaderboardView: View {
                     var name = board.latest.flatMap { s in s.rows.first { $0.player.id == s.me } }?.player.onlineId
                     if name == nil { name = try? await PSNClient.shared.me().onlineId }
                     guard let id = name, let url = URL(string: "https://psnprofiles.com/\(id)") else { return }
-                    await UIApplication.shared.open(url)
+                    openExternally(url)
                 }
             }
         } footer: {

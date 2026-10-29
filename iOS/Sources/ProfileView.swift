@@ -13,7 +13,7 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     if let playing = playingGame {
-                        NavigationLink(value: playing) { nowPlaying(playing) }.tint(.primary)
+                        NavigationLink(value: playing) { nowPlaying(playing) }.buttonStyle(.plain)
                     }
                     if let profile = store.profile {
                         hero(profile)
@@ -41,6 +41,8 @@ struct ProfileView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
             }
             .onBackdrop()
             .screen(S.profile)
@@ -117,7 +119,7 @@ struct ProfileView: View {
                 action("calendar", M.yearReview)
             }
         }
-        .tint(.primary)
+        .buttonStyle(.plain)
     }
 
     private func action(_ icon: String, _ title: String) -> some View {
@@ -136,7 +138,7 @@ struct ProfileView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 14) {
                     ForEach(games) { game in
-                        NavigationLink(value: game) { GameTile(game: game) }.tint(.primary)
+                        NavigationLink(value: game) { GameTile(game: game) }.buttonStyle(.plain)
                     }
                 }
             }
@@ -183,7 +185,10 @@ struct AccountSheet: View {
                         Image(systemName: "circle.fill").foregroundStyle(Theme.colors[i]).tag(i)
                     }
                 }
+                #if os(iOS)
                 .pickerStyle(.navigationLink)
+                #endif
+                #if os(iOS)
                 Section {
                     ForEach(Notifier.Kind.allCases, id: \.self) { kind in NotifyToggle(kind: kind) }
                 } header: {
@@ -191,6 +196,7 @@ struct AccountSheet: View {
                 } footer: {
                     Text(M.notifyHint)
                 }
+                #endif
                 Section {
                     Button(M.syncLibrary) { library.sync(with: TrophyStore.shared.games) }
                         .disabled(library.syncing)
@@ -206,12 +212,13 @@ struct AccountSheet: View {
                 }
             }
             .navigationTitle(M.account)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineTitle()
             .toolbar { Button(S.close) { dismiss() } }
         }
     }
 }
 
+#if os(iOS)
 private struct NotifyToggle: View {
     let kind: Notifier.Kind
     @AppStorage private var on: Bool
@@ -226,3 +233,4 @@ private struct NotifyToggle: View {
             .onChange(of: on) { if on { Task { await Notifier.requestPermission(); Notifier.schedule() } } }
     }
 }
+#endif
