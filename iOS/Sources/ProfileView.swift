@@ -60,6 +60,7 @@ struct ProfileView: View {
             LevelRing(level: profile.level, progress: profile.progress, size: 168)
                 .padding(.top, 4)
             HStack {
+                stat(TrophyGrade.allCases.reduce(0) { $0 + profile.earnedTrophies.value($1) }.formatted(), M.trophies)
                 stat(Level.points(profile.earnedTrophies).formatted(), M.points)
                 stat("\(store.games.count)", S.gamesPlayed)
                 stat(S.percent(store.averageCompletion), S.averageCompletion)

@@ -75,6 +75,7 @@ extension M {
     static var unmarkDone: String { t("İşareti kaldır", "Unmark") }
     static var doneLocally: String { t("Kendi işaretin", "Your mark") }
     static var baseGame: String { t("Ana oyun", "Base game") }
+    static var trophies: String { t("Kupa", "Trophies") }
     static var baseGameOnly: String { t("Sadece ana oyun", "Base game only") }
     static var baseTag: String { t("ANA OYUN", "BASE") }
     static var dlcTag: String { t("EK PAKET", "DLC") }
