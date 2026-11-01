@@ -33,6 +33,12 @@ struct GameView: View {
         return baseOnly ? seen.filter { $0 == "default" } : seen
     }
 
+    /// Unearned trophies most players have, respecting the base-game toggle.
+    private var easiest: [Trophy] {
+        Array(trophies.filter { !$0.earned && $0.earnedRate != nil && (!baseOnly || ($0.groupId ?? "default") == "default") }
+            .sorted { $0.earnedRate! > $1.earnedRate! }.prefix(5))
+    }
+
     private var loaded: Bool { store.selectedGame?.id == game.id && !store.trophies.isEmpty }
 
     var body: some View {
@@ -45,6 +51,16 @@ struct GameView: View {
             .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
             .listRowSeparator(.hidden)
 
+            if store.filter != .earned && !easiest.isEmpty {
+                Section {
+                    Label(M.easiestNext, systemImage: "bolt.fill").font(.subheadline.weight(.semibold)).foregroundStyle(Style.glow)
+                    ForEach(easiest) { trophy in
+                        Button { selected = trophy } label: { row(trophy) }
+                            .tint(.primary)
+                            .trophyActions(trophy, in: game, canMark: !online)
+                    }
+                }
+            }
             if trophies.isEmpty {
                 ProgressView().frame(maxWidth: .infinity).listRowBackground(Color.clear)
             }

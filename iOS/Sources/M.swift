@@ -65,6 +65,7 @@ extension M {
     static var recentTrophies: String { t("Son kupalar", "Recent trophies") }
     static var friendFeed: String { t("Akış", "Feed") }
     static var noFeed: String { t("Arkadaşların son 2 haftada kupa almamış", "No friend trophies in the last 2 weeks") }
+    static var easiestNext: String { t("En kolay sıradakiler", "Easiest next") }
     static var seeAll: String { t("Tümü", "See all") }
     static func thisWeek(_ n: Int) -> String { t("Bu hafta \(n)", "\(n) this week") }
     static var onThisDay: String { t("Geçmişte bugün", "On this day") }
