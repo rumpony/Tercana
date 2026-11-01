@@ -7,7 +7,12 @@ struct ProfileView: View {
     private var showcase: TrophyShowcase { .shared }
     private var local: Local { .shared }
     private var memories: [Insights.Earned] { Insights.onThisDay(TrophyStats(TrophyLibrary.shared.entries).earned) }
-    private var latest: [Insights.Earned] { Array(TrophyStats(TrophyLibrary.shared.entries).earned.sorted { $0.date > $1.date }.prefix(5)) }
+    private var timeline: [Insights.Earned] { TrophyStats(TrophyLibrary.shared.entries).earned.sorted { $0.date > $1.date } }
+    private var latest: [Insights.Earned] { Array(timeline.prefix(5)) }
+    private var thisWeek: Int {
+        let start = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        return timeline.prefix { $0.date >= start }.count
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,7 +27,14 @@ struct ProfileView: View {
                     }
                     quickActions
                     if !latest.isEmpty {
-                        SectionTitle(text: M.recentTrophies)
+                        HStack(alignment: .firstTextBaseline) {
+                            SectionTitle(text: M.recentTrophies)
+                            if thisWeek > 0 {
+                                Text(M.thisWeek(thisWeek)).font(.caption).foregroundStyle(.secondary).fixedSize()
+                            }
+                            NavigationLink(M.seeAll) { RecentTrophiesView(items: Array(timeline.prefix(200))) }
+                                .font(.subheadline.weight(.medium)).fixedSize()
+                        }
                         VStack(spacing: 12) {
                             ForEach(Array(latest.enumerated()), id: \.offset) { _, item in
                                 NavigationLink(value: item.game) {
@@ -248,3 +260,43 @@ private struct NotifyToggle: View {
     }
 }
 #endif
+
+/// Every recently earned trophy, newest first, grouped by day.
+struct RecentTrophiesView: View {
+    let items: [Insights.Earned]
+
+    private var days: [(day: Date, items: [Insights.Earned])] {
+        Dictionary(grouping: items) { Calendar.current.startOfDay(for: $0.date) }
+            .map { ($0.key, $0.value) }
+            .sorted { $0.day > $1.day }
+    }
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                ForEach(days, id: \.day) { group in
+                    HStack {
+                        Text(group.day.formatted(date: .complete, time: .omitted)).font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Text("\(group.items.count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    }
+                    VStack(spacing: 12) {
+                        ForEach(Array(group.items.enumerated()), id: \.offset) { _, item in
+                            NavigationLink(value: item.game) {
+                                TrophyRow(trophy: item.trophy, subtitle: "\(item.game.name) · \(item.date.formatted(date: .omitted, time: .shortened))")
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .card()
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
+            .frame(maxWidth: 760)
+            .frame(maxWidth: .infinity)
+        }
+        .onBackdrop()
+        .screen(M.recentTrophies)
+    }
+}

@@ -63,6 +63,8 @@ extension M {
     static var shareCard: String { t("Profil kartını paylaş", "Share profile card") }
     static var heatmap: String { t("Kupa takvimi", "Trophy calendar") }
     static var recentTrophies: String { t("Son kupalar", "Recent trophies") }
+    static var seeAll: String { t("Tümü", "See all") }
+    static func thisWeek(_ n: Int) -> String { t("Bu hafta \(n)", "\(n) this week") }
     static var onThisDay: String { t("Geçmişte bugün", "On this day") }
     static func yearsAgo(_ n: Int) -> String { t("\(n) yıl önce", n == 1 ? "1 year ago" : "\(n) years ago") }
     static var platinumWall: String { t("Platin duvarı", "Platinum wall") }
