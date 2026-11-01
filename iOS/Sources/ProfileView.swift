@@ -7,6 +7,7 @@ struct ProfileView: View {
     private var showcase: TrophyShowcase { .shared }
     private var local: Local { .shared }
     private var memories: [Insights.Earned] { Insights.onThisDay(TrophyStats(TrophyLibrary.shared.entries).earned) }
+    private var latest: [Insights.Earned] { Array(TrophyStats(TrophyLibrary.shared.entries).earned.sorted { $0.date > $1.date }.prefix(5)) }
 
     var body: some View {
         NavigationStack {
@@ -20,6 +21,18 @@ struct ProfileView: View {
                         planner(profile)
                     }
                     quickActions
+                    if !latest.isEmpty {
+                        SectionTitle(text: M.recentTrophies)
+                        VStack(spacing: 12) {
+                            ForEach(Array(latest.enumerated()), id: \.offset) { _, item in
+                                NavigationLink(value: item.game) {
+                                    TrophyRow(trophy: item.trophy, subtitle: "\(item.game.name) · \(item.date.formatted(.relative(presentation: .named)))")
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .card()
+                    }
                     rail(M.hunting, local.hunting.compactMap { id in store.games.first { $0.id == id } })
                     rail(S.closestToFinish, Array(store.closestGames.prefix(10)))
                     if !memories.isEmpty {
