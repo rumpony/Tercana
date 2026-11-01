@@ -7,16 +7,25 @@ struct FriendsView: View {
     @State private var query = ""
     @State private var found: PSNClient.Player?
     @State private var searchProblem: String?
-    @State private var showingBoard = true
+    @State private var tab = 0
+    private var feed = FriendFeed.shared
 
     var body: some View {
         NavigationStack {
             GlassList {
-                Chips(selection: $showingBoard, options: [(true, M.leaderboard), (false, M.friendsList)])
+                Chips(selection: $tab, options: [(0, M.leaderboard), (1, M.friendFeed), (2, M.friendsList)])
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
-                if showingBoard && query.isEmpty {
+                if tab == 0 && query.isEmpty {
                     LeaderboardView()
+                } else if tab == 1 && query.isEmpty {
+                    Section {
+                        ForEach(feed.items) { item in
+                            NavigationLink(value: item.player) {
+                                TrophyRow(trophy: item.trophy, subtitle: "\(item.player.onlineId) · \(item.game.name) · \(item.date.formatted(.relative(presentation: .named)))")
+                            }
+                        }
+                    }
                 } else {
                 if let found {
                     Section { NavigationLink(value: found) { PlayerRow(player: found) } }
@@ -28,8 +37,9 @@ struct FriendsView: View {
                 }
             }
             .overlay {
-                if loading && friends.isEmpty { ProgressView() }
-                else if !showingBoard && friends.isEmpty && found == nil && searchProblem == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
+                if (loading && friends.isEmpty) || (tab == 1 && feed.loading && feed.items.isEmpty) { ProgressView() }
+                else if tab == 1 && feed.items.isEmpty && query.isEmpty { ContentUnavailableView(M.noFeed, systemImage: "sparkles") }
+                else if tab == 2 && friends.isEmpty && found == nil && searchProblem == nil { ContentUnavailableView(M.noFriends, systemImage: "person.2") }
             }
             .onBackdrop()
             .screen(M.friendsTab)
@@ -49,6 +59,7 @@ struct FriendsView: View {
         do {
             friends = try await PSNClient.shared.friends()
             failed = friends.isEmpty
+            Task { await feed.refresh(friends) }
         } catch {
             failed = true
         }
