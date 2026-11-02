@@ -71,6 +71,7 @@ extension M {
         t("Toplam \(points.formatted()) puan · \(trophies.formatted()) kupa · Seviye \(level)",
           "Total \(points.formatted()) points · \(trophies.formatted()) trophies · Level \(level)")
     }
+    static var sendSample: String { t("Örnek bildirim gönder (5 sn)", "Send a sample alert (5 s)") }
     static var seeAll: String { t("Tümü", "See all") }
     static func thisWeek(_ n: Int) -> String { t("Bu hafta \(n)", "\(n) this week") }
     static var onThisDay: String { t("Geçmişte bugün", "On this day") }

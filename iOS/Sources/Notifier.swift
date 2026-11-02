@@ -140,11 +140,21 @@ enum Notifier {
         WidgetCenter.shared.reloadAllTimelines()
     }
 
-    private static func post(_ title: String, _ body: String, id: String) {
+    /// Posts what a new-trophy alert looks like, from the latest synced trophy, a few seconds later.
+    static func sample(profile: TrophyProfile?) async {
+        await requestPermission()
+        guard let latest = TrophyStats(TrophyLibrary.shared.entries).earned.max(by: { $0.date < $1.date }) else { return }
+        let totals = profile.map { M.totals(points: Level.points($0.earnedTrophies), trophies: $0.earnedTrophies.total, level: $0.level) }
+        let lines = ["\(latest.trophy.name) — \(latest.game.name)", M.gainedPoints(Level.points(latest.trophy.grade)), totals].compactMap { $0 }
+        post("\(M.newTrophy) · \(latest.trophy.grade.label)", lines.joined(separator: "\n"), id: "sample", after: 5)
+    }
+
+    private static func post(_ title: String, _ body: String, id: String, after delay: TimeInterval? = nil) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
-        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content,
+                                                                           trigger: delay.map { UNTimeIntervalNotificationTrigger(timeInterval: $0, repeats: false) }))
     }
 }

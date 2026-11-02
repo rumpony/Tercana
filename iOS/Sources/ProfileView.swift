@@ -217,6 +217,7 @@ struct AccountSheet: View {
                 #if os(iOS)
                 Section {
                     ForEach(Notifier.Kind.allCases, id: \.self) { kind in NotifyToggle(kind: kind) }
+                    Button(M.sendSample, systemImage: "bell.badge") { Task { await Notifier.sample(profile: TrophyStore.shared.profile) } }
                 } header: {
                     Text(M.notifications)
                 } footer: {
