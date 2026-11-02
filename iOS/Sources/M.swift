@@ -66,6 +66,11 @@ extension M {
     static var friendFeed: String { t("Akış", "Feed") }
     static var noFeed: String { t("Arkadaşların son 2 haftada kupa almamış", "No friend trophies in the last 2 weeks") }
     static var easiestNext: String { t("En kolay sıradakiler", "Easiest next") }
+    static func gainedPoints(_ n: Int) -> String { t("+\(n) puan kazandın", "+\(n) points earned") }
+    static func totals(points: Int, trophies: Int, level: Int) -> String {
+        t("Toplam \(points.formatted()) puan · \(trophies.formatted()) kupa · Seviye \(level)",
+          "Total \(points.formatted()) points · \(trophies.formatted()) trophies · Level \(level)")
+    }
     static var seeAll: String { t("Tümü", "See all") }
     static func thisWeek(_ n: Int) -> String { t("Bu hafta \(n)", "\(n) this week") }
     static var onThisDay: String { t("Geçmişte bugün", "On this day") }

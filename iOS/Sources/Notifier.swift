@@ -73,15 +73,17 @@ enum Notifier {
 
         if notify && !first && Kind.newTrophy.isOn {
             let changed = games.filter { $0.earnedTrophies.total > (state.earned[$0.id] ?? 0) }
+            let totals = profile.map { M.totals(points: Level.points($0.earnedTrophies), trophies: $0.earnedTrophies.total, level: $0.level) }
             for game in changed.prefix(3) {
                 let gained = game.earnedTrophies.total - (state.earned[game.id] ?? 0)
-                if game.platinumEarned && !state.platinums.contains(game.id) {
-                    post(M.newPlatinum, game.name, id: "plat-\(game.id)")
-                } else if let list = try? await PSNClient.shared.trophies(for: game),
-                          let newest = list.filter(\.earned).max(by: { ($0.earnedDate ?? .distantPast) < ($1.earnedDate ?? .distantPast) }) {
-                    let more = gained > 1 ? " +\(gained - 1)" : ""
-                    post("\(M.newTrophy) · \(newest.grade.label)", "\(newest.name)\(more) — \(game.name)", id: "new-\(game.id)")
-                }
+                guard let list = try? await PSNClient.shared.trophies(for: game) else { continue }
+                let fresh = list.filter(\.earned).sorted { ($0.earnedDate ?? .distantPast) > ($1.earnedDate ?? .distantPast) }.prefix(max(gained, 1))
+                guard let newest = fresh.first else { continue }
+                let earnedPoints = fresh.reduce(0) { $0 + Level.points($1.grade) }
+                let more = gained > 1 ? " +\(gained - 1)" : ""
+                let title = game.platinumEarned && !state.platinums.contains(game.id) ? M.newPlatinum : "\(M.newTrophy) · \(newest.grade.label)"
+                let lines = ["\(newest.name)\(more) — \(game.name)", M.gainedPoints(earnedPoints), totals].compactMap { $0 }
+                post(title, lines.joined(separator: "\n"), id: "new-\(game.id)")
             }
         }
         if let level = profile?.level {
