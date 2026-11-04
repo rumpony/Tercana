@@ -77,6 +77,12 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
         let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "code" }?.value
         AppLog.write("psn-login: redirect received, code \(code == nil ? "missing" : "present")")
         if let code, let onCode {
+            // Keep the account cookie too, so the login can renew itself after the refresh token lapses.
+            webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
+                if let npsso = cookies.first(where: { $0.name == "npsso" })?.value {
+                    Task { await PSNClient.shared.rememberSessionToken(npsso) }
+                }
+            }
             close()
             onCode(code)
         }

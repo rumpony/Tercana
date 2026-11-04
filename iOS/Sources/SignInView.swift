@@ -96,7 +96,15 @@ struct PSNLoginWeb: UIViewRepresentable {
             }
             decisionHandler(.cancel)
             let code = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "code" }?.value
-            if let code { finish(.code(code)) }
+            if let code {
+                // Keep the account cookie too, so the login can renew itself after the refresh token lapses.
+                webView.configuration.websiteDataStore.httpCookieStore.getAllCookies { cookies in
+                    if let npsso = cookies.first(where: { $0.name == "npsso" })?.value {
+                        Task { await PSNClient.shared.rememberSessionToken(npsso) }
+                    }
+                }
+                finish(.code(code))
+            }
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {

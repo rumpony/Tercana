@@ -57,6 +57,23 @@ actor PSNClient {
     // MARK: Sign-in
 
     func signIn(sessionToken npsso: String) async throws {
+        try await authorize(with: npsso.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    /// Keeps the account cookie from a browser sign-in so an expired refresh token can be replaced silently.
+    func rememberSessionToken(_ npsso: String) {
+        guard !npsso.isEmpty else { return }
+        SecureStore.set(npsso, for: Keys.sessionToken)
+    }
+
+    /// When the refresh token lapses, as Sony's two-month lifetime makes it do.
+    nonisolated static var loginExpiry: Date? {
+        SecureStore.string(for: Keys.refreshExpiry).flatMap(Double.init).map(Date.init(timeIntervalSince1970:))
+    }
+
+    nonisolated static var canRenewSilently: Bool { SecureStore.string(for: Keys.sessionToken) != nil }
+
+    private func authorize(with npsso: String) async throws {
         var components = URLComponents(string: "\(Self.authBase)/authorize")!
         components.queryItems = [
             URLQueryItem(name: "access_type", value: "offline"),
@@ -66,12 +83,19 @@ actor PSNClient {
             URLQueryItem(name: "scope", value: Self.scope),
         ]
         var request = URLRequest(url: components.url!)
-        request.setValue("npsso=\(npsso.trimmingCharacters(in: .whitespacesAndNewlines))", forHTTPHeaderField: "Cookie")
+        request.setValue("npsso=\(npsso)", forHTTPHeaderField: "Cookie")
         let (_, response) = try await session.data(for: request)
+        // Sony may hand back a fresher account cookie; keep whichever is newest.
+        let renewed = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Set-Cookie")?
+            .components(separatedBy: CharacterSet(charactersIn: ";,"))
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .first { $0.hasPrefix("npsso=") && $0.count > 6 }
+            .map { String($0.dropFirst(6)) }
         // Sony answers with a redirect whose query carries the one-time code.
         guard let location = (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Location"),
               let code = URLComponents(string: location)?.queryItems?.first(where: { $0.name == "code" })?.value
         else { throw PSNError.badSessionToken }
+        rememberSessionToken(renewed ?? npsso)
 
         try await requestTokens([
             "code": code,
@@ -108,6 +132,8 @@ actor PSNClient {
     func signOut() {
         SecureStore.set(nil, for: Keys.refreshToken)
         SecureStore.set(nil, for: Keys.accountID)
+        SecureStore.set(nil, for: Keys.sessionToken)
+        SecureStore.set(nil, for: Keys.refreshExpiry)
         accessToken = nil
         accessExpiry = .distantPast
         cache.removeAll()
@@ -278,8 +304,16 @@ actor PSNClient {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 {
+            // A stale access token, not necessarily a dead login: refresh once and retry.
             accessToken = nil
-            throw PSNError.expiredLogin
+            accessExpiry = .distantPast
+            request.setValue("Bearer \(try await validAccessToken())", forHTTPHeaderField: "Authorization")
+            let (retryData, retry) = try await session.data(for: request)
+            let retryStatus = (retry as? HTTPURLResponse)?.statusCode ?? 0
+            if retryStatus == 401 { throw PSNError.expiredLogin }
+            guard (200..<300).contains(retryStatus) else { throw PSNError.server(retryStatus) }
+            cache[cacheKey] = (Date(), retryData)
+            return try JSONDecoder().decode(T.self, from: retryData)
         }
         guard (200..<300).contains(status) else { throw PSNError.server(status) }
         cache[cacheKey] = (Date(), data)
@@ -296,8 +330,10 @@ actor PSNClient {
                 "token_format": "jwt",
                 "scope": Self.scope,
             ])
-        } catch {
-            throw PSNError.expiredLogin
+        } catch PSNError.badSessionToken {
+            // Refresh token rejected: start over from the saved account cookie, as PSNAWP does.
+            guard let npsso = SecureStore.string(for: Keys.sessionToken),
+                  (try? await authorize(with: npsso)) != nil else { throw PSNError.expiredLogin }
         }
         guard let accessToken else { throw PSNError.expiredLogin }
         return accessToken
@@ -313,21 +349,30 @@ actor PSNClient {
         request.httpBody = body.percentEncodedQuery?.data(using: .utf8)
 
         let (data, response) = try await session.data(for: request)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw PSNError.badSessionToken }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        // Only a 4xx means Sony refused the grant; anything else is a hiccup worth retrying later.
+        if (400..<500).contains(status) { throw PSNError.badSessionToken }
+        guard status == 200 else { throw PSNError.server(status) }
         struct Tokens: Decodable {
             let access_token: String
             let expires_in: Double
             let refresh_token: String?
+            let refresh_token_expires_in: Double?
         }
         let tokens = try JSONDecoder().decode(Tokens.self, from: data)
         accessToken = tokens.access_token
         accessExpiry = Date().addingTimeInterval(tokens.expires_in)
         if let refresh = tokens.refresh_token { SecureStore.set(refresh, for: Keys.refreshToken) }
+        if let life = tokens.refresh_token_expires_in {
+            SecureStore.set(String(Date().addingTimeInterval(life).timeIntervalSince1970), for: Keys.refreshExpiry)
+        }
     }
 
     private enum Keys {
         static let refreshToken = "psn.refreshToken"
         static let accountID = "psn.accountID"
+        static let sessionToken = "psn.sessionToken"
+        static let refreshExpiry = "psn.refreshExpiry"
     }
 }
 

@@ -72,6 +72,11 @@ extension M {
           "Total \(points.formatted()) points · \(trophies.formatted()) trophies · Level \(level)")
     }
     static var sendSample: String { t("Örnek bildirim gönder (5 sn)", "Send a sample alert (5 s)") }
+    static var loginExpiring: String { t("PSN oturumun bitmek üzere", "Your PSN login is about to expire") }
+    static func loginExpiringBody(_ date: Date) -> String {
+        t("\(date.formatted(date: .abbreviated, time: .omitted)) tarihinde dolacak. Uygulamadan bir kez yeniden giriş yap, sonrasında kendini yeniler.",
+          "It lapses on \(date.formatted(date: .abbreviated, time: .omitted)). Sign in once more in the app and it will renew itself after that.")
+    }
     static var seeAll: String { t("Tümü", "See all") }
     static func thisWeek(_ n: Int) -> String { t("Bu hafta \(n)", "\(n) this week") }
     static var onThisDay: String { t("Geçmişte bugün", "On this day") }

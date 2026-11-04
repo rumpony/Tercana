@@ -34,6 +34,7 @@ enum Notifier {
         var weeklySent: Date?
         var onThisDaySent: Date?
         var huntingSent: Date?
+        var warnedExpiry: Date?
     }
 
     private static var seen: Seen {
@@ -85,6 +86,12 @@ enum Notifier {
                 let lines = ["\(newest.name)\(more) — \(game.name)", M.gainedPoints(earnedPoints), totals].compactMap { $0 }
                 post(title, lines.joined(separator: "\n"), id: "new-\(game.id)")
             }
+        }
+        // Warn once, a few days ahead, when the login can't renew itself.
+        if notify, !PSNClient.canRenewSilently, let expiry = PSNClient.loginExpiry,
+           expiry < Date().addingTimeInterval(5 * 86_400), state.warnedExpiry != expiry {
+            post(M.loginExpiring, M.loginExpiringBody(expiry), id: "login-expiry")
+            state.warnedExpiry = expiry
         }
         if let level = profile?.level {
             if notify && state.level > 0 && level > state.level && Kind.level.isOn {
