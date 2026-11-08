@@ -32,7 +32,7 @@ struct GamesView: View {
             List {
                 Chips(selection: $scope, options: [(.all, M.all), (.close, M.close), (.plats, M.plats)])
                 .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
                 ForEach(games) { game in
                     NavigationLink(value: game) { GameRow(game: game) }
                         .swipeActions(edge: .leading) {
@@ -47,8 +47,9 @@ struct GamesView: View {
                                 Link(destination: link.url) { Label(link.title, systemImage: "book") }
                             }
                         }
+                        .listRowInsets(EdgeInsets(top: 12, leading: 28, bottom: 12, trailing: 28))
                         .listRowBackground(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(.white.opacity(0.06)).padding(.vertical, 4))
+                            .fill(.white.opacity(0.06)).padding(.vertical, 4).padding(.horizontal, 16))
                         .listRowSeparator(.hidden)
                 }
             }
@@ -97,7 +98,7 @@ struct GameRow: View {
                     if game.platinumEarned {
                         Image(systemName: "trophy.fill").foregroundStyle(TrophyGrade.platinum.color).font(.caption)
                     }
-                    Text("\(game.progress)%").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                    Text(S.percent(Double(game.progress) / 100)).font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 }
                 Bar(value: Double(game.progress) / 100, color: game.progress == 100 ? TrophyGrade.platinum.color : Style.glow)
                 GradeCounts(counts: game.earnedTrophies, defined: game.definedTrophies)

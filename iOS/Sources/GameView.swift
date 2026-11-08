@@ -189,11 +189,13 @@ struct GameView: View {
                                 .font(.caption.weight(.semibold)).foregroundStyle(.orange)
                                 .accessibilityLabel(M.missableWarning(missable))
                         }
+                        Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                     }
                     .padding(12)
+                    .contentShape(Rectangle())
                     .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .tint(.primary)
+                .buttonStyle(.plain)
             }
             HStack(spacing: 8) {
                 if let days = Insights.platinumETA(trophies) {
@@ -233,7 +235,7 @@ struct GameView: View {
     }
 
     private func pill(_ text: String, _ icon: String) -> some View {
-        Label(text, systemImage: icon).font(.caption.weight(.medium)).lineLimit(1)
+        Label(text, systemImage: icon).font(.caption.weight(.medium)).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 12).padding(.vertical, 8)
             .glassEffect(.regular, in: Capsule())
     }

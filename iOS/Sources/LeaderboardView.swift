@@ -9,7 +9,7 @@ struct LeaderboardView: View {
                 summary(latest)
                 ForEach(Array(latest.rows.enumerated()), id: \.element.id) { index, row in
                     NavigationLink(value: row.player) { rowView(index + 1, row, isMe: row.player.id == latest.me) }
-                        .listRowBackground(row.player.id == latest.me ? Style.glow.opacity(0.18) : nil)
+                        .listRowBackground(row.player.id == latest.me ? Style.glow.opacity(0.18) : Color.white.opacity(0.06))
                 }
             }
             Section {
@@ -63,12 +63,12 @@ struct LeaderboardView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title).font(.caption).foregroundStyle(.secondary)
             if let old, let oldRank = old.myRank, let newRank = new.myRank,
-               let oldPoints = old.myPoints, let newPoints = new.myPoints {
+               let oldPoints = old.myPoints, let newPoints = new.myPoints, oldRank != newRank || oldPoints != newPoints {
                 Text("\(M.rankMove(oldRank - newRank)) · \(M.pointsMove(newPoints - oldPoints)) \(M.points.lowercased())")
                     .font(.subheadline.weight(.semibold)).monospacedDigit()
                     .foregroundStyle(newPoints > oldPoints ? Style.glow : .primary)
             } else {
-                Text("–").font(.subheadline)
+                Text(M.noChange).font(.subheadline).foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

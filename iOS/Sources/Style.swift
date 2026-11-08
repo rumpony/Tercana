@@ -56,13 +56,13 @@ struct LevelRing: View {
                 .stroke(AngularGradient(colors: [Style.glow, TrophyGrade.platinum.color, TrophyGrade.gold.color, Style.glow], center: .center),
                         style: StrokeStyle(lineWidth: size * 0.09, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .shadow(color: Style.glow.opacity(0.6), radius: 10)
+                .shadow(color: Style.glow.opacity(0.3), radius: 6)
             VStack(spacing: 0) {
                 Text(showsPercent ? "\(level)" : "%\(level)")
                     .font(.system(size: size * (showsPercent ? 0.3 : 0.24), weight: .bold, design: .rounded)).monospacedDigit()
                     .contentTransition(.numericText())
                 if showsPercent {
-                    Text("%\(progress)").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    Text(M.toNextLevel(progress)).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 }
             }
         }
@@ -116,7 +116,7 @@ struct GameTile: View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .bottomLeading) {
                 Artwork(url: game.iconURL, size: 150)
-                Text("\(game.progress)%")
+                Text(S.percent(Double(game.progress) / 100))
                     .font(.caption.bold()).monospacedDigit()
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .glassEffect(.regular, in: Capsule())

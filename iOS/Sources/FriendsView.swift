@@ -22,7 +22,7 @@ struct FriendsView: View {
                     Section {
                         ForEach(feed.items) { item in
                             NavigationLink(value: item.player) {
-                                TrophyRow(trophy: item.trophy, subtitle: "\(item.player.onlineId) · \(item.game.name) · \(item.date.formatted(.relative(presentation: .named)))")
+                                TrophyRow(trophy: item.trophy, subtitle: "\(item.player.onlineId) · \(item.game.name) · \(item.date.formatted(.relative(presentation: .named).locale(S.locale)))")
                             }
                         }
                     }
@@ -123,9 +123,9 @@ struct PlayerView: View {
                                 Artwork(url: pair.mine.iconURL, size: 40)
                                 Text(pair.mine.name).font(.subheadline).lineLimit(2)
                                 Spacer()
-                                Text("\(pair.mine.progress)%").monospacedDigit()
+                                Text(S.percent(Double(pair.mine.progress) / 100)).monospacedDigit()
                                     .foregroundStyle(pair.mine.progress >= pair.theirs.progress ? Style.glow : .secondary)
-                                Text("\(pair.theirs.progress)%").monospacedDigit()
+                                Text(S.percent(Double(pair.theirs.progress) / 100)).monospacedDigit()
                                     .foregroundStyle(pair.theirs.progress > pair.mine.progress ? Style.glow : .secondary)
                             }
                             .font(.caption)

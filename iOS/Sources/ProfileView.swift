@@ -38,7 +38,7 @@ struct ProfileView: View {
                         VStack(spacing: 12) {
                             ForEach(Array(latest.enumerated()), id: \.offset) { _, item in
                                 NavigationLink(value: item.game) {
-                                    TrophyRow(trophy: item.trophy, subtitle: "\(item.game.name) · \(item.date.formatted(.relative(presentation: .named)))")
+                                    TrophyRow(trophy: item.trophy, subtitle: "\(item.game.name) · \(item.date.formatted(.relative(presentation: .named).locale(S.locale)))")
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -140,7 +140,7 @@ struct ProfileView: View {
                 }
             }
             NavigationLink { PlatinumWall(games: store.platinumGames) } label: {
-                action("trophy", "\(store.platinumGames.count)")
+                action("trophy", M.platinumWall)
             }
             NavigationLink { YearStory(earned: TrophyStats(TrophyLibrary.shared.entries).earned) } label: {
                 action("calendar", M.yearReview)

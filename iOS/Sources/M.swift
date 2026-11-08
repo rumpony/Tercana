@@ -81,6 +81,8 @@ extension M {
     static func thisWeek(_ n: Int) -> String { t("Bu hafta \(n)", "\(n) this week") }
     static var onThisDay: String { t("Geçmişte bugün", "On this day") }
     static func yearsAgo(_ n: Int) -> String { t("\(n) yıl önce", n == 1 ? "1 year ago" : "\(n) years ago") }
+    static func toNextLevel(_ p: Int) -> String { t("Sonraki seviye %\(p)", "Next level \(p)%") }
+    static var noChange: String { t("Değişmedi", "No change") }
     static var platinumWall: String { t("Platin duvarı", "Platinum wall") }
     static var yearReview: String { t("Yıl özeti", "Year in review") }
     static var bestMonth: String { t("En iyi ay", "Best month") }
