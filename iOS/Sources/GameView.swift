@@ -189,7 +189,6 @@ struct GameView: View {
                                 .font(.caption.weight(.semibold)).foregroundStyle(.orange)
                                 .accessibilityLabel(M.missableWarning(missable))
                         }
-                        Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                     }
                     .padding(12)
                     .contentShape(Rectangle())

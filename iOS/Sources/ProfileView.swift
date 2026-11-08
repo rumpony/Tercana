@@ -154,7 +154,7 @@ struct ProfileView: View {
             Image(systemName: icon).font(.title3)
             Text(title).font(.caption.weight(.medium)).lineLimit(1)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 56)
         .card(padding: 12)
     }
 
