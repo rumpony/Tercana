@@ -143,7 +143,7 @@ final class PSNWebLogin: NSObject, WKNavigationDelegate {
 
 private struct LoginHeader: View {
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             Image(systemName: "lock.shield").foregroundStyle(.tint)
             Text(S.webLoginHint).font(.callout)
             Spacer()

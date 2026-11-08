@@ -55,9 +55,9 @@ struct TrophiesView: View {
                     Label(item.title, systemImage: item.icon)
                         .font(.body.weight(section == item.rawValue ? .semibold : .regular))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 12).padding(.vertical, 9)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
                         .background(section == item.rawValue ? Style.glow.opacity(0.22) : .clear,
-                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -111,7 +111,7 @@ struct SignInView: View {
     @State private var manual = false
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 20) {
             Image(systemName: "trophy.circle.fill").font(.system(size: 54)).foregroundStyle(.tint)
             Text(S.connectPSN).font(.title2.bold())
             Text(S.connectIntroShort)
@@ -148,7 +148,7 @@ struct SignInView: View {
                         .disabled(token.isEmpty || store.loading)
                     }
                 }
-                .padding(.top, 6)
+                .padding(.top, 8)
             }
             .frame(maxWidth: 460)
             .font(.callout)

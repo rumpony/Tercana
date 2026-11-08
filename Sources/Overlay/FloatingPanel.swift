@@ -43,12 +43,12 @@ enum Toast {
     static func show(_ message: String, symbol: String = "info.circle", seconds: Double = 4) {
         let panel = Self.panel ?? FloatingPanel(clickThrough: true)
         Self.panel = panel
-        let view = HStack(spacing: 10) {
+        let view = HStack(spacing: 12) {
             Image(systemName: symbol).font(.title3)
-            Text(message).font(.system(size: 14, weight: .medium))
+            Text(message).font(.body.weight(.medium))
         }
         .foregroundStyle(.white)
-        .padding(.horizontal, 18)
+        .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(Color.black.opacity(0.82), in: Capsule())
         .fixedSize()
@@ -121,10 +121,10 @@ struct PromptView: View {
     let onClose: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             Image(systemName: "captions.bubble.fill").font(.title2).foregroundStyle(.tint)
             VStack(alignment: .leading, spacing: 2) {
-                Text(message).font(.system(size: 14, weight: .semibold))
+                Text(message).font(.body.weight(.semibold))
                 Text(hint).font(.caption).foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)
@@ -136,6 +136,7 @@ struct PromptView: View {
                 }
             }
             Button { onClose() } label: { Image(systemName: "xmark").font(.caption.weight(.bold)) }
+                .accessibilityLabel(S.close)
                 .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
         }
@@ -143,8 +144,8 @@ struct PromptView: View {
         .padding(.vertical, 12)
         .frame(minWidth: 460)
         .fixedSize()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.white.opacity(0.12)))
-        .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.white.opacity(0.12)))
+        .shadow(color: .black.opacity(0.12), radius: 6, y: 2)
     }
 }

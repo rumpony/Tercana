@@ -65,13 +65,13 @@ struct HomeView: View {
                     router.tab = tab
                 } label: {
                     // Icon and text spelled out: a Label in the toolbar would drop its title.
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         Image(systemName: tab.symbol)
                         Text(tab.title).lineLimit(1)
                     }
                         .font(.callout.weight(selected ? .semibold : .regular))
                         .foregroundStyle(selected ? .primary : .secondary)
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 16)
                         .frame(height: 30)
                         .background {
                             if selected {
@@ -103,12 +103,12 @@ private struct HomePage: View {
     private let controller = ControllerWatch.shared
 
     var body: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 24) {
             Spacer(minLength: 10)
             ZStack {
                 Circle().fill(app.isLive ? Style.glow.opacity(0.22) : Color.white.opacity(0.06))
                     .frame(width: 132, height: 132)
-                    .shadow(color: app.isLive ? Style.glow.opacity(0.6) : .clear, radius: 24)
+                    .shadow(color: app.isLive ? Style.glow.opacity(0.3) : .clear, radius: 8)
                 Circle().stroke(app.isLive ? Style.glow : Color.white.opacity(0.1), lineWidth: 3)
                     .frame(width: 132, height: 132)
                 Image(systemName: app.isLive ? "captions.bubble.fill" : "captions.bubble")
@@ -139,12 +139,12 @@ private struct HomePage: View {
             Button(S.newLiveArea) { app.startLive(reselect: true) }
                 .buttonStyle(.link)
             Spacer()
-            HStack(spacing: 18) {
+            HStack(spacing: 20) {
                 ForEach(HotKeys.Action.allCases, id: \.rawValue) { action in
                     Text("\(action.combo.label)  \(action.title)").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            .padding(.bottom, 14)
+            .padding(.bottom, 16)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: app.isLive)
@@ -156,7 +156,7 @@ private struct HomePage: View {
             .lineLimit(1)
             .frame(width: 210)
             .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
             .background(.white.opacity(0.06), in: Capsule())
             .overlay(Capsule().stroke(.white.opacity(0.06)))
     }

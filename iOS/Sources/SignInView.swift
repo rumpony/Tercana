@@ -21,7 +21,7 @@ struct SignInView: View {
                 failed = false
                 showingWeb = true
             } label: {
-                Text(S.signInWithPlayStation).frame(maxWidth: .infinity).padding(.vertical, 6)
+                Text(S.signInWithPlayStation).frame(maxWidth: .infinity).padding(.vertical, 8)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

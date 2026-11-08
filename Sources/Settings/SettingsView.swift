@@ -145,7 +145,7 @@ private struct ShortcutRecorder: View {
     @State private var monitor: Any?
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             Button {
                 recording ? stop() : start()
             } label: {
@@ -159,6 +159,7 @@ private struct ShortcutRecorder: View {
                 } label: {
                     Image(systemName: "arrow.uturn.backward")
                 }
+                .accessibilityLabel(S.resetShortcut)
                 .buttonStyle(.borderless)
                 .help(S.restoreDefault)
             }

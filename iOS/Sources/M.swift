@@ -105,10 +105,10 @@ extension M {
     static var notifyNew: String { t("Yeni kupa bildirimi", "New trophy alerts") }
     static var notifyHint: String { t("Arka planda ara sıra kontrol eder; iOS ne zaman izin verirse.", "Checks now and then in the background, whenever iOS allows.") }
     static var newTrophy: String { t("Yeni kupa", "New trophy") }
-    static var newPlatinum: String { t("Yeni platin!", "New platinum!") }
+    static var newPlatinum: String { t("Yeni platin", "New platinum") }
     static var theme: String { t("Renk", "Color") }
     static var level: String { t("Seviye", "Level") }
-    static var levelUp: String { t("Seviye atladın!", "Level up!") }
+    static var levelUp: String { t("Seviye atladın", "Level up") }
     static func levelReached(_ n: Int) -> String { t("Kupa seviyen \(n) oldu.", "You reached trophy level \(n).") }
     static var notifyLevel: String { t("Seviye atlama", "Level ups") }
     static var notifyOnThisDay: String { t("Geçmişte bugün hatırlatması", "On this day reminder") }

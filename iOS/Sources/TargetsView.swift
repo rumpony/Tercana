@@ -10,7 +10,7 @@ struct TargetsView: View {
                 ForEach(targets.sorted) { target in
                     let game = store.games.first { $0.id == target.gameID }
                     NavigationLink(value: game) {
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: 4) {
                             Text(target.trophyName).font(.subheadline.weight(.medium))
                             Text(target.gameName).font(.caption).foregroundStyle(.secondary)
                             if !target.note.isEmpty {

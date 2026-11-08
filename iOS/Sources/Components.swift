@@ -123,7 +123,7 @@ struct Chips<Value: Hashable>: View {
     @Namespace private var glow
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             ForEach(options.indices, id: \.self) { index in
                 let option = options[index]
                 let selected = option.value == selection
@@ -136,7 +136,7 @@ struct Chips<Value: Hashable>: View {
                         .foregroundStyle(selected ? .primary : .secondary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
+                        .padding(.vertical, 8)
                         .background {
                             if selected {
                                 Capsule().fill(Style.glow.opacity(0.3)).matchedGeometryEffect(id: "chip", in: glow)
@@ -150,6 +150,6 @@ struct Chips<Value: Hashable>: View {
         .padding(4)
         .background(.white.opacity(0.06), in: Capsule())
         .overlay(Capsule().stroke(.white.opacity(0.08)))
-        .padding(.vertical, 6)
+        .padding(.vertical, 8)
     }
 }

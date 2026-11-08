@@ -135,12 +135,12 @@ struct GameView: View {
             HStack(spacing: 12) {
                 Artwork(url: info?.iconURL ?? game.iconURL)
                     .frame(width: 44, height: 44)
-                    .clipShape(.rect(cornerRadius: 10))
-                VStack(alignment: .leading, spacing: 5) {
-                    HStack(spacing: 6) {
+                    .clipShape(.rect(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
                         Text(isBase ? M.baseTag : M.dlcTag)
                             .font(.caption2.weight(.bold))
-                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
                             .background(isBase ? Style.glow.opacity(0.35) : Color.white.opacity(0.12), in: .capsule)
                         Text(title).font(.subheadline.weight(.semibold)).lineLimit(1)
                     }
@@ -164,11 +164,11 @@ struct GameView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 16) {
                 Artwork(url: game.iconURL, size: 76)
                     .shadow(color: .black.opacity(0.4), radius: 10, y: 4)
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(game.name).font(.headline).lineLimit(2)
                     Text(game.platform).font(.caption).foregroundStyle(.secondary)
                 }
@@ -191,7 +191,7 @@ struct GameView: View {
                         }
                     }
                     .padding(12)
-                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .tint(.primary)
             }
@@ -207,7 +207,8 @@ struct GameView: View {
                     Haptic.tap()
                 } label: {
                     Image(systemName: Local.shared.isHunting(game) ? "scope" : "plus.viewfinder")
-                        .frame(width: 22, height: 22)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
                 }
                 .softButton()
                 .tint(Local.shared.isHunting(game) ? Style.glow : nil)
@@ -215,7 +216,7 @@ struct GameView: View {
                 Menu {
                     ForEach(GuideLinks.forGame(game.name)) { Link($0.title, destination: $0.url) }
                 } label: {
-                    Image(systemName: "book").frame(width: 22, height: 22)
+                    Image(systemName: "book").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
                 }
                 .softButton()
                 .accessibilityLabel(S.guides)
@@ -225,7 +226,7 @@ struct GameView: View {
         .background {
             // The game's own artwork, blurred, behind the header.
             AsyncImage(url: game.iconURL) { $0.resizable().scaledToFill() } placeholder: { Style.glow.opacity(0.25) }
-                .blur(radius: 40).opacity(0.6)
+                .opacity(0.18)
         }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(.white.opacity(0.08)))
@@ -233,7 +234,7 @@ struct GameView: View {
 
     private func pill(_ text: String, _ icon: String) -> some View {
         Label(text, systemImage: icon).font(.caption.weight(.medium)).lineLimit(1)
-            .padding(.horizontal, 10).padding(.vertical, 7)
+            .padding(.horizontal, 12).padding(.vertical, 8)
             .glassEffect(.regular, in: Capsule())
     }
 
@@ -274,8 +275,8 @@ struct TrophyRow: View {
         HStack(spacing: 12) {
             Artwork(url: trophy.iconURL, size: 44)
                 .opacity(trophy.earned ? 1 : 0.45)
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
                     Circle().fill(trophy.grade.color).frame(width: 8, height: 8)
                     Text(trophy.name).font(.subheadline.weight(.medium)).lineLimit(1)
                 }
@@ -283,7 +284,7 @@ struct TrophyRow: View {
                     .font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
             Spacer(minLength: 4)
-            VStack(alignment: .trailing, spacing: 3) {
+            VStack(alignment: .trailing, spacing: 4) {
                 if let rate = trophy.earnedRate {
                     Text(S.percent(rate / 100, digits: 1)).font(.caption).monospacedDigit()
                 }
@@ -313,9 +314,9 @@ struct TrophySheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 18) {
+                VStack(spacing: 20) {
                     ZStack {
-                        Circle().fill(trophy.grade.color.opacity(0.25)).frame(width: 150, height: 150).blur(radius: 30)
+                        Circle().fill(trophy.grade.color.opacity(0.12)).frame(width: 150, height: 150)
                         Artwork(url: trophy.iconURL, size: 112)
                             .overlay(alignment: .bottomTrailing) {
                                 Image(systemName: "trophy.circle.fill").font(.title).foregroundStyle(trophy.grade.color)
@@ -323,7 +324,7 @@ struct TrophySheet: View {
                             }
                             .grayscale(trophy.earned ? 0 : 0.8)
                     }
-                    VStack(spacing: 6) {
+                    VStack(spacing: 8) {
                         Text(trophy.name).font(.title2.bold()).multilineTextAlignment(.center)
                         if trophy.hidden && !trophy.earned && !revealed {
                             Button(S.revealSpoiler) { revealed = true }.font(.footnote)
@@ -343,7 +344,7 @@ struct TrophySheet: View {
                             .onChange(of: note) { targets.setNote(note, for: trophy, in: game) }
                             .card(padding: 14)
                     }
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         Link(destination: GuideLinks.forTrophy(trophy.name, game: game.name)) {
                             Label(S.searchYouTube, systemImage: "play.rectangle").frame(maxWidth: .infinity)
                         }
@@ -387,7 +388,7 @@ struct TrophySheet: View {
     }
 
     private var actions: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             if trophy.earned {
                 actionButton(showcase.contains(trophy, in: game) ? S.removeFromShowcase : S.addToShowcase, "star") {
                     showcase.toggle(trophy, in: game)
@@ -410,7 +411,7 @@ struct TrophySheet: View {
             action()
             Haptic.tap()
         } label: {
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Image(systemName: icon).font(.title3)
                 Text(title).font(.caption.weight(.medium)).multilineTextAlignment(.center).lineLimit(2)
             }

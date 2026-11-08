@@ -58,7 +58,7 @@ struct PlatinumMoment: View {
     private var card: some View {
         VStack(spacing: 16) {
             Image(systemName: "trophy.fill").font(.system(size: 54)).foregroundStyle(TrophyGrade.platinum.color.gradient)
-                .shadow(color: TrophyGrade.platinum.color, radius: 20)
+                .shadow(color: TrophyGrade.platinum.color.opacity(0.4), radius: 8)
             Text(M.newPlatinum).font(.title.bold())
             Artwork(url: game.iconURL, size: 120)
             Text(game.name).font(.headline).multilineTextAlignment(.center)
@@ -75,6 +75,7 @@ struct PlatinumMoment: View {
 
 /// Year in review as full-screen story cards, each one shareable.
 struct YearStory: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var heroSize: CGFloat = 64
     let earned: [Insights.Earned]
     @State private var year = Calendar.current.component(.year, from: Date())
 
@@ -89,7 +90,7 @@ struct YearStory: View {
             .padding(.horizontal)
             TabView {
                 ForEach(Array(pages(review).enumerated()), id: \.offset) { _, page in
-                    VStack(spacing: 18) {
+                    VStack(spacing: 20) {
                         page
                         let image = snapshot(page)
                         ShareLink(item: image, preview: SharePreview(M.yearReview, image: image)) {
@@ -117,7 +118,7 @@ struct YearStory: View {
         if !r.platinums.isEmpty {
             list.append(AnyView(storyCard {
                 Text(S.platinums).font(.headline).foregroundStyle(.secondary)
-                Text("\(r.platinums.count)").font(.system(size: 64, weight: .heavy, design: .rounded))
+                Text("\(r.platinums.count)").font(.system(size: heroSize, weight: .bold, design: .rounded))
                 LazyVGrid(columns: Array(repeating: GridItem(.fixed(52)), count: 4), spacing: 8) {
                     ForEach(r.platinums.prefix(12)) { Artwork(url: $0.iconURL, size: 52) }
                 }
@@ -138,14 +139,14 @@ struct YearStory: View {
     private func story(_ title: String, _ value: String, _ caption: String, footer: String? = nil) -> some View {
         storyCard {
             Text(title).font(.headline).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 64, weight: .heavy, design: .rounded)).minimumScaleFactor(0.5).lineLimit(1)
+            Text(value).font(.system(size: heroSize, weight: .bold, design: .rounded)).minimumScaleFactor(0.5).lineLimit(1)
             Text(caption).font(.title3.weight(.semibold))
             if let footer { Text(footer).font(.footnote).foregroundStyle(.secondary) }
         }
     }
 
     private func storyCard(@ViewBuilder _ content: () -> some View) -> some View {
-        VStack(spacing: 14) { content() }
+        VStack(spacing: 16) { content() }
             .padding(28)
             .frame(width: 320, height: 420)
             .background(LinearGradient(colors: [Style.glow.mix(with: .black, by: 0.45), Color(red: 0.05, green: 0.06, blue: 0.15)],

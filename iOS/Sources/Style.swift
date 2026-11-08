@@ -19,7 +19,7 @@ enum Style {
 extension View {
     /// Rounded glass panel used for every block of content.
     func card(padding: CGFloat = 16) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
         #if os(iOS)
         return self.padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -59,7 +59,7 @@ struct LevelRing: View {
                 .shadow(color: Style.glow.opacity(0.6), radius: 10)
             VStack(spacing: 0) {
                 Text(showsPercent ? "\(level)" : "%\(level)")
-                    .font(.system(size: size * (showsPercent ? 0.3 : 0.24), weight: .heavy, design: .rounded)).monospacedDigit()
+                    .font(.system(size: size * (showsPercent ? 0.3 : 0.24), weight: .bold, design: .rounded)).monospacedDigit()
                     .contentTransition(.numericText())
                 if showsPercent {
                     Text("%\(progress)").font(.caption.weight(.semibold)).foregroundStyle(.secondary)

@@ -46,7 +46,7 @@ struct LeaderboardView: View {
 
     private func summary(_ latest: Leaderboard.Snapshot) -> some View {
         Section {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 16) {
                 if let rank = latest.myRank {
                     Text(M.yourRank(rank, latest.rows.count)).font(.title3.bold())
                 }
@@ -55,7 +55,7 @@ struct LeaderboardView: View {
                     move(M.sinceYesterday, from: board.yesterday, to: latest)
                 }
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
         }
     }
 
@@ -82,7 +82,7 @@ struct LeaderboardView: View {
                 .frame(width: 36, height: 36).clipShape(Circle())
             VStack(alignment: .leading, spacing: 2) {
                 Text(row.player.onlineId).font(.subheadline.weight(isMe ? .bold : .medium)).lineLimit(1)
-                Text("\(M.level) \(row.level) · 🏆 \(row.counts.platinum)").font(.caption).foregroundStyle(.secondary)
+                (Text("\(M.level) \(row.level) · ") + Text(Image(systemName: "trophy.fill")) + Text(" \(row.counts.platinum)")).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             Text(row.points.formatted()).font(.subheadline.monospacedDigit())

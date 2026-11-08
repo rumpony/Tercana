@@ -22,7 +22,7 @@ struct SubtitleLogView: View {
                 List(log.entries) { entry in
                     VStack(alignment: .leading, spacing: 4) {
                         SpeakerLine(text: entry.translation)
-                            .font(.system(size: 15))
+                            .font(.title3)
                             .textSelection(.enabled)
                         if showOriginal {
                             Text(entry.original)

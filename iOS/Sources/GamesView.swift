@@ -47,7 +47,7 @@ struct GamesView: View {
                                 Link(destination: link.url) { Label(link.title, systemImage: "book") }
                             }
                         }
-                        .listRowBackground(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .listRowBackground(RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .fill(.white.opacity(0.06)).padding(.vertical, 4))
                         .listRowSeparator(.hidden)
                 }
@@ -87,7 +87,7 @@ struct GameRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Artwork(url: game.iconURL, size: 52)
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(game.name).font(.subheadline.weight(.medium)).lineLimit(1)
                     Spacer()

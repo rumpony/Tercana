@@ -15,18 +15,18 @@ struct Heatmap: View {
         let symbols = S.locale.calendar.veryShortWeekdaySymbols
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 4) {
-                Color.clear.frame(width: 14, height: 1)
+                Color.clear.frame(width: 16, height: 1)
                 ForEach(0..<weeks, id: \.self) { column in
                     let monday = calendar.date(byAdding: .day, value: (column - weeks + 1) * 7, to: lastMonday)!
                     let day = calendar.component(.day, from: monday)
                     Text(day <= 7 ? S.locale.calendar.shortMonthSymbols[calendar.component(.month, from: monday) - 1] : "")
-                        .font(.system(size: 9)).foregroundStyle(.secondary).fixedSize()
+                        .font(.caption2).foregroundStyle(.secondary).fixedSize()
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             ForEach(0..<7, id: \.self) { row in
                 HStack(spacing: 4) {
-                    Text(symbols[(row + 1) % 7]).font(.system(size: 9)).foregroundStyle(.secondary).frame(width: 14)
+                    Text(symbols[(row + 1) % 7]).font(.caption2).foregroundStyle(.secondary).frame(width: 16)
                     ForEach(0..<weeks, id: \.self) { column in
                         let day = calendar.date(byAdding: .day, value: (column - weeks + 1) * 7 + row, to: lastMonday)!
                         let value = counts[day] ?? 0
@@ -35,9 +35,7 @@ struct Heatmap: View {
                                   : value == 0 ? Color.white.opacity(0.07)
                                   : Style.glow.opacity(0.35 + 0.65 * Double(value) / Double(peak)))
                             .aspectRatio(1, contentMode: .fit)
-                            .overlay {
-                                if value > 0 { Text("\(value)").font(.system(size: 8, weight: .bold)).foregroundStyle(.black.opacity(0.7)) }
-                            }
+                            .accessibilityLabel(Text("\(value)"))
                     }
                 }
             }
@@ -60,7 +58,7 @@ struct ProfileCard: View {
                 Text(S.trophyLevel(profile.level)).font(.headline)
             }
             Bar(value: Double(profile.progress) / 100)
-            HStack(spacing: 18) {
+            HStack(spacing: 20) {
                 ForEach(TrophyGrade.allCases.reversed(), id: \.self) { grade in
                     VStack(spacing: 2) {
                         Text("\(profile.earnedTrophies.value(grade))").font(.title2.bold()).monospacedDigit()
@@ -89,7 +87,7 @@ struct PlatinumWall: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 10)], spacing: 10) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 12)], spacing: 12) {
                 ForEach(games) { game in
                     NavigationLink(value: game) { Artwork(url: game.iconURL, size: 72) }
                 }
@@ -104,7 +102,7 @@ struct PlatinumWall: View {
     }
 
     private var wallImage: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.fixed(56), spacing: 6), count: 6), spacing: 6) {
+        LazyVGrid(columns: Array(repeating: GridItem(.fixed(56), spacing: 8), count: 6), spacing: 8) {
             ForEach(games) { Artwork(url: $0.iconURL, size: 56) }
         }
         .padding(16)

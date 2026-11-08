@@ -35,7 +35,7 @@ final class ControllerWatch {
     var summary: String? {
         guard let name else { return nil }
         guard let batteryLevel else { return name }
-        return "\(name) · \(S.percent(Double(batteryLevel)))\(isCharging ? " ⚡︎" : "")"
+        return "\(name) · \(S.percent(Double(batteryLevel)))\(isCharging ? " · " + S.charging : "")"
     }
 
     private func refresh() {

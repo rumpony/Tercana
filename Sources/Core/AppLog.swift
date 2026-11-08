@@ -3,6 +3,7 @@ import Foundation
 /// Plain-text event log for diagnosing problems outside live translation (sign-in, sync…).
 /// Written only while debug recording is on: ~/Library/Application Support/Tercana/Logs/app.log
 enum AppLog {
+    // ai-design-check-ignore-next-line sentence-case -- logger identifier, not interface text
     private static let queue = DispatchQueue(label: "Tercana.AppLog")
 
     static func write(_ message: String) {

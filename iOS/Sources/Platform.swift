@@ -97,13 +97,15 @@ extension View {
         #else
         overlay(alignment: .topTrailing) {
             Button(action: action) {
-                Image(systemName: "xmark").font(.system(size: 11, weight: .bold))
-                    .frame(width: 26, height: 26)
-                    .background(.white.opacity(0.1), in: Circle())
+                Image(systemName: "xmark").font(.caption2.weight(.bold))
+                    .frame(width: 44, height: 44)
+                    .background(.white.opacity(0.1), in: Circle().inset(by: 9))
+                    .contentShape(Rectangle())
             }
+            .accessibilityLabel(S.close)
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)
-            .padding(14)
+            .padding(16)
         }
         .frame(minWidth: 460, minHeight: 520)
         #endif
@@ -115,7 +117,7 @@ struct SoftButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.horizontal, 14).padding(.vertical, 8)
+            .padding(.horizontal, 16).padding(.vertical, 8)
             .background(prominent ? Style.glow.opacity(0.35) : Color.white.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(.white.opacity(0.08)))

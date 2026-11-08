@@ -75,6 +75,7 @@ struct ProfileView: View {
             .refreshable { await store.load() }
             .toolbar {
                 Button { showingAccount = true } label: { Image(systemName: "gearshape") }
+                    .accessibilityLabel(M.account)
             }
             .sheet(isPresented: $showingAccount) { AccountSheet() }
         }
@@ -108,7 +109,7 @@ struct ProfileView: View {
     }
 
     private func nowPlaying(_ game: TrophyGame) -> some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             Artwork(url: game.iconURL, size: 56)
             VStack(alignment: .leading, spacing: 4) {
                 Label(S.nowPlaying, systemImage: "dot.radiowaves.left.and.right")
@@ -149,7 +150,7 @@ struct ProfileView: View {
     }
 
     private func action(_ icon: String, _ title: String) -> some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Image(systemName: icon).font(.title3)
             Text(title).font(.caption.weight(.medium)).lineLimit(1)
         }
@@ -162,7 +163,7 @@ struct ProfileView: View {
         if !games.isEmpty {
             SectionTitle(text: title)
             ScrollView(.horizontal) {
-                HStack(spacing: 14) {
+                HStack(spacing: 16) {
                     ForEach(games) { game in
                         NavigationLink(value: game) { GameTile(game: game) }.buttonStyle(.plain)
                     }

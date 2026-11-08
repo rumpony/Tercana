@@ -51,11 +51,11 @@ struct ResultView: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             if let translation {
                 ScrollView {
                     Text(translation)
-                        .font(.system(size: 16))
+                        .font(.title3)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -68,7 +68,7 @@ struct ResultView: View {
                 Divider()
                 ScrollView {
                     Text(original)
-                        .font(.system(size: 12))
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)

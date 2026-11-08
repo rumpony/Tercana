@@ -41,9 +41,9 @@ private struct MenuContent: View {
         Button(S.subtitleLog) { app.showSubtitleLog() }
         Button(S.trophies) { app.showTrophies() }
         Divider()
-        Text("🎮 " + (controller.summary ?? S.noController))
+        Label(controller.summary ?? S.noController, systemImage: "gamecontroller")
         if prefs.debugRecording {
-            Button("🔴 " + S.debugOn + " · " + S.openDebugFolder) { DebugRecorder.shared.openFolder() }
+            Button { DebugRecorder.shared.openFolder() } label: { Label(S.debugOn + " · " + S.openDebugFolder, systemImage: "record.circle") }
         }
         Divider()
         Button(S.settings) { app.showSettings() }

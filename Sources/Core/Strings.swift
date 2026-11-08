@@ -84,6 +84,8 @@ enum S {
     static var noTextFound: String { pick("Çevrilecek yazı bulunamadı.", "No text found to translate.", "Kein Text zum Übersetzen gefunden.", "No se encontró texto para traducir.", "Aucun texte à traduire.") }
     static var copy: String { pick("Kopyala", "Copy", "Kopieren", "Copiar", "Copier") }
     static var close: String { pick("Kapat", "Close", "Schließen", "Cerrar", "Fermer") }
+    static var charging: String { pick("şarj oluyor", "charging", "lädt", "cargando", "en charge") }
+    static var resetShortcut: String { pick("Varsayılan kısayola dön", "Reset to default shortcut", "Standardkürzel wiederherstellen", "Restablecer atajo predeterminado", "Rétablir le raccourci par défaut") }
 
     // MARK: Errors
     static var errorNoPermission: String { pick("Ekran kaydı izni yok. Sistem Ayarları → Gizlilik ve Güvenlik → Ekran Kaydı'ndan Tercana'i aç.", "Screen recording isn't allowed. Turn on Tercana in System Settings → Privacy & Security → Screen Recording.", "Bildschirmaufnahme ist nicht erlaubt. Aktiviere Tercana unter Systemeinstellungen → Datenschutz & Sicherheit → Bildschirmaufnahme.", "La grabación de pantalla no está permitida. Activa Tercana en Ajustes del Sistema → Privacidad y seguridad → Grabación de pantalla.", "L'enregistrement de l'écran n'est pas autorisé. Activez Tercana dans Réglages Système → Confidentialité et sécurité → Enregistrement de l'écran.") }
