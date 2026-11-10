@@ -23,6 +23,9 @@ enum TextReader {
         request.recognitionLevel = quality == .fast ? .fast : .accurate
         request.usesLanguageCorrection = true
         request.recognitionLanguages = [Locale.Language(identifier: language)]
+        // Names from translation packs ("Kratos", "Atreus") so they aren't "corrected" into other words.
+        let names = TranslationPacks.shared.customWords
+        if !names.isEmpty { request.customWords = names }
         let observations = try await request.perform(on: image)
         return observations
             .compactMap { observation -> Line? in
