@@ -35,6 +35,10 @@ final class Preferences {
     var batteryAlerts: Bool {
         didSet { defaults.set(batteryAlerts, forKey: Keys.batteryAlerts) }
     }
+    /// Serve the live translation as a web page for a phone or OBS.
+    var webSubtitles: Bool {
+        didSet { defaults.set(webSubtitles, forKey: Keys.webSubtitles); SubtitleWebView.shared.setEnabled(webSubtitles) }
+    }
     /// Opacity of the box behind the translated subtitle.
     var subtitleBackground: Double {
         didSet { defaults.set(subtitleBackground, forKey: Keys.subtitleBackground) }
@@ -84,6 +88,7 @@ final class Preferences {
         followRemotePlay = defaults.bool(forKey: Keys.followRemotePlay)
         remotePlayAction = RemotePlayAction(rawValue: defaults.string(forKey: Keys.remotePlayAction) ?? "") ?? .ask
         batteryAlerts = defaults.bool(forKey: Keys.batteryAlerts)
+        webSubtitles = defaults.bool(forKey: Keys.webSubtitles)
         subtitleFontSize = defaults.double(forKey: Keys.subtitleFontSize)
         liveRegion = defaults.string(forKey: Keys.liveRegion).map { NSRectFromString($0) }
     }
@@ -95,6 +100,7 @@ final class Preferences {
         static let followRemotePlay = "followRemotePlay"
         static let remotePlayAction = "remotePlayAction"
         static let batteryAlerts = "batteryAlerts"
+        static let webSubtitles = "webSubtitles"
         static let subtitleFontSize = "subtitleFontSize"
         static let liveRegion = "liveRegion"
         static let subtitleBackground = "subtitleBackground"

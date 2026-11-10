@@ -6,6 +6,7 @@ import Translation
 struct SettingsView: View {
     @Bindable private var prefs = Preferences.shared
     @State private var packStatus: LanguageAvailability.Status?
+    @State private var packNames = TranslationPacks.shared.names
     @State private var downloadConfig: TranslationSession.Configuration?
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var psnSignedIn = false
@@ -73,6 +74,22 @@ struct SettingsView: View {
                 }
                 Text(S.followRemotePlayHint)
                     .font(.caption).foregroundStyle(.secondary)
+                Toggle(S.webSubtitles, isOn: $prefs.webSubtitles)
+                if prefs.webSubtitles {
+                    ForEach(SubtitleWebView.addresses, id: \.self) { address in
+                        Link(address, destination: URL(string: address)!).font(.caption.monospaced())
+                    }
+                    Text(S.webSubtitlesHint).font(.caption).foregroundStyle(.secondary)
+                }
+                HStack {
+                    Text(S.translationPacks)
+                    Spacer()
+                    Text(packNames.isEmpty ? S.noPacks : packNames.joined(separator: ", "))
+                        .foregroundStyle(.secondary).lineLimit(1)
+                    Button(S.reloadPacks) { TranslationPacks.shared.reload(); packNames = TranslationPacks.shared.names }
+                    Button(S.openPacksFolder) { TranslationPacks.shared.openFolder() }
+                }
+                Text(S.packsHint).font(.caption).foregroundStyle(.secondary)
             }
 
             Section(S.recognition) {

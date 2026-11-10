@@ -18,7 +18,11 @@ final class LiveTranslator {
     var onStop: ((String?) -> Void)?
 
     private(set) var state: State = .idle {
-        didSet { if state != oldValue { onStateChange?(state) } }
+        didSet {
+            guard state != oldValue else { return }
+            onStateChange?(state)
+            if case .subtitle(let text) = state { SubtitleWebView.shared.show(text) } else { SubtitleWebView.shared.show("") }
+        }
     }
     private(set) var isRunning = false
     /// Where the subtitle text sits on screen (global coordinates), so the translation can cover
@@ -45,6 +49,7 @@ final class LiveTranslator {
     }
 
     func start() {
+        if prefs.webSubtitles { SubtitleWebView.shared.start() }
         guard !isRunning else { return }
         isRunning = true
         state = .waiting
@@ -181,8 +186,14 @@ final class LiveTranslator {
         let parts = SubtitleText.splitSpeaker(line)
         // Games mix in other languages ("Ai posti! Pronti!"); translate those from what they are.
         let from = SubtitleText.likelyLanguage(of: parts.line, expected: source) ?? source
-        let body = from == target ? parts.line
-            : try await Translator.shared.translate(parts.line, from: from, to: target)
+        let body: String
+        if from == target {
+            body = parts.line
+        } else if let packed = TranslationPacks.shared.translation(of: parts.line, from: from, to: target) {
+            body = packed
+        } else {
+            body = try await Translator.shared.translate(parts.line, from: from, to: target)
+        }
         return parts.speaker.map { "\($0): \(body)" } ?? body
     }
 
