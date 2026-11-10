@@ -23,6 +23,21 @@ final class Translator {
     private var sessionPair: (String, String)?
     private var cache: [String: String] = [:]
     private var cacheOrder: [String] = []
+    private var saveScheduled = false
+    /// Translations kept between launches, so a line seen before (menus, recurring lines) shows at once.
+    private static let cacheFile = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("Tercana/translations.json")
+    private static let cacheLimit = 5000
+
+    init() {
+        if let data = try? Data(contentsOf: Self.cacheFile),
+           let saved = try? JSONDecoder().decode([[String]].self, from: data) {
+            for pair in saved.suffix(Self.cacheLimit) where pair.count == 2 {
+                if cache[pair[0]] == nil { cacheOrder.append(pair[0]) }
+                cache[pair[0]] = pair[1]
+            }
+        }
+    }
     private var inFlight: [String: Task<String, Error>] = [:]
 
     func translate(_ text: String, from source: String, to target: String) async throws -> String {
@@ -62,10 +77,27 @@ final class Translator {
     }
 
     private func remember(_ value: String, for key: String) {
+        if cache[key] == nil { cacheOrder.append(key) }
         cache[key] = value
-        cacheOrder.append(key)
-        if cacheOrder.count > 500 {
+        if cacheOrder.count > Self.cacheLimit {
             cache[cacheOrder.removeFirst()] = nil
+        }
+        scheduleSave()
+    }
+
+    /// Writes the cache a few seconds after the last new translation, off the main thread.
+    private func scheduleSave() {
+        guard !saveScheduled else { return }
+        saveScheduled = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            self.saveScheduled = false
+            let pairs = self.cacheOrder.compactMap { key in self.cache[key].map { [key, $0] } }
+            Task.detached(priority: .utility) {
+                guard let data = try? JSONEncoder().encode(pairs) else { return }
+                try? FileManager.default.createDirectory(at: Self.cacheFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? data.write(to: Self.cacheFile, options: .atomic)
+            }
         }
     }
 }

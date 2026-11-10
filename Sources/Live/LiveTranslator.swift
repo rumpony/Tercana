@@ -36,6 +36,11 @@ final class LiveTranslator {
     /// The subtitle currently on the game screen; a late translation for an older line is dropped.
     private var onScreen = ""
     private var translating = false
+    /// Apple's translation handles one request at a time, so prefetches run one by one and only the
+    /// newest waiting line is kept: a typewriter line no longer queues every half-typed version
+    /// ahead of the finished one (measured: 2.0 s instead of 0.6 s for the final line).
+    private var prefetchWanted: String?
+    private var prefetching = false
     /// When each reading was first seen, for prefetching and end-to-end timing.
     private var firstSeen: [String: ContinuousClock.Instant] = [:]
     private var lastReadable = ""
@@ -118,10 +123,7 @@ final class LiveTranslator {
             let isNew = firstSeen[readable] == nil
             if firstSeen.count > 200 { firstSeen.removeAll() }
             firstSeen[readable] = .now
-            if isNew {
-                let line = readable
-                Task { _ = try? await self.translate(line) }
-            }
+            if isNew { prefetch(readable) }
         }
         lastReadable = readable
         let change = stabilizer.feed(readable)
@@ -142,6 +144,20 @@ final class LiveTranslator {
             var final = record
             final.decision = Self.describe(change)
             recorder.log(final)
+        }
+    }
+
+    private func prefetch(_ line: String) {
+        prefetchWanted = line
+        guard !prefetching else { return }
+        prefetching = true
+        Task { [weak self] in
+            while let self, let next = self.prefetchWanted {
+                self.prefetchWanted = nil
+                // The confirmed line is being translated already; don't wait behind an older guess.
+                if next != self.onScreen || !self.translating { _ = try? await self.translate(next) }
+            }
+            self?.prefetching = false
         }
     }
 
