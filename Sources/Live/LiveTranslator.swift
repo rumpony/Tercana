@@ -18,11 +18,7 @@ final class LiveTranslator {
     var onStop: ((String?) -> Void)?
 
     private(set) var state: State = .idle {
-        didSet {
-            guard state != oldValue else { return }
-            onStateChange?(state)
-            if case .subtitle(let text) = state { SubtitleWebView.shared.show(text) } else { SubtitleWebView.shared.show("") }
-        }
+        didSet { if state != oldValue { onStateChange?(state) } }
     }
     private(set) var isRunning = false
     /// Where the subtitle text sits on screen (global coordinates), so the translation can cover
@@ -49,7 +45,6 @@ final class LiveTranslator {
     }
 
     func start() {
-        if prefs.webSubtitles { SubtitleWebView.shared.start() }
         guard !isRunning else { return }
         isRunning = true
         state = .waiting

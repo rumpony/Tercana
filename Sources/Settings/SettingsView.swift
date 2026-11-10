@@ -74,13 +74,6 @@ struct SettingsView: View {
                 }
                 Text(S.followRemotePlayHint)
                     .font(.caption).foregroundStyle(.secondary)
-                Toggle(S.webSubtitles, isOn: $prefs.webSubtitles)
-                if prefs.webSubtitles {
-                    ForEach(SubtitleWebView.addresses, id: \.self) { address in
-                        Link(address, destination: URL(string: address)!).font(.caption.monospaced())
-                    }
-                    Text(S.webSubtitlesHint).font(.caption).foregroundStyle(.secondary)
-                }
                 HStack {
                     Text(S.translationPacks)
                     Spacer()
