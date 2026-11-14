@@ -9,7 +9,8 @@ import Foundation
 /// { "name": "My game", "language": "en-to-tr", "names": ["Kratos", "Atreus"],
 ///   "terms": [ { "en": "No cap.", "tr": "Yalan yok." } ] }
 /// `names` (optional) are taught to text recognition so character and place names are read correctly.
-/// Lines also match with small OCR mistakes ("I'II" for "I'll").
+/// Lines also match with small OCR mistakes ("I'II" for "I'll") or sentence by
+/// sentence. Keep terms in dialogue order: the line after the last match wins close calls.
 final class TranslationPacks {
     static let shared = TranslationPacks()
 
@@ -27,8 +28,18 @@ final class TranslationPacks {
     }
 
     private(set) var names: [String] = []
-    /// "source>target" → normalized source line → translation.
-    private var lookup: [String: [String: String]] = [:]
+    /// One pack's lines for a language pair, in file order (dialogue order for packs made from game files).
+    private struct Table {
+        var keys: [String] = []
+        var texts: [String] = []
+        var exact: [String: Int] = [:]
+        /// Word (3+ letters) → entries that contain it, for finding close lines without scanning all of them.
+        var words: [String: [Int]] = [:]
+    }
+    /// "source>target" → lines.
+    private var tables: [String: Table] = [:]
+    /// The entry of the last matched line, per pair: the next line of dialogue usually follows it.
+    private var lastMatch: [String: Int] = [:]
     /// Character and place names from all packs, for text recognition.
     private(set) var customWords: [String] = []
 
@@ -37,7 +48,7 @@ final class TranslationPacks {
     func reload() {
         try? FileManager.default.createDirectory(at: Self.folder, withIntermediateDirectories: true)
         let files = (try? FileManager.default.contentsOfDirectory(at: Self.folder, includingPropertiesForKeys: nil)) ?? []
-        var lookup: [String: [String: String]] = [:]
+        var tables: [String: Table] = [:]
         var names: [String] = []
         var words: Set<String> = []
         for file in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) where file.pathExtension.lowercased() == "json" {
@@ -46,30 +57,85 @@ final class TranslationPacks {
                 continue
             }
             let pair = (pack.language ?? "en-to-tr").replacingOccurrences(of: "-to-", with: ">")
+            var table = tables[pair] ?? Table()
             for term in pack.terms where !term.tr.isEmpty {
-                lookup[pair, default: [:]][Self.normalize(term.en)] = term.tr
+                let key = Self.normalize(term.en)
+                guard !key.isEmpty else { continue }
+                if let index = table.exact[key] { table.texts[index] = term.tr; continue }
+                let index = table.keys.count
+                table.keys.append(key)
+                table.texts.append(term.tr)
+                table.exact[key] = index
+                for word in Set(key.components(separatedBy: " ")) where word.count >= 3 { table.words[word, default: []].append(index) }
             }
+            tables[pair] = table
             names.append(pack.name)
             words.formUnion(pack.names ?? [])
         }
-        self.lookup = lookup
+        self.tables = tables
+        lastMatch = [:]
         self.names = names
         customWords = words.sorted()
     }
 
-    /// The pack translation for the whole line, if a pack has it.
+    /// The pack translation for the line, if a pack has it: the whole line or every sentence of it.
     func translation(of line: String, from source: String, to target: String) -> String? {
-        guard let table = lookup["\(source)>\(target)"] else { return nil }
-        let key = Self.normalize(line)
-        if let exact = table[key] { return exact }
-        // OCR often gets a letter or two wrong; accept a close line of about the same length.
-        guard key.count >= 8 else { return nil }
-        var best: (score: Double, text: String)?
-        for (candidate, text) in table where abs(candidate.count - key.count) <= max(2, key.count / 10) {
-            let score = Self.similarity(candidate, key)
-            if score >= 0.9, score > (best?.score ?? 0) { best = (score, text) }
+        let pair = "\(source)>\(target)"
+        guard let table = tables[pair] else { return nil }
+        if let hit = match(Self.normalize(line), in: table, pair: pair) { return hit }
+        // Two short lines shown together: use the pack only when it has every sentence.
+        let sentences = Self.sentences(line)
+        guard sentences.count > 1 else { return nil }
+        var parts: [String] = []
+        for sentence in sentences {
+            guard let hit = match(Self.normalize(sentence), in: table, pair: pair) else { return nil }
+            parts.append(hit)
         }
-        return best?.text
+        return parts.joined(separator: " ")
+    }
+
+    private func match(_ key: String, in table: Table, pair: String) -> String? {
+        guard !key.isEmpty else { return nil }
+        if let index = table.exact[key] { lastMatch[pair] = index; return table.texts[index] }
+        // OCR often gets a letter or two wrong; accept a close line of about the same length.
+        // Short lines must match exactly: "Go." and "No." are one letter apart.
+        guard key.count >= 8 else { return nil }
+        let tokens = Set(key.components(separatedBy: " ")).filter { $0.count >= 3 }
+        var shared: [Int: Int] = [:]
+        for word in tokens { for index in table.words[word] ?? [] { shared[index, default: 0] += 1 } }
+        let expected = lastMatch[pair].map { $0 + 1 }
+        var candidates = shared.sorted { $0.value > $1.value }.prefix(60).map(\.key)
+        if let expected, expected < table.keys.count, !candidates.contains(expected) { candidates.append(expected) }
+        var best: (score: Double, index: Int)?
+        for index in candidates {
+            let candidate = table.keys[index]
+            guard abs(candidate.count - key.count) <= max(2, key.count / 10) else { continue }
+            var score = Self.similarity(candidate, key)
+            // The line right after the last match is the likeliest one: it wins ties and close calls.
+            if index == expected { score += 0.03 }
+            if score >= 0.9, score > (best?.score ?? 0) { best = (score, index) }
+        }
+        guard let best else { return nil }
+        lastMatch[pair] = best.index
+        return table.texts[best.index]
+    }
+
+    /// The sentences of a line, split after . ! ? (keeping "..." together).
+    static func sentences(_ line: String) -> [String] {
+        var result: [String] = [], current = ""
+        let chars = Array(line)
+        for (i, c) in chars.enumerated() {
+            current.append(c)
+            let next = i + 1 < chars.count ? chars[i + 1] : " "
+            if ".!?".contains(c), next == " " {
+                let trimmed = current.trimmingCharacters(in: .whitespaces)
+                if !trimmed.isEmpty { result.append(trimmed) }
+                current = ""
+            }
+        }
+        let rest = current.trimmingCharacters(in: .whitespaces)
+        if !rest.isEmpty { result.append(rest) }
+        return result
     }
 
     /// 1 − edit distance / longer length.
