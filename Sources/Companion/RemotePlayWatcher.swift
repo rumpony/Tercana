@@ -1,9 +1,9 @@
 import AppKit
 
-/// Tells the app when PS Remote Play comes to the front or quits.
+/// Tells the app when PS Remote Play (or chiaki-ng) comes to the front or quits.
 @MainActor
 final class RemotePlayWatcher {
-    nonisolated static let bundleID = "com.playstation.RemotePlay"
+    nonisolated static let bundleIDs: Set<String> = ["com.playstation.RemotePlay", "org.streetpea.chiaking"]
 
     var onActivate: (() -> Void)?
     var onQuit: (() -> Void)?
@@ -12,11 +12,11 @@ final class RemotePlayWatcher {
     static var isFrontmost: Bool {
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         // Our own panels and pickers count as "still in the game".
-        return front == bundleID || front == Bundle.main.bundleIdentifier
+        return front.map(bundleIDs.contains) == true || front == Bundle.main.bundleIdentifier
     }
 
     static var isRunning: Bool {
-        !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
+        bundleIDs.contains { !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }
     }
 
     func start() {
@@ -35,6 +35,6 @@ final class RemotePlayWatcher {
 
     nonisolated private static func isRemotePlay(_ note: Notification) -> Bool {
         let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
-        return app?.bundleIdentifier == bundleID
+        return app?.bundleIdentifier.map(bundleIDs.contains) == true
     }
 }
