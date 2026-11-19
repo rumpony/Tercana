@@ -12,6 +12,16 @@ struct SettingsView: View {
     @State private var psnSignedIn = false
     @State private var sources = Language.sources
     @State private var targets = Language.targets
+    @State private var keyCheck: String?
+
+    private var engineHint: String {
+        switch prefs.translationEngine {
+        case .apple: return S.engineHintApple
+        case .deepl: return S.engineHintDeepL
+        case .claude: return S.engineHintClaude
+        case .local: return S.engineHintLocal
+        }
+    }
 
     var body: some View {
         Form {
@@ -51,6 +61,46 @@ struct SettingsView: View {
                     default: ProgressView().controlSize(.small)
                     }
                 }
+                Picker(S.engine, selection: $prefs.translationEngine) {
+                    Text(S.engineApple).tag(TranslationEngine.apple)
+                    Text(S.engineDeepL).tag(TranslationEngine.deepl)
+                    Text(S.engineClaude).tag(TranslationEngine.claude)
+                    Text(S.engineLocal).tag(TranslationEngine.local)
+                }
+                if prefs.translationEngine == .local {
+                    TextField(S.localAddress, text: Binding(get: { TranslationEngine.localURL },
+                                                            set: { TranslationEngine.localURL = $0; keyCheck = nil }))
+                    HStack {
+                        TextField(S.localModel, text: Binding(get: { TranslationEngine.localModel },
+                                                              set: { TranslationEngine.localModel = $0; keyCheck = nil }))
+                        Button(S.checkKey) {
+                            keyCheck = "…"
+                            Task { keyCheck = await CloudTranslator.shared.check(.local) ?? S.keyWorks }
+                        }
+                    }
+                    if let keyCheck {
+                        Text(keyCheck).font(.caption)
+                            .foregroundStyle(keyCheck == S.keyWorks ? Color.green : Color.secondary)
+                    }
+                }
+                if let keyName = prefs.translationEngine.keyName {
+                    HStack {
+                        SecureField(S.apiKey, text: Binding(
+                            get: { SecureStore.string(for: keyName) ?? "" },
+                            set: { SecureStore.set($0.isEmpty ? nil : $0, for: keyName); keyCheck = nil }))
+                        Button(S.checkKey) {
+                            keyCheck = "…"
+                            let engine = prefs.translationEngine
+                            Task { keyCheck = await CloudTranslator.shared.check(engine) ?? S.keyWorks }
+                        }
+                        .disabled(prefs.translationEngine.apiKey == nil)
+                    }
+                    if let keyCheck {
+                        Text(keyCheck).font(.caption)
+                            .foregroundStyle(keyCheck == S.keyWorks ? Color.green : Color.secondary)
+                    }
+                }
+                Text(engineHint).font(.caption).foregroundStyle(.secondary)
             }
 
             Section(S.liveTranslation) {

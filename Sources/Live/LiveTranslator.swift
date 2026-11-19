@@ -171,6 +171,11 @@ final class LiveTranslator {
             do {
                 let translated = try await self.translate(line)
                 SubtitleLog.shared.add(original: line, translation: translated)
+                // Only confirmed lines become context; half-typed guesses would mislead the next request.
+                if self.recentLines.last?.source != line {
+                    self.recentLines.append(ContextLine(source: line, translation: translated))
+                }
+                if self.recentLines.count > 12 { self.recentLines.removeFirst() }
                 if self.recorder.isOn {
                     self.recorder.log(DebugRecorder.Record(
                         time: Date(), frame: nil, regionSize: self.region.size, quality: .fast, ocrMilliseconds: 0,
@@ -203,9 +208,32 @@ final class LiveTranslator {
         } else if let packed = TranslationPacks.shared.translation(of: parts.line, from: from, to: target) {
             body = packed
         } else {
-            body = try await Translator.shared.translate(parts.line, from: from, to: target)
+            body = try await translateOnline(parts.line, from: from, to: target)
         }
         return parts.speaker.map { "\($0): \(body)" } ?? body
+    }
+
+    /// Lines shown just before the current one, given to online engines as context.
+    private var recentLines: [ContextLine] = []
+
+    /// DeepL or Claude when chosen and set up; Apple's on-device translation otherwise or when they fail.
+    private func translateOnline(_ line: String, from: String, to target: String) async throws -> String {
+        let engine = prefs.translationEngine
+        let context = Array(recentLines.suffix(6))
+        if engine.isReady {
+            do {
+                let packs = TranslationPacks.shared
+                let names = packs.keepNames.filter { line.localizedCaseInsensitiveContains($0) }
+                return try await CloudTranslator.shared.translate(line, from: from, to: target, context: context,
+                                                                  names: names, terms: packs.glossaryHints(for: line),
+                                                                  engine: engine)
+            } catch {
+                AppLog.write("\(engine.rawValue) failed, using Apple: \(error.localizedDescription)")
+            }
+        }
+        // Apple's model takes idioms literally; give it plain English instead.
+        let plain = from == "en" ? PlainEnglish.rewrite(line) : line
+        return try await Translator.shared.translate(plain, from: from, to: target)
     }
 
     /// Normalized image box (origin bottom-left) → global screen rectangle.

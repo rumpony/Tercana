@@ -44,6 +44,10 @@ final class Preferences {
         didSet { defaults.set(accurateRecognition, forKey: Keys.accurateRecognition) }
     }
     /// Save frames and recognition results for tuning.
+    /// Which service translates subtitles; online engines fall back to Apple's on any error.
+    var translationEngine: TranslationEngine {
+        didSet { defaults.set(translationEngine.rawValue, forKey: Keys.translationEngine) }
+    }
     var debugRecording: Bool {
         didSet { defaults.set(debugRecording, forKey: Keys.debugRecording) }
     }
@@ -77,6 +81,7 @@ final class Preferences {
         subtitleBackground = defaults.double(forKey: Keys.subtitleBackground)
         accurateRecognition = defaults.bool(forKey: Keys.accurateRecognition)
         debugRecording = defaults.bool(forKey: Keys.debugRecording)
+        translationEngine = TranslationEngine(rawValue: defaults.string(forKey: Keys.translationEngine) ?? "") ?? .apple
         appLanguage = AppLanguage.current
         sourceLanguage = defaults.string(forKey: Keys.sourceLanguage) ?? "en"
         targetLanguage = defaults.string(forKey: Keys.targetLanguage) ?? "tr"
@@ -100,6 +105,7 @@ final class Preferences {
         static let subtitleBackground = "subtitleBackground"
         static let accurateRecognition = "accurateRecognition"
         static let debugRecording = "debugRecording"
+        static let translationEngine = "translationEngine"
     }
 }
 
