@@ -138,6 +138,8 @@ struct SettingsView: View {
             Section(S.recognition) {
                 Toggle(S.accurateRecognition, isOn: $prefs.accurateRecognition)
                 Text(S.accurateRecognitionHint).font(.caption).foregroundStyle(.secondary)
+                Toggle(S.subtitleBoxOnly, isOn: $prefs.subtitleBoxOnly)
+                Text(S.subtitleBoxOnlyHint).font(.caption).foregroundStyle(.secondary)
                 Toggle(S.debugRecording, isOn: $prefs.debugRecording)
                 Text(S.debugRecordingHint).font(.caption).foregroundStyle(.secondary)
                 Button(S.openDebugFolder) { DebugRecorder.shared.openFolder() }

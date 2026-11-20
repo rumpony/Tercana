@@ -21,9 +21,14 @@ enum SubtitleText {
     /// "x,:4¥ T." or "Kil" sits at 0.3–0.5 (measured on recorded game frames).
     static let minimumConfidence: Float = 0.6
 
-    static func clean(_ lines: [TextReader.Line]) -> Result {
+    static func clean(_ lines: [TextReader.Line], boxOnlyIn image: CGImage? = nil) -> Result {
         var kept: [TextReader.Line] = []
         var dropped: [String] = []
+        // Only filter when some line really sits on a solid box; with a see-through background nothing would pass.
+        let backdrop = image.flatMap(Backdrop.init).flatMap { backdrop in
+            lines.contains { $0.confidence >= minimumConfidence && !isNoise($0.text) && backdrop.isSolid(around: $0.box) }
+                ? backdrop : nil
+        }
         // Control hints come back in pieces ("PRESS" · "R3" · "to CROUCH"); everything on the
         // same row as a hint word belongs to it.
         // A PS trophy notification over the subtitle area mixes its title into the line.
@@ -31,9 +36,28 @@ enum SubtitleText {
             return Result(text: "", box: nil, dropped: lines.map(\.text))
         }
         let hintRows = lines.filter { isControlHint($0.text) }.map(\.box)
-        for line in lines {
+        // Lines on the box, plus lines stacked right against them: the second row of a two-line subtitle
+        // sometimes samples the scene at its wider edges.
+        var onBox = Set<Int>()
+        if let backdrop {
+            for (index, line) in lines.enumerated() where backdrop.isSolid(around: line.box) { onBox.insert(index) }
+            var grew = true
+            while grew {
+                grew = false
+                for (index, line) in lines.enumerated() where !onBox.contains(index) {
+                    let touches = onBox.contains { other in
+                        let o = lines[other].box
+                        let gap = max(o.minY - line.box.maxY, line.box.minY - o.maxY)
+                        return gap < 0.6 * min(o.height, line.box.height) && o.minX < line.box.maxX && line.box.minX < o.maxX
+                    }
+                    if touches { onBox.insert(index); grew = true }
+                }
+            }
+        }
+        for (index, line) in lines.enumerated() {
             let onHintRow = hintRows.contains { Self.sameRow($0, line.box) }
-            if onHintRow || line.confidence < minimumConfidence || isNoise(line.text) {
+            let offBox = backdrop != nil && !onBox.contains(index)
+            if onHintRow || offBox || line.confidence < minimumConfidence || isNoise(line.text) {
                 dropped.append(line.text)
             } else {
                 kept.append(line)
@@ -63,8 +87,9 @@ enum SubtitleText {
         if text.range(of: #"\b\d{1,2}:\d{2}(:\d{2})?\b"#, options: .regularExpression) != nil { return true }
         if text.contains("%"), words.count <= 3 { return true }
         guard !letters.contains(where: \.isLowercase) else { return false }
-        // A lone short all-caps fragment ("PHI", "RASSI") is a HUD or map label; shouted lines carry punctuation.
-        if words.count == 1, letters.count <= 5, !text.contains(where: { "!?.,".contains($0) }) { return true }
+        // Short all-caps text without punctuation ("PHI", "TAKE AMMO PACK", "TURN ON") is a HUD label or
+        // an interaction prompt; shouted dialogue carries punctuation ("GET DOWN!").
+        if words.count <= 3, !text.contains(where: { "!?.,…".contains($0) }) { return true }
         return !words.isEmpty && words.allSatisfy { word in
             word.count >= 2 && promptWords.contains { $0 == word || ($0.hasPrefix(word) && word.count >= 3) }
         }
@@ -76,6 +101,10 @@ enum SubtitleText {
     }
 
     private static func isControlHint(_ line: String) -> Bool {
+        // Button glyphs and stick/trigger names ("R3 HİKAYE KIYAFETLERİ □ KAMERA △ TAM GÖRÜNÜM").
+        if line.range(of: #"[□△○◯✕✖⨯▢■▲●]|(^|\s)[LR][123](\s|$)|\b(L|R)-?STICK\b"#, options: .regularExpression) != nil {
+            return true
+        }
         let first = stripDecoration(line).uppercased().split { !$0.isLetter }.first.map(String.init)
         return first.map { ["PRESS", "HOLD", "TAP", "USE"].contains($0) } ?? false
     }
@@ -88,7 +117,7 @@ enum SubtitleText {
 
     /// Bullet glyphs some games put before a speaker.
     private static func stripDecoration(_ line: String) -> String {
-        line.trimmingCharacters(in: CharacterSet(charactersIn: "•·◦▪︎●-–— ").union(.whitespaces))
+        line.trimmingCharacters(in: CharacterSet(charactersIn: "•·◦▪︎●-–—=_| ").union(.whitespaces))
     }
 
     /// The language a line is clearly written in, when that differs from `expected`.
@@ -104,8 +133,25 @@ enum SubtitleText {
     }
 
     /// "MINE GUARD: Almost." → ("MINE GUARD", "Almost."). Names stay untranslated.
+    /// Splits "A: one. B: two." where a new speaker label follows the end of a sentence.
+    static func splitTurns(_ text: String) -> [String] {
+        let regex = try! NSRegularExpression(pattern: #"(?<=[.!?…\]]) (?=[A-Z][\w'’.-]{0,20}(?: [A-Z][\w'’.-]{0,20}){0,2}: )"#)
+        var parts: [String] = []
+        var start = text.startIndex
+        for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+            guard let range = Range(match.range, in: text) else { continue }
+            parts.append(String(text[start..<range.lowerBound]))
+            start = range.upperBound
+        }
+        parts.append(String(text[start...]))
+        parts = parts.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        return parts.count > 1 && parts.allSatisfy({ splitSpeaker($0).speaker != nil }) ? parts : [text]
+    }
+
     static func splitSpeaker(_ text: String) -> (speaker: String?, line: String) {
-        guard let match = text.firstMatch(of: #/^([A-Z][A-Z0-9'’ .-]{0,30}[A-Z]):\s*(.+)$/#) else { return (nil, text) }
+        // "LUCIA: …" and GTA VI's "Jason: …", "Local Cop: …" (up to three capitalized words).
+        guard let match = text.firstMatch(of: #/^([A-Z][A-Z0-9'’ .-]{0,30}[A-Z]|[A-Z][\w'’.-]{0,20}(?: [A-Z#0-9][\w'’.-]{0,20}){0,2}):\s*(.+)$/#)
+        else { return (nil, text) }
         return (String(match.1), String(match.2))
     }
 }
@@ -122,6 +168,15 @@ struct SubtitleStabilizer {
     private var candidate = ""
     private var seen = 0
     private var current: String?
+
+    /// Takes a line known to be complete (it matched a translation pack) without waiting for a second reading.
+    mutating func confirm(_ text: String) -> Change? {
+        candidate = text
+        seen = 2
+        if let current, Self.similar(text, current) { return nil }
+        current = text
+        return .show(text)
+    }
 
     mutating func feed(_ text: String) -> Change? {
         if Self.similar(text, candidate) {
@@ -159,3 +214,53 @@ struct SubtitleStabilizer {
         return Double(previous[y.count]) <= max(1, Double(longest) * 0.2)
     }
 }
+
+/// Tells text on the game's solid subtitle box from text over the scene.
+/// The pixels just around a line on the box are uniformly dark; a sign or HUD label sits on a busy or bright scene.
+struct Backdrop {
+    private let pixels: [UInt8]
+    private let width: Int
+    private let height: Int
+
+    init?(_ image: CGImage) {
+        let width = image.width, height = image.height
+        guard width > 0, height > 0 else { return nil }
+        self.width = width
+        self.height = height
+        var buffer = [UInt8](repeating: 0, count: width * height)
+        let drawn = buffer.withUnsafeMutableBytes { raw -> Bool in
+            guard let context = CGContext(data: raw.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                                          bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(),
+                                          bitmapInfo: CGImageAlphaInfo.none.rawValue) else { return false }
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            return true
+        }
+        guard drawn else { return nil }
+        pixels = buffer
+    }
+
+    /// `box` is normalized, origin bottom-left. Samples a ring a little outside the text.
+    func isSolid(around box: CGRect) -> Bool {
+        let w = Double(width), h = Double(height)
+        // GTA VI's box hugs the text: sample just inside its padding (tuned on recorded frames).
+        let vertical = max(1, box.height * h * 0.08), horizontal = max(2, box.height * h * 0.2)
+        let left = box.minX * w - horizontal, right = box.maxX * w + horizontal
+        let top = (1 - box.maxY) * h - vertical, bottom = (1 - box.minY) * h + vertical
+        var dark = 0, total = 0
+        func sample(_ x: Double, _ y: Double) {
+            let xi = Int(x), yi = Int(y)
+            guard xi >= 0, yi >= 0, xi < width, yi < height else { return }
+            total += 1
+            if pixels[yi * width + xi] < 60 { dark += 1 }
+        }
+        let steps = 24
+        for i in 0...steps {
+            let x = left + (right - left) * Double(i) / Double(steps)
+            sample(x, top); sample(x, bottom)
+            let y = top + (bottom - top) * Double(i) / Double(steps)
+            sample(left, y); sample(right, y)
+        }
+        return total >= 20 && Double(dark) >= Double(total) * 0.6
+    }
+}
+

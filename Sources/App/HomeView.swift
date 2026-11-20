@@ -136,8 +136,11 @@ private struct HomePage: View {
                 }
                 .controlSize(.large)
             }
-            Button(S.newLiveArea) { app.startLive(reselect: true) }
-                .buttonStyle(.link)
+            HStack(spacing: 16) {
+                Button(S.newLiveArea) { app.startLive(reselect: true) }
+                Button(S.addLiveArea) { app.addLiveArea() }.disabled(!app.isLive)
+            }
+            .buttonStyle(.link)
             Spacer()
             HStack(spacing: 20) {
                 ForEach(HotKeys.Action.allCases, id: \.rawValue) { action in

@@ -32,8 +32,11 @@ final class SubtitlePanel {
 
         let cover = prefs.coverOriginal && !dimmed
         let target = cover ? (textRect ?? region).insetBy(dx: -14, dy: -6) : region
-        let width = min(max(target.width, 280), max(region.width, 280))
-        let view = SubtitleView(text: text, dimmed: dimmed, fontSize: prefs.subtitleFontSize, width: width,
+        // A short line stays on one row: the box grows up to the region's width before it wraps.
+        let width = max(region.width, 280)
+        let minWidth = cover ? min(max(target.width, 280), width) : 280
+        let view = SubtitleView(text: text, dimmed: dimmed, fontSize: prefs.subtitleFontSize,
+                                minWidth: minWidth, width: width,
                                 minHeight: cover ? target.height : 0, background: prefs.subtitleBackground)
         panel.host(view)
         let size = panel.contentView?.fittingSize ?? CGSize(width: width, height: 40)
@@ -56,16 +59,23 @@ struct SubtitleView: View {
     let text: String
     let dimmed: Bool
     let fontSize: Double
+    let minWidth: CGFloat
     let width: CGFloat
     let minHeight: CGFloat
     let background: Double
 
     /// "ENZO: Ciao." → the name in the accent colour games use for speakers, the line in white.
     private var styled: Text {
-        let parts = SubtitleText.splitSpeaker(text)
-        guard !dimmed, let speaker = parts.speaker else { return Text(text) }
-        let name = Text(speaker + ": ").foregroundColor(Color(red: 1.0, green: 0.82, blue: 0.3))
-        return Text("\(name)\(parts.line)")
+        guard !dimmed else { return Text(text) }
+        // One row per speaker; each name in amber.
+        return text.split(separator: "\n").enumerated().reduce(Text("")) { result, item in
+            let row = String(item.element)
+            let parts = SubtitleText.splitSpeaker(row)
+            let body = parts.speaker.map {
+                Text($0 + ": ").foregroundColor(Color(red: 0.93, green: 0.74, blue: 0.36)) + Text(parts.line)
+            } ?? Text(row)
+            return item.offset == 0 ? body : result + Text("\n") + body
+        }
     }
 
     var body: some View {
@@ -80,7 +90,7 @@ struct SubtitleView: View {
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .frame(width: width)
+            .frame(minWidth: minWidth, maxWidth: width)
             .frame(minHeight: minHeight)
             .background(Color.black.opacity(background), in: RoundedRectangle(cornerRadius: 8))
     }

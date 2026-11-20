@@ -17,6 +17,8 @@ final class AppController {
     @ObservationIgnored private var live: LiveTranslator?
     @ObservationIgnored private var frame: RegionFrame?
     @ObservationIgnored private var subtitle: SubtitlePanel?
+    /// Extra areas watched alongside the subtitle, each with its own frame and translation.
+    @ObservationIgnored private var extras: [(live: LiveTranslator, frame: RegionFrame, subtitle: SubtitlePanel)] = []
     @ObservationIgnored private var windows: [String: (window: NSWindow, title: () -> String)] = [:]
     /// Auto-start happens once per Remote Play launch, so stopping by hand sticks.
     @ObservationIgnored private var autoStarted = false
@@ -121,9 +123,70 @@ final class AppController {
         isLive = true
         frame.show()
         live.start()
+        for rect in prefs.extraRegions where NSScreen.screens.contains(where: { $0.frame.intersects(rect) }) {
+            beginExtra(in: rect)
+        }
+    }
+
+    /// Adds an area such as the mission text in the corner; it is translated in place next to the subtitle.
+    func addLiveArea() {
+        guard isLive else { startLive(reselect: false); return }
+        picker.pick(hint: S.pickExtraArea) { [weak self] rect in
+            guard let self, let rect, self.isLive else { return }
+            self.prefs.extraRegions.append(rect)
+            self.beginExtra(in: rect)
+        }
+    }
+
+    private func beginExtra(in region: CGRect) {
+        let live = LiveTranslator(region: region, isExtra: true)
+        let frame = RegionFrame(region: region)
+        let subtitle = SubtitlePanel()
+        live.onStateChange = { [weak live, weak subtitle] state in
+            guard let live else { return }
+            subtitle?.update(state, region: live.region, textRect: live.textRect)
+        }
+        live.onStop = { [weak self, weak live] _ in
+            guard let self, let live else { return }
+            self.removeExtra(live, forget: false)
+        }
+        frame.onChange = { [weak self, weak live] rect in
+            guard let self, let live, let index = self.extras.firstIndex(where: { $0.live === live }) else { return }
+            live.region = rect
+            self.saveExtras()
+        }
+        frame.onClose = { [weak self, weak live] in
+            guard let self, let live else { return }
+            self.removeExtra(live, forget: true)
+        }
+        extras.append((live, frame, subtitle))
+        frame.show()
+        live.start()
+    }
+
+    /// `forget`: closed by hand, so it is not brought back next time.
+    private func removeExtra(_ live: LiveTranslator, forget: Bool) {
+        guard let index = extras.firstIndex(where: { $0.live === live }) else { return }
+        let extra = extras.remove(at: index)
+        extra.live.onStop = nil
+        extra.live.stop()
+        extra.frame.close()
+        extra.subtitle.close()
+        if forget { saveExtras() }
+    }
+
+    private func saveExtras() {
+        prefs.extraRegions = extras.map(\.live.region)
     }
 
     private func endLive() {
+        for extra in extras {
+            extra.live.onStop = nil
+            extra.live.stop()
+            extra.frame.close()
+            extra.subtitle.close()
+        }
+        extras = []
         frame?.close()
         subtitle?.close()
         live = nil

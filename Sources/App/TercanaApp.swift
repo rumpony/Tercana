@@ -36,6 +36,7 @@ private struct MenuContent: View {
         Divider()
         Button(app.isLive ? S.stopLive : S.startLive) { app.toggleLive() }
         Button(S.newLiveArea) { app.startLive(reselect: true) }
+        Button(S.addLiveArea) { app.addLiveArea() }.disabled(!app.isLive)
         Button(S.translateArea) { app.translateArea() }
         Divider()
         Button(S.subtitleLog) { app.showSubtitleLog() }

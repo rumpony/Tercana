@@ -3,7 +3,7 @@ import AppKit
 /// Tells the app when PS Remote Play (or chiaki-ng) comes to the front or quits.
 @MainActor
 final class RemotePlayWatcher {
-    nonisolated static let bundleIDs: Set<String> = ["com.playstation.RemotePlay", "org.streetpea.chiaking"]
+    nonisolated static let bundleIDs: Set<String> = ["com.playstation.RemotePlay", "org.streetpea.chiaking", "com.chiaki.Chiaki"]
 
     var onActivate: (() -> Void)?
     var onQuit: (() -> Void)?

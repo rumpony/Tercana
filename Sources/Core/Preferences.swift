@@ -43,6 +43,11 @@ final class Preferences {
     var accurateRecognition: Bool {
         didSet { defaults.set(accurateRecognition, forKey: Keys.accurateRecognition) }
     }
+    /// Read only text sitting on a solid subtitle box (the game's subtitle background set to solid):
+    /// signs, menus and HUD text around it are skipped.
+    var subtitleBoxOnly: Bool {
+        didSet { defaults.set(subtitleBoxOnly, forKey: Keys.subtitleBoxOnly) }
+    }
     /// Save frames and recognition results for tuning.
     /// Which service translates subtitles; online engines fall back to Apple's on any error.
     var translationEngine: TranslationEngine {
@@ -55,6 +60,11 @@ final class Preferences {
         didSet { defaults.set(subtitleFontSize, forKey: Keys.subtitleFontSize) }
     }
     /// Last live region, in global AppKit coordinates.
+    /// Extra areas watched next to the subtitle (mission text, hints), each translated in place.
+    var extraRegions: [CGRect] {
+        didSet { defaults.set(extraRegions.map { NSStringFromRect($0) }, forKey: Keys.extraRegions) }
+    }
+
     var liveRegion: CGRect? {
         didSet {
             if let liveRegion {
@@ -80,6 +90,7 @@ final class Preferences {
         ])
         subtitleBackground = defaults.double(forKey: Keys.subtitleBackground)
         accurateRecognition = defaults.bool(forKey: Keys.accurateRecognition)
+        subtitleBoxOnly = defaults.bool(forKey: Keys.subtitleBoxOnly)
         debugRecording = defaults.bool(forKey: Keys.debugRecording)
         translationEngine = TranslationEngine(rawValue: defaults.string(forKey: Keys.translationEngine) ?? "") ?? .apple
         appLanguage = AppLanguage.current
@@ -91,6 +102,7 @@ final class Preferences {
         batteryAlerts = defaults.bool(forKey: Keys.batteryAlerts)
         subtitleFontSize = defaults.double(forKey: Keys.subtitleFontSize)
         liveRegion = defaults.string(forKey: Keys.liveRegion).map { NSRectFromString($0) }
+        extraRegions = (defaults.stringArray(forKey: Keys.extraRegions) ?? []).map { NSRectFromString($0) }
     }
 
     private enum Keys {
@@ -102,8 +114,10 @@ final class Preferences {
         static let batteryAlerts = "batteryAlerts"
         static let subtitleFontSize = "subtitleFontSize"
         static let liveRegion = "liveRegion"
+        static let extraRegions = "extraRegions"
         static let subtitleBackground = "subtitleBackground"
         static let accurateRecognition = "accurateRecognition"
+        static let subtitleBoxOnly = "subtitleBoxOnly"
         static let debugRecording = "debugRecording"
         static let translationEngine = "translationEngine"
     }

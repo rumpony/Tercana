@@ -45,16 +45,22 @@ final class LiveTranslator {
     private var firstSeen: [String: ContinuousClock.Instant] = [:]
     private var lastReadable = ""
 
-    init(region: CGRect) {
+    /// An extra area (mission text, hints): its lines stay out of the subtitle log and the conversation context.
+    let isExtra: Bool
+
+    init(region: CGRect, isExtra: Bool = false) {
         self.region = region
+        self.isExtra = isExtra
     }
 
     func start() {
         guard !isRunning else { return }
         isRunning = true
         state = .waiting
-        recorder.beginSession()
-        ScreenGrabber.shared.reset()
+        if !isExtra {
+            recorder.beginSession()
+            ScreenGrabber.shared.reset()
+        }
         // The first request after a while loads the translation model; do it before subtitles arrive.
         let (source, target) = (prefs.sourceLanguage, prefs.targetLanguage)
         Task { _ = try? await Translator.shared.translate("Hello.", from: source, to: target) }
@@ -62,7 +68,7 @@ final class LiveTranslator {
             while !Task.isCancelled {
                 guard let self, self.isRunning else { return }
                 await self.tick()
-                try? await Task.sleep(for: .milliseconds(120))
+                try? await Task.sleep(for: .milliseconds(70))
             }
         }
     }
@@ -80,7 +86,6 @@ final class LiveTranslator {
     private func tick() async {
         // With Remote Play running, anything else in front (a browser guide, a chat) covers the
         // region; recordings showed those being translated. Wait until the game is back.
-        if RemotePlayWatcher.isRunning, !RemotePlayWatcher.isFrontmost { return }
         let image: CGImage
         do {
             image = try await ScreenGrabber.shared.capture(region)
@@ -88,6 +93,8 @@ final class LiveTranslator {
             stop(reason: error.localizedDescription)
             return
         }
+        // Reading the stream window directly sees the game whatever is in front; a screen capture doesn't.
+        if !ScreenGrabber.shared.lastFromWindow, RemotePlayWatcher.isRunning, !RemotePlayWatcher.isFrontmost { return }
         guard isRunning else { return }
 
         var record: DebugRecorder.Record?
@@ -102,7 +109,7 @@ final class LiveTranslator {
             let started = ContinuousClock.now
             guard let lines = try? await TextReader.lines(in: image, language: language, quality: quality) else { return }
             let ocrTime = started.duration(to: .now)
-            reading = SubtitleText.clean(lines)
+            reading = SubtitleText.clean(lines, boxOnlyIn: prefs.subtitleBoxOnly && !isExtra ? image : nil)
             lastSignature = signature
             lastReading = reading
             if recorder.isOn {
@@ -126,7 +133,8 @@ final class LiveTranslator {
             if isNew { prefetch(readable) }
         }
         lastReadable = readable
-        let change = stabilizer.feed(readable)
+        // A line found in a pack is a whole subtitle, not one still typing in: show it from the first reading.
+        let change = !readable.isEmpty && isPacked(readable) ? stabilizer.confirm(readable) : stabilizer.feed(readable)
         switch change {
         case .show(let line):
             onScreen = line
@@ -170,9 +178,9 @@ final class LiveTranslator {
             let started = ContinuousClock.now
             do {
                 let translated = try await self.translate(line)
-                SubtitleLog.shared.add(original: line, translation: translated)
+                if !self.isExtra { SubtitleLog.shared.add(original: line, translation: translated) }
                 // Only confirmed lines become context; half-typed guesses would mislead the next request.
-                if self.recentLines.last?.source != line {
+                if !self.isExtra, self.recentLines.last?.source != line {
                     self.recentLines.append(ContextLine(source: line, translation: translated))
                 }
                 if self.recentLines.count > 12 { self.recentLines.removeFirst() }
@@ -195,10 +203,38 @@ final class LiveTranslator {
         }
     }
 
+    private func isPacked(_ line: String) -> Bool {
+        let (source, target) = (prefs.sourceLanguage, prefs.targetLanguage)
+        let packs = TranslationPacks.shared
+        return packs.translation(of: line, from: source, to: target) != nil
+            || packs.translation(of: SubtitleText.splitSpeaker(line).line, from: source, to: target) != nil
+    }
+
+    /// Puts the original speaker name back when a pack translated it ("Local:" → "Yerel:").
+    private static func keepSpeaker(of line: String, in translated: String) -> String {
+        guard let speaker = SubtitleText.splitSpeaker(line).speaker else { return translated }
+        return "\(speaker): \(SubtitleText.splitSpeaker(translated).line)"
+    }
+
     /// Speaker names stay as they are; lines in another language are translated from that language.
     private func translate(_ line: String) async throws -> String {
+        // Two people talking at once come back as one reading ("Local: … Local: Hey! …"): one row each.
+        let turns = SubtitleText.splitTurns(line)
+        if turns.count > 1 {
+            var rows: [String] = []
+            for turn in turns { rows.append(try await translateTurn(turn)) }
+            return rows.joined(separator: "\n")
+        }
+        return try await translateTurn(line)
+    }
+
+    private func translateTurn(_ line: String) async throws -> String {
         let source = prefs.sourceLanguage
         let target = prefs.targetLanguage
+        // Packs often hold the whole line with its speaker; that wins over translating the parts.
+        if let whole = TranslationPacks.shared.translation(of: line, from: source, to: target) {
+            return Self.keepSpeaker(of: line, in: whole)
+        }
         let parts = SubtitleText.splitSpeaker(line)
         // Games mix in other languages ("Ai posti! Pronti!"); translate those from what they are.
         let from = SubtitleText.likelyLanguage(of: parts.line, expected: source) ?? source
