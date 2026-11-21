@@ -39,6 +39,10 @@ final class Preferences {
     var subtitleBackground: Double {
         didSet { defaults.set(subtitleBackground, forKey: Keys.subtitleBackground) }
     }
+    /// Where the player dragged the subtitle, relative to its default spot under the region.
+    var subtitleOffset: CGPoint {
+        didSet { defaults.set(NSStringFromPoint(subtitleOffset), forKey: Keys.subtitleOffset) }
+    }
     /// Use the slower, more thorough recognizer in live mode too.
     var accurateRecognition: Bool {
         didSet { defaults.set(accurateRecognition, forKey: Keys.accurateRecognition) }
@@ -91,6 +95,7 @@ final class Preferences {
         subtitleBackground = defaults.double(forKey: Keys.subtitleBackground)
         accurateRecognition = defaults.bool(forKey: Keys.accurateRecognition)
         subtitleBoxOnly = defaults.bool(forKey: Keys.subtitleBoxOnly)
+        subtitleOffset = defaults.string(forKey: Keys.subtitleOffset).map(NSPointFromString) ?? .zero
         debugRecording = defaults.bool(forKey: Keys.debugRecording)
         translationEngine = TranslationEngine(rawValue: defaults.string(forKey: Keys.translationEngine) ?? "") ?? .apple
         appLanguage = AppLanguage.current
@@ -118,6 +123,7 @@ final class Preferences {
         static let subtitleBackground = "subtitleBackground"
         static let accurateRecognition = "accurateRecognition"
         static let subtitleBoxOnly = "subtitleBoxOnly"
+        static let subtitleOffset = "subtitleOffset"
         static let debugRecording = "debugRecording"
         static let translationEngine = "translationEngine"
     }

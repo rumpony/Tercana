@@ -107,7 +107,19 @@ final class LiveTranslator {
             let quality: TextReader.Quality = TextReader.supportsFastMode(language) && !prefs.accurateRecognition
                 ? .fast : .accurate
             let started = ContinuousClock.now
-            guard let lines = try? await TextReader.lines(in: image, language: language, quality: quality) else { return }
+            // Apple's recognizer occasionally hangs for seconds on a frame; skip that frame instead of stalling subtitles.
+            let result: [TextReader.Line]? = await withCheckedContinuation { continuation in
+                var finished = false
+                Task { @MainActor in
+                    let lines = try? await TextReader.lines(in: image, language: language, quality: quality)
+                    if !finished { finished = true; continuation.resume(returning: lines) }
+                }
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(2))
+                    if !finished { finished = true; continuation.resume(returning: nil) }
+                }
+            }
+            guard let lines = result else { return }
             let ocrTime = started.duration(to: .now)
             reading = SubtitleText.clean(lines, boxOnlyIn: prefs.subtitleBoxOnly && !isExtra ? image : nil)
             lastSignature = signature

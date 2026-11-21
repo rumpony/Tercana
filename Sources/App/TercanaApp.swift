@@ -37,6 +37,8 @@ private struct MenuContent: View {
         Button(app.isLive ? S.stopLive : S.startLive) { app.toggleLive() }
         Button(S.newLiveArea) { app.startLive(reselect: true) }
         Button(S.addLiveArea) { app.addLiveArea() }.disabled(!app.isLive)
+        Button(app.isPositioning ? S.savePosition : S.positionSubtitle) { app.togglePositioning() }.disabled(!app.isLive)
+        if Preferences.shared.subtitleOffset != .zero { Button(S.resetPosition) { app.resetSubtitlePosition() } }
         Button(S.translateArea) { app.translateArea() }
         Divider()
         Button(S.subtitleLog) { app.showSubtitleLog() }

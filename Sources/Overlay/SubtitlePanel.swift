@@ -7,10 +7,38 @@ final class SubtitlePanel {
     private let panel = FloatingPanel(clickThrough: true)
 
     var windowNumber: Int { panel.windowNumber }
+    private var positioningRegion: CGRect?
+
+    /// Lets the player drag the subtitle where they want it; `endPositioning` saves the spot.
+    func beginPositioning(region: CGRect) {
+        positioningRegion = region
+        update(.subtitle(S.positionSample), region: region, textRect: nil, force: true)
+        panel.ignoresMouseEvents = false
+        panel.isMovableByWindowBackground = true
+    }
+
+    func endPositioning() {
+        guard let region = positioningRegion else { return }
+        positioningRegion = nil
+        let prefs = Preferences.shared
+        let frame = panel.frame
+        let old = prefs.subtitleOffset
+        let base = CGPoint(x: region.midX - frame.width / 2, y: region.minY - 6 - frame.height)
+        prefs.subtitleOffset = CGPoint(x: frame.minX - base.x, y: frame.minY - base.y)
+        _ = old
+        panel.ignoresMouseEvents = true
+        panel.isMovableByWindowBackground = false
+    }
 
     /// `textRect` is where the original text was found; covering mode sizes the box to it rather
     /// than blacking out the whole region.
     func update(_ state: LiveTranslator.State, region: CGRect, textRect: CGRect?) {
+        update(state, region: region, textRect: textRect, force: false)
+    }
+
+    private func update(_ state: LiveTranslator.State, region: CGRect, textRect: CGRect?, force: Bool) {
+        // While the player drags it, live updates would snap it back.
+        if positioningRegion != nil, !force { return }
         let prefs = Preferences.shared
         let text: String
         let dimmed: Bool
@@ -44,7 +72,8 @@ final class SubtitlePanel {
         if cover {
             origin = CGPoint(x: target.midX - size.width / 2, y: target.midY - size.height / 2)
         } else {
-            origin = CGPoint(x: region.midX - size.width / 2, y: region.minY - 6 - size.height)
+            let offset = prefs.subtitleOffset
+            origin = CGPoint(x: region.midX - size.width / 2 + offset.x, y: region.minY - 6 - size.height + offset.y)
         }
         panel.setFrame(CGRect(origin: origin, size: size), display: true)
         panel.fade(visible: true, duration: 0.12)
@@ -72,7 +101,7 @@ struct SubtitleView: View {
             let row = String(item.element)
             let parts = SubtitleText.splitSpeaker(row)
             let body = parts.speaker.map {
-                Text($0 + ": ").foregroundColor(Color(red: 0.93, green: 0.74, blue: 0.36)) + Text(parts.line)
+                Text($0 + ": ").foregroundColor(SpeakerColors.color(for: $0)) + Text(parts.line)
             } ?? Text(row)
             return item.offset == 0 ? body : result + Text("\n") + body
         }
@@ -92,6 +121,54 @@ struct SubtitleView: View {
             .padding(.vertical, 8)
             .frame(minWidth: minWidth, maxWidth: width)
             .frame(minHeight: minHeight)
-            .background(Color.black.opacity(background), in: RoundedRectangle(cornerRadius: 8))
+            // Frosted like the game's own subtitle box; the tint keeps it dark over bright scenes.
+            .background {
+                if background > 0 {
+                    ZStack {
+                        Rectangle().fill(.ultraThinMaterial).environment(\.colorScheme, .dark)
+                        Color.black.opacity(background * 0.75)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
+            }
+    }
+}
+
+/// One color per speaker for the whole session; a slightly misread name ("Jasen") keeps its color.
+@MainActor
+enum SpeakerColors {
+    private static let palette: [Color] = [
+        Color(red: 0.93, green: 0.74, blue: 0.36),  // amber
+        Color(red: 0.55, green: 0.80, blue: 1.00),  // sky
+        Color(red: 0.60, green: 0.88, blue: 0.55),  // green
+        Color(red: 1.00, green: 0.62, blue: 0.70),  // pink
+        Color(red: 0.80, green: 0.66, blue: 1.00),  // lilac
+        Color(red: 1.00, green: 0.66, blue: 0.42),  // orange
+        Color(red: 0.50, green: 0.90, blue: 0.85),  // teal
+    ]
+    private static var assigned: [(name: String, color: Color)] = []
+
+    static func color(for speaker: String) -> Color {
+        let key = speaker.lowercased().filter(\.isLetter)
+        if let known = assigned.first(where: { close($0.name, key) }) { return known.color }
+        let color = palette[assigned.count % palette.count]
+        assigned.append((key, color))
+        return color
+    }
+
+    private static func close(_ a: String, _ b: String) -> Bool {
+        if a == b { return true }
+        guard abs(a.count - b.count) <= 1, min(a.count, b.count) >= 4 else { return false }
+        let x = Array(a), y = Array(b)
+        var row = Array(0...y.count)
+        for i in 1...x.count {
+            var previous = row[0]; row[0] = i
+            for j in 1...y.count {
+                let current = row[j]
+                row[j] = min(row[j] + 1, row[j - 1] + 1, previous + (x[i - 1] == y[j - 1] ? 0 : 1))
+                previous = current
+            }
+        }
+        return row[y.count] <= 1
     }
 }

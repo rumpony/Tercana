@@ -63,10 +63,13 @@ enum SubtitleText {
                 kept.append(line)
             }
         }
+        kept = Self.dropSigns(kept, dropped: &dropped)
+        kept = Self.keepDialogueBlock(kept, dropped: &dropped)
         // Two-line subtitles read as one sentence.
         let text = kept.map { stripDecoration($0.text) }.joined(separator: " ")
             .split(whereSeparator: \.isWhitespace)
             .joined(separator: " ")
+            .applying(repair)
         let box = kept.map(\.box).reduce(nil as CGRect?) { partial, next in partial?.union(next) ?? next }
         return Result(text: text, box: box, dropped: dropped)
     }
@@ -83,6 +86,9 @@ enum SubtitleText {
         guard letters.count >= 2 else { return true }
         let words = text.uppercased().split { !$0.isLetter }.map(String.init)
         if isControlHint(text) { return true }
+        // Sat-nav and on-screen directions ("Turn left", "In 200 ft, turn right", "Arrive at destination").
+        if text.range(of: #"^(in [\d.,]+ ?(ft|m|mi|km|yards?),? )?((turn|keep|bear) (left|right|around)|make a u-?turn|continue straight|take the (next )?exit|arrive at|recalculating)\b"#,
+                      options: [.regularExpression, .caseInsensitive]) != nil, words.count <= 8 { return true }
         // System notifications and HUD clocks ("12:25:19 PM").
         if text.range(of: #"\b\d{1,2}:\d{2}(:\d{2})?\b"#, options: .regularExpression) != nil { return true }
         if text.contains("%"), words.count <= 3 { return true }
@@ -93,6 +99,46 @@ enum SubtitleText {
         return !words.isEmpty && words.allSatisfy { word in
             word.count >= 2 && promptWords.contains { $0 == word || ($0.hasPrefix(word) && word.count >= 3) }
         }
+    }
+
+    /// Big world text (shop signs, chalkboards, T-shirts) next to normal-sized lines: short and much taller.
+    private static func dropSigns(_ lines: [TextReader.Line], dropped: inout [String]) -> [TextReader.Line] {
+        guard lines.count > 1 else { return lines }
+        let heights = lines.map(\.box.height).sorted()
+        let typical = heights[heights.count / 2]
+        return lines.filter { line in
+            let words = line.text.split(whereSeparator: \.isWhitespace).count
+            let sign = line.box.height > typical * 1.7 && words <= 4
+            if sign { dropped.append(line.text) }
+            return !sign
+        }
+    }
+
+    /// When someone is speaking, a separate block of other text (a mission objective under the dialogue,
+    /// "Follow John") doesn't replace or join the line; only the block holding the speaker stays.
+    private static func keepDialogueBlock(_ lines: [TextReader.Line], dropped: inout [String]) -> [TextReader.Line] {
+        guard lines.count > 1, lines.contains(where: { splitSpeaker(stripDecoration($0.text)).speaker != nil }) else { return lines }
+        let sorted = lines.sorted { $0.box.maxY > $1.box.maxY }
+        var blocks: [[TextReader.Line]] = []
+        for line in sorted {
+            if let last = blocks.last?.last, last.box.minY - line.box.maxY < 0.8 * min(last.box.height, line.box.height) {
+                blocks[blocks.count - 1].append(line)
+            } else {
+                blocks.append([line])
+            }
+        }
+        let speaking = blocks.filter { $0.contains { splitSpeaker(stripDecoration($0.text)).speaker != nil } }
+        guard !speaking.isEmpty, speaking.count < blocks.count else { return lines }
+        let keep = speaking.flatMap { $0 }
+        for line in lines where !keep.contains(where: { $0.box == line.box }) { dropped.append(line.text) }
+        return lines.filter { line in keep.contains { $0.box == line.box } }
+    }
+
+    /// Fixes OCR slips that break translation: "S200" / "$S200" for prices.
+    static func repair(_ text: String) -> String {
+        text.replacingOccurrences(of: #"\$[S§](?=\d)"#, with: "$", options: .regularExpression)
+            .replacingOccurrences(of: #"(?<![\w$,.])[S§](?=\d{1,3}(?:,\d{3})*(?:\.\d+)?\b)"#, with: "$",
+                                  options: .regularExpression)
     }
 
     private static func isTrophyNotice(_ line: String) -> Bool {
@@ -264,3 +310,6 @@ struct Backdrop {
     }
 }
 
+private extension String {
+    func applying(_ transform: (String) -> String) -> String { transform(self) }
+}

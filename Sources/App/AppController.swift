@@ -9,6 +9,21 @@ final class AppController {
     static let shared = AppController()
 
     private(set) var isLive = false
+    private(set) var isPositioning = false
+
+    /// First call: the subtitle can be dragged; second call: its place is saved.
+    func togglePositioning() {
+        guard let subtitle, let live else { return }
+        if isPositioning {
+            subtitle.endPositioning()
+            isPositioning = false
+        } else {
+            subtitle.beginPositioning(region: live.region)
+            isPositioning = true
+        }
+    }
+
+    func resetSubtitlePosition() { prefs.subtitleOffset = .zero }
 
     @ObservationIgnored private let prefs = Preferences.shared
     @ObservationIgnored private let picker = AreaPicker()
